@@ -16,6 +16,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import jakarta.servlet.http.HttpServletResponse;
 
+@Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
     private static final String[] PUBLIC_ENDPOINTS = {
