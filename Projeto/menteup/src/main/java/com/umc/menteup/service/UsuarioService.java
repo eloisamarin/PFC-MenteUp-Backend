@@ -15,7 +15,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.Optional;
 
-
 @Service
 public class UsuarioService {
 
@@ -96,8 +95,6 @@ public class UsuarioService {
         usuarioLogin.setSenha(usuario.getSenha());
         usuarioLogin.setTokem(gerarToken(usuario.getUsuario()));
         return usuarioLogin;
-
-
     }
 
     private String gerarToken(String usuario) {

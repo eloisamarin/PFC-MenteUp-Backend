@@ -33,9 +33,6 @@ public class AtividadeController {
         return atividadeRepository.findById(id)
                 .map(resposta -> ResponseEntity.ok(resposta))
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
-
-
-
     }
     @GetMapping("/titulo/{titulo}")
     public ResponseEntity<List<Atividade>> getByTitulo(@PathVariable String titulo)  {
@@ -64,7 +61,7 @@ public class AtividadeController {
 
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @DeleteMapping("/id")
+    @DeleteMapping("/{id}")
     public void delete (@PathVariable Long id ){
         Optional<Atividade> atividade = atividadeRepository.findById(id);
 
