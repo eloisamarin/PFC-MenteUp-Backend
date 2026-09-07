@@ -32,7 +32,7 @@ public class TurmaController {
     @Autowired
     private TurmaRepository turmaRepository;
 
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<List<Turma>> getAll() {
         return ResponseEntity.ok(turmaRepository.findAll());
     }
