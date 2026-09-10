@@ -1,9 +1,8 @@
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../context/authContext";
 
 interface PrivateRouteProps {
     children: React.ReactNode;
-    permitido?: string[];
+    permitido: string[];
 }
 
 function PrivateRoute({
@@ -11,20 +10,44 @@ function PrivateRoute({
     permitido
 }: PrivateRouteProps) {
 
-    const { usuario } = useAuth();
+    const token = localStorage.getItem("token");
+    const usuarioSalvo = localStorage.getItem("usuario");
 
-    if (!usuario) {
+    console.log("=== PRIVATE ROUTE ===");
+    console.log("Token:", token);
+    console.log("Usuário:", usuarioSalvo);
+    console.log("Permitido:", permitido);
+
+    // Não está logado
+    if (!token || !usuarioSalvo) {
+        console.log("❌ Sem token ou usuário");
         return <Navigate to="/login" replace />;
     }
 
-    if (
-        permitido &&
-        !permitido.includes(usuario.tipoUsuario)
-    ) {
+    let usuario;
+
+    try {
+        usuario = JSON.parse(usuarioSalvo);
+    } catch (error) {
+        console.error("❌ Erro ao ler usuário:", error);
+
+        localStorage.removeItem("token");
+        localStorage.removeItem("usuario");
+
         return <Navigate to="/login" replace />;
     }
 
-    return children;
+    console.log("Tipo do usuário:", usuario.tipoUsuario);
+
+    // Verifica permissão
+    if (!permitido.includes(usuario.tipoUsuario)) {
+        console.log("❌ Usuário sem permissão");
+        return <Navigate to="/login" replace />;
+    }
+
+    console.log("✅ Acesso permitido");
+
+    return <>{children}</>;
 }
 
 export default PrivateRoute;

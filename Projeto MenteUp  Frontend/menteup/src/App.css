@@ -1285,3 +1285,819 @@
   }
 
 }
+
+/* =========================================================
+   MENTEUP - ATIVIDADES
+   ========================================================= */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f4f5fb;
+  color: #202038;
+}
+
+/* =========================================================
+   LAYOUT PRINCIPAL
+   ========================================================= */
+
+.mu-page {
+  min-height: 100vh;
+  background: #f4f5fb;
+}
+
+.mu-dashboard {
+  min-height: 100vh;
+  display: flex;
+}
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
+.mu-sidebar {
+  width: 220px;
+  min-height: 100vh;
+  background: #15152d;
+  color: white;
+  padding: 20px 14px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+}
+
+.mu-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 20px;
+}
+
+.mu-brand-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #6246ff, #7c3aed);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-weight: bold;
+}
+
+.mu-brand-name {
+  color: white;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.mu-brand-name span {
+  color: #8b7cff;
+}
+
+/* =========================================================
+   MENU
+   ========================================================= */
+
+.mu-sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.mu-sidebar-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: 9px;
+  color: #a9a9c2;
+  text-decoration: none;
+  font-size: 13px;
+  transition: 0.2s;
+}
+
+.mu-sidebar-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+}
+
+.mu-sidebar-item.active {
+  background: #302f4c;
+  color: white;
+}
+
+.mu-sidebar-item.active svg {
+  color: #8a72ff;
+}
+
+/* =========================================================
+   CONTEÚDO
+   ========================================================= */
+
+.mu-main {
+  margin-left: 220px;
+  width: calc(100% - 220px);
+  min-height: 100vh;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.mu-header {
+  height: 72px;
+  background: white;
+  border-bottom: 1px solid #e8e8f0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 28px;
+}
+
+.mu-search {
+  width: 280px;
+  height: 38px;
+
+  background: #f4f5fb;
+  border: none;
+  border-radius: 20px;
+
+  padding: 0 16px;
+  outline: none;
+
+  color: #55556b;
+  font-size: 13px;
+}
+
+.mu-search::placeholder {
+  color: #9999b0;
+}
+
+.mu-header-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mu-avatar {
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  border-radius: 50%;
+
+  background: linear-gradient(135deg, #6146ff, #7438e8);
+  color: white;
+
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.mu-user-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #27273d;
+}
+
+/* =========================================================
+   ÁREA DE ATIVIDADES
+   ========================================================= */
+
+.mu-content {
+  padding: 28px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.mu-content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.mu-title h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #202038;
+}
+
+.mu-title p {
+  margin-top: 5px;
+  color: #9696ac;
+  font-size: 13px;
+}
+
+/* =========================================================
+   BOTÕES
+   ========================================================= */
+
+.mu-btn {
+  border: none;
+  cursor: pointer;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 8px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  transition: 0.2s;
+}
+
+.mu-btn-primary {
+  background: linear-gradient(135deg, #6046ff, #7038ed);
+  color: white;
+
+  padding: 11px 18px;
+
+  box-shadow: 0 5px 12px rgba(91, 70, 255, 0.25);
+}
+
+.mu-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 7px 16px rgba(91, 70, 255, 0.3);
+}
+
+.mu-btn-lg {
+  min-height: 42px;
+}
+
+/* =========================================================
+   CARD DA TABELA
+   ========================================================= */
+
+.mu-card {
+  background: white;
+  border-radius: 12px;
+
+  border: 1px solid #e8e8f0;
+
+  box-shadow: 0 3px 12px rgba(28, 28, 55, 0.05);
+
+  overflow: hidden;
+}
+
+/* =========================================================
+   TABELA
+   ========================================================= */
+
+.mu-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.mu-table thead {
+  background: #ffffff;
+}
+
+.mu-table th {
+  text-align: left;
+
+  padding: 13px 14px;
+
+  color: #8989a5;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  text-transform: uppercase;
+
+  border-bottom: 1px solid #eeeeF5;
+}
+
+.mu-table td {
+  padding: 17px 14px;
+
+  color: #38384e;
+
+  font-size: 12px;
+
+  border-bottom: 1px solid #eeeeF5;
+}
+
+.mu-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.mu-table tbody tr {
+  transition: 0.2s;
+}
+
+.mu-table tbody tr:hover {
+  background: #fafaff;
+}
+
+/* =========================================================
+   NOME DA ATIVIDADE
+   ========================================================= */
+
+.mu-activity-name {
+  color: #22223a;
+  font-weight: 700;
+}
+
+.mu-activity-description {
+  margin-top: 4px;
+  color: #9999ad;
+  font-size: 11px;
+}
+
+/* =========================================================
+   BADGES
+   ========================================================= */
+
+.mu-badge {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 5px 9px;
+
+  border-radius: 20px;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Status */
+
+.mu-status-publicada {
+  background: #dff7ea;
+  color: #20a36b;
+}
+
+.mu-status-rascunho {
+  background: #f0f0f8;
+  color: #77778e;
+}
+
+.mu-status-andamento {
+  background: #fff1cf;
+  color: #c98b00;
+}
+
+.mu-status-concluida {
+  background: #e2e4ff;
+  color: #5b5ce2;
+}
+
+/* Dificuldade */
+
+.mu-dificuldade-facil {
+  background: #dcf8e9;
+  color: #1ca968;
+}
+
+.mu-dificuldade-medio {
+  background: #fff0d1;
+  color: #c98700;
+}
+
+.mu-dificuldade-dificil {
+  background: #ffe0e2;
+  color: #e34d59;
+}
+
+/* =========================================================
+   AÇÕES
+   ========================================================= */
+
+.mu-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mu-action-btn {
+  width: 32px;
+  height: 32px;
+
+  border-radius: 8px;
+
+  border: 1px solid #ddddea;
+
+  background: white;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  cursor: pointer;
+
+  color: #52526e;
+
+  transition: 0.2s;
+}
+
+.mu-action-btn:hover {
+  background: #f4f2ff;
+  border-color: #7560ff;
+  color: #6246ff;
+}
+
+.mu-action-btn.delete:hover {
+  background: #fff0f0;
+  border-color: #ffb4b4;
+  color: #e34d59;
+}
+
+/* =========================================================
+   LOG DE VISUALIZAÇÕES
+   ========================================================= */
+
+.mu-log-card {
+  margin-top: 20px;
+
+  background: white;
+
+  border-radius: 12px;
+
+  border: 1px solid #e8e8f0;
+
+  box-shadow: 0 3px 12px rgba(28, 28, 55, 0.05);
+
+  padding: 20px;
+}
+
+.mu-log-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #29293f;
+
+  margin-bottom: 15px;
+}
+
+.mu-log-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.mu-log-table th {
+  text-align: left;
+
+  color: #9292a8;
+
+  font-size: 10px;
+
+  padding: 10px;
+
+  border-bottom: 1px solid #eeeeF5;
+}
+
+.mu-log-table td {
+  padding: 12px 10px;
+
+  font-size: 11px;
+
+  color: #44445a;
+
+  border-bottom: 1px solid #f0f0f5;
+}
+
+.mu-log-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* =========================================================
+   USUÁRIO DO LOG
+   ========================================================= */
+
+.mu-student {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.mu-student-avatar {
+  width: 28px;
+  height: 28px;
+
+  border-radius: 50%;
+
+  background: #6146ff;
+
+  color: white;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 9px;
+  font-weight: bold;
+}
+
+/* =========================================================
+   RESPOSTA
+   ========================================================= */
+
+.mu-response-yes {
+  background: #dff7ea;
+  color: #20a36b;
+
+  padding: 5px 9px;
+
+  border-radius: 20px;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.mu-response-no {
+  background: #ffe1e1;
+  color: #e34d59;
+
+  padding: 5px 9px;
+
+  border-radius: 20px;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* =========================================================
+   ESTADO VAZIO
+   ========================================================= */
+
+.mu-empty {
+  text-align: center;
+  padding: 50px 20px;
+
+  color: #9999ad;
+}
+
+.mu-empty-icon {
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+
+.mu-empty h3 {
+  color: #3b3b52;
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.mu-empty p {
+  font-size: 12px;
+}
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+.mu-modal-overlay {
+  position: fixed;
+
+  inset: 0;
+
+  background: rgba(20, 20, 40, 0.55);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 1000;
+}
+
+.mu-modal {
+  width: 500px;
+  max-width: 90%;
+
+  background: white;
+
+  border-radius: 14px;
+
+  padding: 25px;
+
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+.mu-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 20px;
+}
+
+.mu-modal-title {
+  font-size: 20px;
+  font-weight: 700;
+
+  color: #25253c;
+}
+
+.mu-modal-close {
+  width: 32px;
+  height: 32px;
+
+  border: none;
+
+  border-radius: 50%;
+
+  background: #f3f3f8;
+
+  cursor: pointer;
+
+  font-size: 18px;
+
+  color: #55556c;
+}
+
+/* =========================================================
+   FORMULÁRIO
+   ========================================================= */
+
+.mu-form-group {
+  margin-bottom: 16px;
+}
+
+.mu-form-group label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #45455c;
+
+  font-size: 12px;
+
+  font-weight: 600;
+}
+
+.mu-form-group input,
+.mu-form-group textarea,
+.mu-form-group select {
+  width: 100%;
+
+  border: 1px solid #dedee9;
+
+  border-radius: 8px;
+
+  padding: 11px 12px;
+
+  font-size: 13px;
+
+  color: #303047;
+
+  outline: none;
+
+  background: white;
+
+  transition: 0.2s;
+}
+
+.mu-form-group textarea {
+  min-height: 100px;
+
+  resize: vertical;
+}
+
+.mu-form-group input:focus,
+.mu-form-group textarea:focus,
+.mu-form-group select:focus {
+  border-color: #6852ff;
+
+  box-shadow: 0 0 0 3px rgba(104, 82, 255, 0.1);
+}
+
+.mu-form-row {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 14px;
+}
+
+/* =========================================================
+   BOTÕES DO MODAL
+   ========================================================= */
+
+.mu-modal-footer {
+  display: flex;
+
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  margin-top: 20px;
+}
+
+.mu-btn-secondary {
+  padding: 10px 17px;
+
+  background: #f0f0f6;
+
+  color: #55556c;
+
+  border: none;
+
+  border-radius: 8px;
+
+  cursor: pointer;
+
+  font-size: 13px;
+
+  font-weight: 600;
+}
+
+.mu-btn-secondary:hover {
+  background: #e6e6ef;
+}
+
+/* =========================================================
+   RESPONSIVIDADE
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+  .mu-sidebar {
+    width: 190px;
+  }
+
+  .mu-main {
+    margin-left: 190px;
+
+    width: calc(100% - 190px);
+  }
+
+  .mu-content {
+    padding: 20px;
+  }
+
+  .mu-table {
+    min-width: 850px;
+  }
+
+  .mu-card {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 700px) {
+
+  .mu-sidebar {
+    width: 65px;
+
+    padding: 15px 8px;
+  }
+
+  .mu-sidebar-brand {
+    justify-content: center;
+    padding: 0 0 20px;
+  }
+
+  .mu-brand-name {
+    display: none;
+  }
+
+  .mu-sidebar-item span {
+    display: none;
+  }
+
+  .mu-sidebar-item {
+    justify-content: center;
+  }
+
+  .mu-main {
+    margin-left: 65px;
+
+    width: calc(100% - 65px);
+  }
+
+  .mu-header {
+    padding: 0 15px;
+  }
+
+  .mu-search {
+    width: 180px;
+  }
+
+  .mu-content-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .mu-form-row {
+    grid-template-columns: 1fr;
+  }
+}
