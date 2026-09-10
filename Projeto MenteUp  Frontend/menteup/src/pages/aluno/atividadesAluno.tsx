@@ -1,17 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-    Plus,
     Search,
-    MoreVertical,
     Eye,
-    Pencil,
-    Trash2,
     Users,
     BookOpen,
     Clock,
     CheckCircle,
 } from "lucide-react";
+import { apiFetch } from "../../services/api";
 
 interface Turma {
     id: number;
@@ -35,6 +32,17 @@ interface Atividade {
     usuario?: Usuario;
 }
 
+function atividadeConcluida(id: number) {
+    const usuario = JSON.parse(
+        localStorage.getItem("usuario") || "{}"
+    );
+    const chave = `atividades-concluidas-${usuario.id || usuario.usuario || "aluno"}`;
+    const concluidas: Record<string, number> = JSON.parse(
+        localStorage.getItem(chave) || "{}"
+    );
+    return Object.prototype.hasOwnProperty.call(concluidas, String(id));
+}
+
 function AtividadesProfessor() {
     const navigate = useNavigate();
 
@@ -52,30 +60,7 @@ function AtividadesProfessor() {
             setCarregando(true);
             setErro("");
 
-            const token = localStorage.getItem("token");
-
-            if (!token) {
-                navigate("/login");
-                return;
-            }
-
-            const resposta = await fetch(
-                "http://localhost:8081/atividades",
-                {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
-
-            if (resposta.status === 401) {
-                localStorage.removeItem("token");
-                localStorage.removeItem("usuario");
-                navigate("/login");
-                return;
-            }
+            const resposta = await apiFetch("/atividades");
 
             if (!resposta.ok) {
                 throw new Error("Não foi possível carregar as atividades.");
@@ -90,42 +75,6 @@ function AtividadesProfessor() {
             setErro("Não foi possível carregar as atividades.");
         } finally {
             setCarregando(false);
-        }
-    }
-
-    async function excluirAtividade(id: number) {
-        const confirmar = window.confirm(
-            "Deseja realmente excluir esta atividade?"
-        );
-
-        if (!confirmar) {
-            return;
-        }
-
-        try {
-            const token = localStorage.getItem("token");
-
-            const resposta = await fetch(
-                `http://localhost:8081/atividades/${id}`,
-                {
-                    method: "DELETE",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
-
-            if (!resposta.ok) {
-                throw new Error("Erro ao excluir atividade.");
-            }
-
-            setAtividades((listaAtual) =>
-                listaAtual.filter((atividade) => atividade.id !== id)
-            );
-
-        } catch (error) {
-            console.error(error);
-            alert("Não foi possível excluir a atividade.");
         }
     }
 
@@ -207,7 +156,7 @@ function AtividadesProfessor() {
 
                     <button
                         onClick={() =>
-                            navigate("/professor/dashboard")
+                            navigate("/aluno/dashboard")
                         }
                         className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-white/10 transition"
                     >
@@ -217,7 +166,7 @@ function AtividadesProfessor() {
 
                     <button
                         onClick={() =>
-                            navigate("/professor/turmas")
+                            navigate("/aluno/atividades")
                         }
                         className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-white/10 transition"
                     >
@@ -275,7 +224,7 @@ function AtividadesProfessor() {
                         </div>
 
                         <span className="text-sm font-semibold text-gray-700">
-                            Professor
+                            Aluno
                         </span>
 
                     </div>
@@ -299,16 +248,6 @@ function AtividadesProfessor() {
                             </p>
 
                         </div>
-
-                        <button
-                            onClick={() =>
-                                navigate("/professor/atividades/nova")
-                            }
-                            className="flex items-center gap-2 bg-[#5b4cff] hover:bg-[#4d3fe0] text-white px-5 py-3 rounded-lg font-semibold text-sm shadow-sm transition"
-                        >
-                            <Plus size={18} />
-                            Criar atividade
-                        </button>
 
                     </div>
 
@@ -481,10 +420,10 @@ function AtividadesProfessor() {
                                     {atividadesFiltradas.map(
                                         (atividade) => {
 
-                                            const status =
-                                                obterStatus(
-                                                    atividade.status
-                                                );
+                                            const concluida = atividadeConcluida(atividade.id);
+                                            const status = obterStatus(
+                                                concluida ? "CONCLUIDO" : atividade.status
+                                            );
 
                                             return (
 
@@ -566,38 +505,21 @@ function AtividadesProfessor() {
 
                                                             <button
                                                                 title="Visualizar"
-                                                                onClick={() =>
-                                                                    navigate(
-                                                                        `/professor/atividades/${atividade.id}`
-                                                                    )
-                                                                }
-                                                                className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-[#5b4cff]"
+                                                                onClick={() => {
+                                                                    if (!concluida) {
+                                                                        navigate(
+                                                                            `/aluno/atividades/responder/${atividade.id}`
+                                                                        );
+                                                                    }
+                                                                }}
+                                                                disabled={concluida}
+                                                                className={`w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 ${
+                                                                    concluida
+                                                                        ? "cursor-not-allowed bg-gray-100 opacity-50"
+                                                                        : "hover:bg-gray-100 hover:text-[#5b4cff]"
+                                                                }`}
                                                             >
                                                                 <Eye size={16} />
-                                                            </button>
-
-                                                            <button
-                                                                title="Editar"
-                                                                onClick={() =>
-                                                                    navigate(
-                                                                        `/professor/atividades/${atividade.id}/editar`
-                                                                    )
-                                                                }
-                                                                className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-[#5b4cff]"
-                                                            >
-                                                                <Pencil size={16} />
-                                                            </button>
-
-                                                            <button
-                                                                title="Excluir"
-                                                                onClick={() =>
-                                                                    excluirAtividade(
-                                                                        atividade.id
-                                                                    )
-                                                                }
-                                                                className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-red-50 hover:text-red-500"
-                                                            >
-                                                                <Trash2 size={16} />
                                                             </button>
 
                                                         </div>

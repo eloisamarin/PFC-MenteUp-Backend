@@ -66,6 +66,688 @@
   cursor: pointer;
 }
 
+/* Formulário de criação de atividades */
+.criar-atividade-container {
+  min-height: 100vh;
+  padding: 40px 24px 64px;
+  background: #f5f6fc;
+  color: #14152b;
+  font-family: "Inter", sans-serif;
+}
+
+.criar-atividade-container > * {
+  width: min(100%, 980px);
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.criar-atividade-container h1 {
+  margin: 24px auto 8px;
+  color: #14152b;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 700;
+}
+
+.criar-atividade-container > p {
+  margin-bottom: 28px;
+  color: #686b86;
+  font-size: 15px;
+}
+
+.botao-voltar,
+.botao-secundario,
+.botoes-acoes button {
+  border: 0;
+  border-radius: 10px;
+  padding: 11px 16px;
+  font: inherit;
+  font-weight: 600;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.botao-voltar {
+  width: auto !important;
+  padding: 0;
+  color: #3652ff;
+  background: transparent;
+}
+
+.botao-voltar:hover,
+.botao-secundario:hover,
+.botoes-acoes button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.erro-turmas {
+  margin-bottom: 20px;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 13px 16px;
+  color: #b42318;
+  background: #fff1f2;
+}
+
+.card-atividade {
+  margin-bottom: 24px;
+  border: 1px solid #e5e7f1;
+  border-radius: 18px;
+  padding: 28px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(20, 21, 43, 0.07);
+}
+
+.card-atividade h2 {
+  margin-bottom: 20px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 22px;
+}
+
+.card-atividade h3 {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 18px;
+}
+
+.card-atividade h4 {
+  margin: 24px 0 6px;
+  color: #2b2c4a;
+  font-size: 15px;
+}
+
+.card-atividade > p,
+.pergunta-card > p {
+  margin-bottom: 18px;
+  color: #8688a6;
+  font-size: 14px;
+}
+
+.card-atividade > label,
+.pergunta-card > label {
+  display: block;
+  margin: 16px 0 7px;
+  color: #2b2c4a;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.card-atividade > input,
+.card-atividade > textarea,
+.card-atividade > select,
+.pergunta-card > textarea,
+.alternativa input[type="text"] {
+  display: block;
+  width: 100%;
+  border: 1px solid #d6d8ed;
+  border-radius: 9px;
+  padding: 12px 14px;
+  color: #14152b;
+  background: #fff;
+  font: inherit;
+  outline: none;
+}
+
+.card-atividade > textarea,
+.pergunta-card > textarea {
+  min-height: 105px;
+  resize: vertical;
+}
+
+.card-atividade > input:focus,
+.card-atividade > textarea:focus,
+.card-atividade > select:focus,
+.pergunta-card > textarea:focus,
+.alternativa input[type="text"]:focus {
+  border-color: #3652ff;
+  box-shadow: 0 0 0 3px #e9ecff;
+}
+
+.card-atividade > input[type="number"] {
+  max-width: 180px;
+}
+
+.pergunta-card {
+  margin-top: 20px;
+  border: 1px solid #e7e8f5;
+  border-radius: 14px;
+  padding: 20px;
+  background: #fafaff;
+}
+
+.pergunta-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.pergunta-header button,
+.alternativa > button {
+  border: 0;
+  color: #b42318;
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.alternativa {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.alternativa input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #3652ff;
+}
+
+.botao-secundario {
+  margin-top: 16px;
+  color: #3652ff;
+  background: #e9ecff;
+}
+
+.botoes-acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.botoes-acoes button {
+  color: #4b4d6b;
+  background: #e7e8f5;
+}
+
+.botoes-acoes button:last-child {
+  color: #fff;
+  background: linear-gradient(135deg, #3652ff, #7c3aed);
+  box-shadow: 0 8px 18px rgba(54, 82, 255, 0.22);
+}
+
+.botoes-acoes button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+@media (max-width: 640px) {
+  .criar-atividade-container {
+    padding: 24px 14px 40px;
+  }
+}
+
+/* Layout compartilhado das telas de atividades do professor */
+  .mu-dashboard {
+    display: flex;
+    min-height: 100vh;
+    background: #f5f6fc;
+    color: #14152b;
+    font-family: "Inter", sans-serif;
+  }
+
+  .mu-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mu-content {
+    width: min(100%, 1120px);
+    margin: 0 auto;
+    padding: 36px 32px 64px;
+  }
+
+  .mu-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: 76px;
+    padding: 0 32px;
+    border-bottom: 1px solid #e7e8f5;
+    background: #fff;
+  }
+
+  .mu-search {
+    display: block;
+    width: min(100%, 280px);
+    border: 0;
+    border-radius: 999px;
+    padding: 12px 18px;
+    color: #2b2c4a;
+    background: #f3f5ff;
+    outline: none;
+  }
+
+  .mu-header-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: 18px;
+  }
+
+  .mu-avatar {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border-radius: 50%;
+    color: #fff;
+    background: linear-gradient(135deg, #3652ff, #7c3aed);
+    font-weight: 700;
+  }
+
+  .mu-user-name {
+    color: #2b2c4a;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .mu-content-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin: 28px 0 24px;
+  }
+
+  .mu-title h1 {
+    margin: 0;
+    color: #14152b;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+  }
+
+  .mu-title p {
+    margin-top: 7px;
+    color: #8688a6;
+    font-size: 14px;
+  }
+
+  .mu-card {
+    border: 1px solid #e5e7f1;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(20, 21, 43, 0.07);
+  }
+
+  .mu-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+
+  .mu-form-group label {
+    color: #2b2c4a;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .mu-form-group input,
+  .mu-form-group textarea,
+  .mu-form-group select {
+    width: 100%;
+    border: 1px solid #d6d8ed;
+    border-radius: 9px;
+    padding: 12px 14px;
+    color: #14152b;
+    background: #fff;
+    font: inherit;
+    outline: none;
+  }
+
+  .mu-form-group textarea {
+    min-height: 110px;
+    resize: vertical;
+  }
+
+  .mu-form-group input:focus,
+  .mu-form-group textarea:focus,
+  .mu-form-group select:focus {
+    border-color: #3652ff;
+    box-shadow: 0 0 0 3px #e9ecff;
+  }
+
+  .mu-form-row {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 20px;
+  }
+
+  .mu-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 22px;
+  }
+
+  .mu-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e7e8f5;
+  }
+
+  .mu-question-card {
+    margin-top: 14px;
+    border: 1px solid #e7e8f5;
+    border-radius: 12px;
+    padding: 16px;
+    background: #fafaff;
+  }
+
+  .mu-view-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    margin: 28px 0 24px;
+    padding: 28px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #eef1ff, #f7f1ff);
+  }
+
+  .mu-view-label {
+    display: block;
+    margin-bottom: 10px;
+    color: #3652ff;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+  }
+
+  .mu-view-header h1 {
+    margin: 0 0 8px;
+    color: #14152b;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+  }
+
+  .mu-view-header p {
+    max-width: 700px;
+    color: #686b86;
+    font-size: 15px;
+  }
+
+  .mu-view-status {
+    flex-shrink: 0;
+  }
+
+  .mu-badge {
+    display: inline-flex;
+    border-radius: 999px;
+    padding: 8px 13px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .mu-status-concluida {
+    color: #16734a;
+    background: #d9f8e8;
+  }
+
+  .mu-status-andamento {
+    color: #3652a8;
+    background: #dfe7ff;
+  }
+
+  .mu-status-rascunho {
+    color: #6d5a18;
+    background: #fff1c7;
+  }
+
+  .mu-info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .mu-info-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 88px;
+    border: 1px solid #e5e7f1;
+    border-radius: 14px;
+    padding: 18px;
+    background: #fff;
+    box-shadow: 0 5px 16px rgba(20, 21, 43, 0.05);
+  }
+
+  .mu-info-card > span {
+    font-size: 25px;
+  }
+
+  .mu-info-card small,
+  .mu-info-card strong {
+    display: block;
+  }
+
+  .mu-info-card small {
+    margin-bottom: 5px;
+    color: #8688a6;
+    font-size: 12px;
+  }
+
+  .mu-info-card strong {
+    color: #2b2c4a;
+    font-size: 15px;
+  }
+
+  .mu-questions-card {
+    padding: 28px;
+  }
+
+  .mu-section-header {
+    margin-bottom: 22px;
+  }
+
+  .mu-section-header h2 {
+    margin: 0 0 6px;
+    color: #14152b;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 22px;
+  }
+
+  .mu-section-header p {
+    color: #8688a6;
+    font-size: 14px;
+  }
+
+  .mu-question-list {
+    display: grid;
+    gap: 14px;
+  }
+
+  .mu-question {
+    display: flex;
+    gap: 16px;
+    border: 1px solid #e7e8f5;
+    border-radius: 14px;
+    padding: 18px;
+    background: #fafaff;
+  }
+
+  .mu-question-number {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    place-items: center;
+    border-radius: 50%;
+    color: #fff;
+    background: linear-gradient(135deg, #3652ff, #7c3aed);
+    font-weight: 700;
+  }
+
+  .mu-question-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mu-question-content h3 {
+    margin: 5px 0 14px;
+    color: #2b2c4a;
+    font-size: 16px;
+  }
+
+  .mu-alternatives {
+    display: grid;
+    gap: 8px;
+  }
+
+  .mu-alternative {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    border: 1px solid #e8e9f2;
+    gap: 9px;
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: #686b86;
+    background: #fff;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .mu-alternative:hover:not(:disabled),
+  .mu-alternative.selected {
+    border-color: #3652ff;
+    background: #f0f2ff;
+    color: #2734a5;
+  }
+
+  .mu-alternative:disabled {
+    cursor: default;
+  }
+
+  .mu-alternative-letter {
+    color: #3652ff;
+    font-weight: 800;
+  }
+
+  .mu-correct {
+    margin-left: auto;
+    color: #1faa6d;
+    font-size: 12px;
+  }
+
+  .mu-success {
+    margin-top: 20px;
+    border: 1px solid #b9e8cf;
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: #16734a;
+    background: #e5f9ee;
+    font-weight: 600;
+  }
+
+  .mu-finish-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 24px;
+    border: 0;
+    border-radius: 10px;
+    padding: 13px 24px;
+    color: #fff !important;
+    background: linear-gradient(135deg, #3652ff, #7c3aed) !important;
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.2;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(54, 82, 255, 0.28);
+  }
+
+  .mu-finish-button:hover {
+    opacity: 0.9;
+  }
+
+  .mu-empty {
+    padding: 42px 24px;
+    text-align: center;
+  }
+
+  .mu-empty-icon {
+    margin-bottom: 12px;
+    font-size: 28px;
+  }
+
+  .mu-empty h3 {
+    margin-bottom: 6px;
+    color: #2b2c4a;
+    font-size: 18px;
+  }
+
+  .mu-empty p {
+    color: #8688a6;
+    font-size: 14px;
+  }
+
+@media (max-width: 700px) {
+    .mu-content {
+      padding: 24px 16px 48px;
+    }
+
+    .mu-header {
+      padding: 0 16px;
+    }
+
+    .mu-form-row {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    .mu-modal-footer {
+      flex-direction: column-reverse;
+    }
+
+    .mu-modal-footer .mu-btn {
+      width: 100%;
+    }
+
+    .mu-view-header {
+      flex-direction: column;
+      padding: 20px;
+    }
+
+    .mu-info-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .mu-questions-card {
+      padding: 20px 16px;
+    }
+  }
+
+@media (max-width: 640px) {
+  .card-atividade {
+    padding: 20px 16px;
+  }
+
+  .alternativa {
+    grid-template-columns: 20px minmax(0, 1fr) 24px;
+  }
+
+  .botoes-acoes {
+    flex-direction: column-reverse;
+  }
+
+  .botoes-acoes button {
+    width: 100%;
+  }
+}
+
 .mu-container {
   max-width: 1180px;
   margin: 0 auto;
@@ -793,1311 +1475,4 @@
   border-color: #4f46e5;
   background-color: #f5f3ff;
   color: #4f46e5;
-}
-
-/* ========================================
-   DASHBOARD / ATIVIDADES
-======================================== */
-
-.mu-dashboard {
-  min-height: 100vh;
-  display: flex;
-  background: #f4f6fc;
-}
-
-
-/* ========================================
-   SIDEBAR
-======================================== */
-
-.mu-sidebar {
-  width: 153px;
-  min-height: 100vh;
-  background: #111329;
-  color: #fff;
-  flex-shrink: 0;
-}
-
-.mu-sidebar-logo {
-  height: 53px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-}
-
-.mu-sidebar-logo .mu-brand-mark {
-  width: 22px;
-  height: 22px;
-  min-width: 22px;
-  border-radius: 6px;
-  font-size: 11px;
-}
-
-.mu-sidebar-brand {
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.mu-sidebar-brand span {
-  color: #a98cff;
-}
-
-
-/* MENU */
-
-.mu-sidebar-menu {
-  padding: 15px 8px;
-}
-
-.mu-sidebar-item {
-  width: 100%;
-  height: 36px;
-  border: none;
-  background: transparent;
-  color: #9da1bb;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 11px;
-  border-radius: 7px;
-  font-family: var(--font-body);
-  font-size: 10px;
-  text-align: left;
-  cursor: pointer;
-  margin-bottom: 3px;
-}
-
-.mu-sidebar-item span {
-  width: 15px;
-  text-align: center;
-  font-size: 13px;
-}
-
-.mu-sidebar-item:hover {
-  color: #fff;
-  background: rgba(255,255,255,0.05);
-}
-
-.mu-sidebar-item.active {
-  color: #fff;
-  background: #292b42;
-}
-
-
-/* ========================================
-   ÁREA PRINCIPAL
-======================================== */
-
-.mu-dashboard-main {
-  flex: 1;
-  min-width: 0;
-}
-
-
-/* ========================================
-   TOPBAR
-======================================== */
-
-.mu-dashboard-topbar {
-  height: 53px;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 18px;
-  border-bottom: 1px solid #e7e9f2;
-}
-
-
-/* BUSCA */
-
-.mu-search {
-  width: 185px;
-  height: 28px;
-  border-radius: 20px;
-  background: #f3f5fb;
-  display: flex;
-  align-items: center;
-  padding: 0 11px;
-  gap: 7px;
-}
-
-.mu-search span {
-  color: #9da3bc;
-  font-size: 13px;
-}
-
-.mu-search input {
-  width: 100%;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-family: var(--font-body);
-  font-size: 9px;
-  color: #25283e;
-}
-
-.mu-search input::placeholder {
-  color: #9da3bc;
-}
-
-
-/* AÇÕES */
-
-.mu-topbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-}
-
-.mu-notification {
-  width: 27px;
-  height: 27px;
-  border: none;
-  background: #f5f6fb;
-  color: #707590;
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-.mu-topbar-divider {
-  width: 1px;
-  height: 25px;
-  background: #e6e8f0;
-}
-
-.mu-profile {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 9px;
-  font-weight: 700;
-  color: #282b40;
-}
-
-.mu-profile-avatar {
-  width: 23px;
-  height: 23px;
-  border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    #3c50ff,
-    #713cf2
-  );
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 7px;
-}
-
-
-/* ========================================
-   CONTEÚDO
-======================================== */
-
-.mu-dashboard-content {
-  padding: 18px;
-  max-width: 1100px;
-}
-
-
-/* CABEÇALHO */
-
-.mu-activity-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.mu-activity-header h1 {
-  margin: 0;
-  color: #202338;
-  font-size: 20px;
-  font-weight: 700;
-}
-
-.mu-activity-header p {
-  margin: 3px 0 0;
-  color: #8b90aa;
-  font-size: 9px;
-}
-
-.mu-create-button {
-  height: 26px;
-  padding: 0 14px;
-  font-size: 9px;
-}
-
-.mu-create-button span {
-  font-size: 13px;
-  margin-right: 5px;
-}
-
-
-/* ========================================
-   TABELA
-======================================== */
-
-.mu-table-card {
-  background: #fff;
-  border: 1px solid #e3e6f0;
-  border-radius: 9px;
-  overflow: hidden;
-  box-shadow: 0 2px 7px rgba(32, 38, 70, 0.04);
-}
-
-.mu-activity-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.mu-activity-table th {
-  height: 30px;
-  background: #fff;
-  color: #8186a1;
-  font-size: 7px;
-  font-weight: 700;
-  text-align: left;
-  padding: 0 9px;
-  letter-spacing: 0.2px;
-}
-
-.mu-activity-table td {
-  height: 69px;
-  padding: 0 9px;
-  border-top: 1px solid #e9ebf3;
-  color: #555a72;
-  font-size: 8px;
-}
-
-.mu-activity-table td strong {
-  color: #25283d;
-  font-size: 8px;
-}
-
-
-/* ========================================
-   DIFICULDADE
-======================================== */
-
-.mu-difficulty {
-  display: inline-flex;
-  padding: 4px 8px;
-  border-radius: 20px;
-  font-size: 7px;
-  font-weight: 700;
-}
-
-.mu-difficulty.easy {
-  background: #ddf7e9;
-  color: #2e9c65;
-}
-
-.mu-difficulty.medium {
-  background: #fff0d5;
-  color: #b57918;
-}
-
-.mu-difficulty.hard {
-  background: #ffe0e1;
-  color: #df5358;
-}
-
-
-/* ========================================
-   STATUS
-======================================== */
-
-.mu-status {
-  display: inline-flex;
-  padding: 4px 8px;
-  border-radius: 20px;
-  font-size: 7px;
-  font-weight: 700;
-}
-
-.mu-status.published {
-  background: #d9f6e8;
-  color: #2c9b67;
-}
-
-.mu-status.draft {
-  background: #f0f1f7;
-  color: #6c7189;
-}
-
-
-/* ========================================
-   AÇÕES
-======================================== */
-
-.mu-action-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.mu-action-buttons button {
-  width: 18px;
-  height: 18px;
-  padding: 0;
-  border: 1px solid #dce0eb;
-  background: #fff;
-  border-radius: 5px;
-  color: #30344c;
-  font-size: 9px;
-  cursor: pointer;
-}
-
-.mu-action-buttons button:hover {
-  background: #f3f4ff;
-  border-color: #5665ff;
-  color: #4555ef;
-}
-
-
-/* ========================================
-   LOG
-======================================== */
-
-.mu-log-card {
-  margin-top: 10px;
-  background: #fff;
-  border: 1px solid #e3e6f0;
-  border-radius: 9px;
-  padding: 12px;
-  box-shadow: 0 2px 7px rgba(32, 38, 70, 0.04);
-}
-
-.mu-log-card h2 {
-  margin: 0 0 10px;
-  color: #25283d;
-  font-size: 9px;
-  font-weight: 700;
-}
-
-.mu-log-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.mu-log-table th {
-  height: 20px;
-  color: #8186a1;
-  font-size: 6px;
-  font-weight: 700;
-  text-align: left;
-}
-
-.mu-log-table td {
-  height: 36px;
-  border-top: 1px solid #e9ebf3;
-  color: #4f536b;
-  font-size: 8px;
-}
-
-
-/* ALUNO */
-
-.mu-student {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-weight: 600;
-  color: #30344b;
-}
-
-.mu-student-avatar {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    #4859ff,
-    #713df0
-  );
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 6px;
-}
-
-
-/* RESPOSTAS */
-
-.mu-response {
-  display: inline-flex;
-  padding: 4px 7px;
-  border-radius: 20px;
-  font-size: 6px;
-  font-weight: 700;
-}
-
-.mu-response.yes {
-  background: #d8f6e7;
-  color: #269a63;
-}
-
-.mu-response.no {
-  background: #ffe0e1;
-  color: #e05259;
-}
-
-
-/* ========================================
-   RESPONSIVO
-======================================== */
-
-@media (max-width: 850px) {
-
-  .mu-sidebar {
-    width: 65px;
-  }
-
-  .mu-sidebar-brand {
-    display: none;
-  }
-
-  .mu-sidebar-item {
-    justify-content: center;
-    padding: 0;
-  }
-
-  .mu-sidebar-item span {
-    font-size: 16px;
-  }
-
-  .mu-sidebar-item {
-    font-size: 0;
-  }
-
-  .mu-activity-table {
-    min-width: 800px;
-  }
-
-  .mu-table-card {
-    overflow-x: auto;
-  }
-
-}
-
-/* =========================================================
-   MENTEUP - ATIVIDADES
-   ========================================================= */
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: Arial, Helvetica, sans-serif;
-  background: #f4f5fb;
-  color: #202038;
-}
-
-/* =========================================================
-   LAYOUT PRINCIPAL
-   ========================================================= */
-
-.mu-page {
-  min-height: 100vh;
-  background: #f4f5fb;
-}
-
-.mu-dashboard {
-  min-height: 100vh;
-  display: flex;
-}
-
-/* =========================================================
-   SIDEBAR
-   ========================================================= */
-
-.mu-sidebar {
-  width: 220px;
-  min-height: 100vh;
-  background: #15152d;
-  color: white;
-  padding: 20px 14px;
-  position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
-}
-
-.mu-sidebar-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 10px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  margin-bottom: 20px;
-}
-
-.mu-brand-mark {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #6246ff, #7c3aed);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: white;
-  font-weight: bold;
-}
-
-.mu-brand-name {
-  color: white;
-  font-size: 17px;
-  font-weight: 700;
-}
-
-.mu-brand-name span {
-  color: #8b7cff;
-}
-
-/* =========================================================
-   MENU
-   ========================================================= */
-
-.mu-sidebar-menu {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.mu-sidebar-item {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 11px 12px;
-  border-radius: 9px;
-  color: #a9a9c2;
-  text-decoration: none;
-  font-size: 13px;
-  transition: 0.2s;
-}
-
-.mu-sidebar-item:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: white;
-}
-
-.mu-sidebar-item.active {
-  background: #302f4c;
-  color: white;
-}
-
-.mu-sidebar-item.active svg {
-  color: #8a72ff;
-}
-
-/* =========================================================
-   CONTEÚDO
-   ========================================================= */
-
-.mu-main {
-  margin-left: 220px;
-  width: calc(100% - 220px);
-  min-height: 100vh;
-}
-
-/* =========================================================
-   HEADER
-   ========================================================= */
-
-.mu-header {
-  height: 72px;
-  background: white;
-  border-bottom: 1px solid #e8e8f0;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  padding: 0 28px;
-}
-
-.mu-search {
-  width: 280px;
-  height: 38px;
-
-  background: #f4f5fb;
-  border: none;
-  border-radius: 20px;
-
-  padding: 0 16px;
-  outline: none;
-
-  color: #55556b;
-  font-size: 13px;
-}
-
-.mu-search::placeholder {
-  color: #9999b0;
-}
-
-.mu-header-user {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.mu-avatar {
-  width: 36px;
-  height: 36px;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  border-radius: 50%;
-
-  background: linear-gradient(135deg, #6146ff, #7438e8);
-  color: white;
-
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.mu-user-name {
-  font-size: 12px;
-  font-weight: 700;
-  color: #27273d;
-}
-
-/* =========================================================
-   ÁREA DE ATIVIDADES
-   ========================================================= */
-
-.mu-content {
-  padding: 28px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.mu-content-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.mu-title h1 {
-  font-size: 24px;
-  font-weight: 700;
-  color: #202038;
-}
-
-.mu-title p {
-  margin-top: 5px;
-  color: #9696ac;
-  font-size: 13px;
-}
-
-/* =========================================================
-   BOTÕES
-   ========================================================= */
-
-.mu-btn {
-  border: none;
-  cursor: pointer;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 8px;
-
-  font-size: 13px;
-  font-weight: 600;
-
-  transition: 0.2s;
-}
-
-.mu-btn-primary {
-  background: linear-gradient(135deg, #6046ff, #7038ed);
-  color: white;
-
-  padding: 11px 18px;
-
-  box-shadow: 0 5px 12px rgba(91, 70, 255, 0.25);
-}
-
-.mu-btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 7px 16px rgba(91, 70, 255, 0.3);
-}
-
-.mu-btn-lg {
-  min-height: 42px;
-}
-
-/* =========================================================
-   CARD DA TABELA
-   ========================================================= */
-
-.mu-card {
-  background: white;
-  border-radius: 12px;
-
-  border: 1px solid #e8e8f0;
-
-  box-shadow: 0 3px 12px rgba(28, 28, 55, 0.05);
-
-  overflow: hidden;
-}
-
-/* =========================================================
-   TABELA
-   ========================================================= */
-
-.mu-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.mu-table thead {
-  background: #ffffff;
-}
-
-.mu-table th {
-  text-align: left;
-
-  padding: 13px 14px;
-
-  color: #8989a5;
-
-  font-size: 10px;
-  font-weight: 700;
-
-  text-transform: uppercase;
-
-  border-bottom: 1px solid #eeeeF5;
-}
-
-.mu-table td {
-  padding: 17px 14px;
-
-  color: #38384e;
-
-  font-size: 12px;
-
-  border-bottom: 1px solid #eeeeF5;
-}
-
-.mu-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.mu-table tbody tr {
-  transition: 0.2s;
-}
-
-.mu-table tbody tr:hover {
-  background: #fafaff;
-}
-
-/* =========================================================
-   NOME DA ATIVIDADE
-   ========================================================= */
-
-.mu-activity-name {
-  color: #22223a;
-  font-weight: 700;
-}
-
-.mu-activity-description {
-  margin-top: 4px;
-  color: #9999ad;
-  font-size: 11px;
-}
-
-/* =========================================================
-   BADGES
-   ========================================================= */
-
-.mu-badge {
-  display: inline-flex;
-
-  align-items: center;
-  justify-content: center;
-
-  padding: 5px 9px;
-
-  border-radius: 20px;
-
-  font-size: 10px;
-  font-weight: 700;
-}
-
-/* Status */
-
-.mu-status-publicada {
-  background: #dff7ea;
-  color: #20a36b;
-}
-
-.mu-status-rascunho {
-  background: #f0f0f8;
-  color: #77778e;
-}
-
-.mu-status-andamento {
-  background: #fff1cf;
-  color: #c98b00;
-}
-
-.mu-status-concluida {
-  background: #e2e4ff;
-  color: #5b5ce2;
-}
-
-/* Dificuldade */
-
-.mu-dificuldade-facil {
-  background: #dcf8e9;
-  color: #1ca968;
-}
-
-.mu-dificuldade-medio {
-  background: #fff0d1;
-  color: #c98700;
-}
-
-.mu-dificuldade-dificil {
-  background: #ffe0e2;
-  color: #e34d59;
-}
-
-/* =========================================================
-   AÇÕES
-   ========================================================= */
-
-.mu-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.mu-action-btn {
-  width: 32px;
-  height: 32px;
-
-  border-radius: 8px;
-
-  border: 1px solid #ddddea;
-
-  background: white;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  cursor: pointer;
-
-  color: #52526e;
-
-  transition: 0.2s;
-}
-
-.mu-action-btn:hover {
-  background: #f4f2ff;
-  border-color: #7560ff;
-  color: #6246ff;
-}
-
-.mu-action-btn.delete:hover {
-  background: #fff0f0;
-  border-color: #ffb4b4;
-  color: #e34d59;
-}
-
-/* =========================================================
-   LOG DE VISUALIZAÇÕES
-   ========================================================= */
-
-.mu-log-card {
-  margin-top: 20px;
-
-  background: white;
-
-  border-radius: 12px;
-
-  border: 1px solid #e8e8f0;
-
-  box-shadow: 0 3px 12px rgba(28, 28, 55, 0.05);
-
-  padding: 20px;
-}
-
-.mu-log-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: #29293f;
-
-  margin-bottom: 15px;
-}
-
-.mu-log-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.mu-log-table th {
-  text-align: left;
-
-  color: #9292a8;
-
-  font-size: 10px;
-
-  padding: 10px;
-
-  border-bottom: 1px solid #eeeeF5;
-}
-
-.mu-log-table td {
-  padding: 12px 10px;
-
-  font-size: 11px;
-
-  color: #44445a;
-
-  border-bottom: 1px solid #f0f0f5;
-}
-
-.mu-log-table tr:last-child td {
-  border-bottom: none;
-}
-
-/* =========================================================
-   USUÁRIO DO LOG
-   ========================================================= */
-
-.mu-student {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-
-.mu-student-avatar {
-  width: 28px;
-  height: 28px;
-
-  border-radius: 50%;
-
-  background: #6146ff;
-
-  color: white;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-size: 9px;
-  font-weight: bold;
-}
-
-/* =========================================================
-   RESPOSTA
-   ========================================================= */
-
-.mu-response-yes {
-  background: #dff7ea;
-  color: #20a36b;
-
-  padding: 5px 9px;
-
-  border-radius: 20px;
-
-  font-size: 10px;
-  font-weight: 700;
-}
-
-.mu-response-no {
-  background: #ffe1e1;
-  color: #e34d59;
-
-  padding: 5px 9px;
-
-  border-radius: 20px;
-
-  font-size: 10px;
-  font-weight: 700;
-}
-
-/* =========================================================
-   ESTADO VAZIO
-   ========================================================= */
-
-.mu-empty {
-  text-align: center;
-  padding: 50px 20px;
-
-  color: #9999ad;
-}
-
-.mu-empty-icon {
-  font-size: 40px;
-  margin-bottom: 10px;
-}
-
-.mu-empty h3 {
-  color: #3b3b52;
-  font-size: 16px;
-  margin-bottom: 5px;
-}
-
-.mu-empty p {
-  font-size: 12px;
-}
-
-/* =========================================================
-   MODAL
-   ========================================================= */
-
-.mu-modal-overlay {
-  position: fixed;
-
-  inset: 0;
-
-  background: rgba(20, 20, 40, 0.55);
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  z-index: 1000;
-}
-
-.mu-modal {
-  width: 500px;
-  max-width: 90%;
-
-  background: white;
-
-  border-radius: 14px;
-
-  padding: 25px;
-
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-}
-
-.mu-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  margin-bottom: 20px;
-}
-
-.mu-modal-title {
-  font-size: 20px;
-  font-weight: 700;
-
-  color: #25253c;
-}
-
-.mu-modal-close {
-  width: 32px;
-  height: 32px;
-
-  border: none;
-
-  border-radius: 50%;
-
-  background: #f3f3f8;
-
-  cursor: pointer;
-
-  font-size: 18px;
-
-  color: #55556c;
-}
-
-/* =========================================================
-   FORMULÁRIO
-   ========================================================= */
-
-.mu-form-group {
-  margin-bottom: 16px;
-}
-
-.mu-form-group label {
-  display: block;
-
-  margin-bottom: 7px;
-
-  color: #45455c;
-
-  font-size: 12px;
-
-  font-weight: 600;
-}
-
-.mu-form-group input,
-.mu-form-group textarea,
-.mu-form-group select {
-  width: 100%;
-
-  border: 1px solid #dedee9;
-
-  border-radius: 8px;
-
-  padding: 11px 12px;
-
-  font-size: 13px;
-
-  color: #303047;
-
-  outline: none;
-
-  background: white;
-
-  transition: 0.2s;
-}
-
-.mu-form-group textarea {
-  min-height: 100px;
-
-  resize: vertical;
-}
-
-.mu-form-group input:focus,
-.mu-form-group textarea:focus,
-.mu-form-group select:focus {
-  border-color: #6852ff;
-
-  box-shadow: 0 0 0 3px rgba(104, 82, 255, 0.1);
-}
-
-.mu-form-row {
-  display: grid;
-
-  grid-template-columns: 1fr 1fr;
-
-  gap: 14px;
-}
-
-/* =========================================================
-   BOTÕES DO MODAL
-   ========================================================= */
-
-.mu-modal-footer {
-  display: flex;
-
-  justify-content: flex-end;
-
-  gap: 10px;
-
-  margin-top: 20px;
-}
-
-.mu-btn-secondary {
-  padding: 10px 17px;
-
-  background: #f0f0f6;
-
-  color: #55556c;
-
-  border: none;
-
-  border-radius: 8px;
-
-  cursor: pointer;
-
-  font-size: 13px;
-
-  font-weight: 600;
-}
-
-.mu-btn-secondary:hover {
-  background: #e6e6ef;
-}
-
-/* =========================================================
-   RESPONSIVIDADE
-   ========================================================= */
-
-@media (max-width: 900px) {
-
-  .mu-sidebar {
-    width: 190px;
-  }
-
-  .mu-main {
-    margin-left: 190px;
-
-    width: calc(100% - 190px);
-  }
-
-  .mu-content {
-    padding: 20px;
-  }
-
-  .mu-table {
-    min-width: 850px;
-  }
-
-  .mu-card {
-    overflow-x: auto;
-  }
-}
-
-@media (max-width: 700px) {
-
-  .mu-sidebar {
-    width: 65px;
-
-    padding: 15px 8px;
-  }
-
-  .mu-sidebar-brand {
-    justify-content: center;
-    padding: 0 0 20px;
-  }
-
-  .mu-brand-name {
-    display: none;
-  }
-
-  .mu-sidebar-item span {
-    display: none;
-  }
-
-  .mu-sidebar-item {
-    justify-content: center;
-  }
-
-  .mu-main {
-    margin-left: 65px;
-
-    width: calc(100% - 65px);
-  }
-
-  .mu-header {
-    padding: 0 15px;
-  }
-
-  .mu-search {
-    width: 180px;
-  }
-
-  .mu-content-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
-
-  .mu-form-row {
-    grid-template-columns: 1fr;
-  }
 }

@@ -6,7 +6,8 @@ public class UsuarioLogin {
     private String nome;
     private String usuario;
     private String senha;
-    private String tokem;
+    private String token;
+    private String tipoUsuario;
 
     public Long getId() {
         return id;
@@ -40,11 +41,19 @@ public class UsuarioLogin {
         this.senha = senha;
     }
 
-    public String getTokem() {
-        return tokem;
+    public String getToken() {
+        return token;
     }
 
-    public void setTokem(String tokem) {
-        this.tokem = tokem;
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public String getTipoUsuario() {
+        return tipoUsuario;
+    }
+
+    public void setTipoUsuario(String tipoUsuario) {
+        this.tipoUsuario = tipoUsuario;
     }
 }

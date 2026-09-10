@@ -22,7 +22,7 @@ function Login() {
 
         try {
             const resposta = await fetch(
-                "http://localhost:8081/usuarios/logar",
+                "http://localhost:8080/usuarios/logar",
                 {
                     method: "POST",
                     headers: {

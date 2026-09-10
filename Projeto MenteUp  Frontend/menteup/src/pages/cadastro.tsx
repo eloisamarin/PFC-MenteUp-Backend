@@ -36,7 +36,7 @@ function Cadastro() {
 
         try {
             const resposta = await fetch(
-                "http://localhost:8081/usuarios/cadastrar",
+                "http://localhost:8080/usuarios/cadastrar",
                 {
                     method: "POST",
                     headers: {

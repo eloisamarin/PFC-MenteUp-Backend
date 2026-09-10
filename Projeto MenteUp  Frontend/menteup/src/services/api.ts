@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8081";
+const API_URL = "http://localhost:8080";
 
 export async function apiFetch(
     endpoint: string,
@@ -16,6 +16,7 @@ export async function apiFetch(
 
     const resposta = await fetch(`${API_URL}${endpoint}`, {
         ...options,
+        cache: "no-store",
         headers,
     });
 
