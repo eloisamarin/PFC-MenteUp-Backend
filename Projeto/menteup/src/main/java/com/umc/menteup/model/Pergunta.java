@@ -1,5 +1,6 @@
 package com.umc.menteup.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Setter;
@@ -24,6 +25,7 @@ public class Pergunta {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "atividade_id", nullable = false)
+    @JsonIgnore
     private Atividade atividade;
 
     @OneToMany(

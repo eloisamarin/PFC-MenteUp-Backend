@@ -11,6 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/atividades")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class QuestionarioController {
     private final QuestionarioService questionarioService;
 
@@ -56,10 +57,12 @@ public class QuestionarioController {
                                 atividade.getTurma().getNome()
                         ),
 
-                        new UsuarioResponse(
-                                atividade.getUsuario().getId(),
-                                atividade.getUsuario().getNomeUsuario()
-                        )
+                        atividade.getUsuario() == null
+                                ? null
+                                : new UsuarioResponse(
+                                        atividade.getUsuario().getId(),
+                                        atividade.getUsuario().getNomeUsuario()
+                                )
                 ), perguntas
         );
         return  ResponseEntity.ok(response);
