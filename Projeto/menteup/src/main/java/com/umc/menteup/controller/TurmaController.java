@@ -3,6 +3,7 @@ package com.umc.menteup.controller;
 import java.util.List;
 import java.util.Optional;
 
+import com.umc.menteup.dto.TurmaResponse;
 import com.umc.menteup.model.Turma;
 import com.umc.menteup.repository.TurmaRepository;
 
@@ -32,9 +33,14 @@ public class TurmaController {
     @Autowired
     private TurmaRepository turmaRepository;
 
-    @GetMapping
-    public ResponseEntity<List<Turma>> getAll() {
-        return ResponseEntity.ok(turmaRepository.findAll());
+    @GetMapping("/all")
+    public ResponseEntity<List<TurmaResponse>> getAll() {
+        List<TurmaResponse> turmas = turmaRepository.findAll()
+                .stream()
+                .map(turma -> new TurmaResponse(turma.getId(), turma.getNome()))
+                .toList();
+
+        return ResponseEntity.ok(turmas);
     }
 
     @GetMapping("/{id}")

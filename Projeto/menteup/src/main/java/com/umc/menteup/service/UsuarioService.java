@@ -88,12 +88,15 @@ public class UsuarioService {
         }
     }
 
-    public UsuarioLogin  construirRespostaLogin(UsuarioLogin usuarioLogin, Usuario usuario) {
+    public UsuarioLogin construirRespostaLogin(UsuarioLogin usuarioLogin, Usuario usuario) {
 
         usuarioLogin.setId(usuario.getId());
         usuarioLogin.setNome(usuario.getNomeUsuario());
-        usuarioLogin.setSenha(usuario.getSenha());
-        usuarioLogin.setTokem(gerarToken(usuario.getUsuario()));
+        usuarioLogin.setUsuario(usuario.getUsuario());
+        usuarioLogin.setTipoUsuario(usuario.getTipoUsuario());
+
+        usuarioLogin.setToken(gerarToken(usuario.getUsuario()));
+
         return usuarioLogin;
     }
 
