@@ -39,6 +39,9 @@ public class Usuario {
     @JsonIgnoreProperties(value = "usuario", allowSetters = true)
     private List<Turma> turma;
 
+    @Column(name = "fcm_token", length = 500)
+    private String fcmToken;
+
     public Long getId() {
         return id;
     }
@@ -93,5 +96,13 @@ public class Usuario {
 
     public void setTurma(List<Turma> turma) {
         this.turma = turma;
+    }
+
+    public String getFcmToken() {
+        return fcmToken;
+    }
+
+    public void setFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;
     }
 }

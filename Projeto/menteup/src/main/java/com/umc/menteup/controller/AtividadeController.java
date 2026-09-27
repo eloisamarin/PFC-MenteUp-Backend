@@ -3,12 +3,14 @@ package com.umc.menteup.controller;
 import com.umc.menteup.model.Atividade;
 import com.umc.menteup.repository.AtividadeRepository;
 import com.umc.menteup.repository.TurmaRepository;
+import com.umc.menteup.service.AtividadeService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+
 
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +25,9 @@ public class AtividadeController {
 
     @Autowired
     private TurmaRepository turmaRepository;
+
+    @Autowired
+    private AtividadeService atividadeService;
 
     @GetMapping
     public ResponseEntity<List<Atividade>> getAll(){
@@ -40,12 +45,23 @@ public class AtividadeController {
     }
 
     @PostMapping
-    public ResponseEntity<Atividade> post(@Valid @RequestBody Atividade atividade){
-        if(turmaRepository.existsById(atividade.getTurma().getId())) {
+    public ResponseEntity<Atividade> post(
+            @Valid @RequestBody Atividade atividade) {
+
+        if (turmaRepository.existsById(atividade.getTurma().getId())) {
+
             atividade.setId(null);
-            return ResponseEntity.status((HttpStatus.CREATED)).body(atividadeRepository.save(atividade));
+
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(atividadeService.criarAtividade(atividade));
         }
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Turma não existe!", null);
+
+        throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Turma não existe!",
+                null
+        );
     }
 
     @PutMapping
