@@ -3,12 +3,9 @@ package com.umc.menteup.controller;
 import java.util.List;
 import java.util.Optional;
 
-import com.umc.menteup.dto.TurmaResponse;
 import com.umc.menteup.model.Turma;
-import com.umc.menteup.model.Usuario;
 import com.umc.menteup.repository.TurmaRepository;
 
-import com.umc.menteup.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,17 +32,9 @@ public class TurmaController {
     @Autowired
     private TurmaRepository turmaRepository;
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
-
     @GetMapping("/all")
-    public ResponseEntity<List<TurmaResponse>> getAll() {
-        List<TurmaResponse> turmas = turmaRepository.findAll()
-                .stream()
-                .map(turma -> new TurmaResponse(turma.getId(), turma.getNome()))
-                .toList();
-
-        return ResponseEntity.ok(turmas);
+    public ResponseEntity<List<Turma>> getAll() {
+        return ResponseEntity.ok(turmaRepository.findAll());
     }
 
     @GetMapping("/{id}")
@@ -95,47 +84,5 @@ public class TurmaController {
         }
 
         turmaRepository.deleteById(id);
-    }
-    @PostMapping("/{turmaId}/alunos/{alunoId}")
-    public ResponseEntity<?> adicionarAluno(
-            @PathVariable Long turmaId,
-            @PathVariable Long alunoId) {
-
-        Optional<Turma> turmaOptional = turmaRepository.findById(turmaId);
-
-        if (turmaOptional.isEmpty()) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body("Turma não encontrada.");
-        }
-
-        Optional<Usuario> alunoOptional = usuarioRepository.findById(alunoId);
-
-        if (alunoOptional.isEmpty()) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body("Aluno não encontrado.");
-        }
-
-        Turma turma = turmaOptional.get();
-        Usuario aluno = alunoOptional.get();
-
-        if (!"ALUNO".equalsIgnoreCase(aluno.getTipoUsuario())) {
-            return ResponseEntity
-                    .badRequest()
-                    .body("O usuário informado não é um aluno.");
-        }
-
-        if (turma.getAlunos().contains(aluno)) {
-            return ResponseEntity
-                    .badRequest()
-                    .body("O aluno já está cadastrado nesta turma.");
-        }
-
-        turma.getAlunos().add(aluno);
-
-        turmaRepository.save(turma);
-
-        return ResponseEntity.ok(turma);
     }
 }
