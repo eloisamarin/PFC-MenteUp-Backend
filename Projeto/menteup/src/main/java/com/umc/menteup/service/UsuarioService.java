@@ -1,9 +1,7 @@
 package com.umc.menteup.service;
 
-import com.umc.menteup.model.Codio2FA;
 import com.umc.menteup.model.Usuario;
 import com.umc.menteup.model.UsuarioLogin;
-import com.umc.menteup.repository.Codigo2FARepository;
 import com.umc.menteup.repository.UsuarioRepository;
 import com.umc.menteup.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,22 +12,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 
 @Service
 public class UsuarioService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
-
-    @Autowired
-    private Codigo2FARepository codigo2FARepository;
-
-    @Autowired
-    private EmailService emailService;
 
     @Autowired
     private JwtService jwtService;
@@ -57,10 +47,7 @@ public class UsuarioService {
         usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
         usuario.setId(null);
 
-        Usuario usuarioSalvo = usuarioRepository.save(usuario);
-        gerarCodigo2FA(usuarioSalvo);
-
-        return Optional.of(usuarioSalvo);
+        return Optional.of(usuarioRepository.save(usuario));
     }
 
     public Optional<Usuario> atualizarUsuario(Usuario usuario) {
@@ -92,57 +79,13 @@ public class UsuarioService {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(login.getUsuario(), login.getSenha()));
 
-            Optional<Usuario> usuarioEncontrado = usuarioRepository.findByUsuario(login.getUsuario());
-
-            if ( usuarioEncontrado.isEmpty()){
-                return Optional.empty();
-
-            }
-
-            Usuario usuario = usuarioEncontrado.get();
-            gerarCodigo2FA(usuario);
-
-            UsuarioLogin resposta = new UsuarioLogin();
-
-            resposta.setId(usuario.getId());
-            resposta.setNome(usuario.getNomeUsuario());
-            resposta.setUsuario(usuario.getUsuario());
-            resposta.setTipoUsuario(usuario.getTipoUsuario());
-
-            resposta.setToken(null);
-
-            return Optional.of(resposta);
-
+            return usuarioRepository.findByUsuario(login.getUsuario())
+                    .map(usuario -> construirRespostaLogin(login, usuario));
 
         } catch (Exception e) {
 
             return Optional.empty();
         }
-    }
-
-    private void gerarCodigo2FA(Usuario usuario) {
-
-        String codigo = String.format(
-                "%06d",
-                new Random().nextInt(1_000_000)
-        );
-
-        LocalDateTime expiracao =
-                LocalDateTime.now().plusMinutes(5);
-
-        Codio2FA codigo2FA =
-                new Codio2FA(
-                        usuario.getUsuario(),
-                        codigo,
-                        expiracao
-                );
-
-        codigo2FARepository.save(codigo2FA);
-
-        emailService.enviarCodigo2FA(
-                usuario.getUsuario(),
-                codigo
-        );
     }
 
     public UsuarioLogin construirRespostaLogin(UsuarioLogin usuarioLogin, Usuario usuario) {
@@ -160,85 +103,4 @@ public class UsuarioService {
     private String gerarToken(String usuario) {
         return "Bearer " + jwtService.generateToken(usuario);
     }
-
-    public Optional<UsuarioLogin> validarCodigo2FA(
-            String usuario,
-            String codigo
-    ) {
-
-        Optional<Codio2FA> codigoEncontrado =
-                codigo2FARepository
-                        .findTopByUsuarioAndUtilizadoFalseOrderByIdDesc(
-                                usuario
-                        );
-
-        if (codigoEncontrado.isEmpty()) {
-            return Optional.empty();
-        }
-
-        Codio2FA codigo2FA =
-                codigoEncontrado.get();
-
-        if (codigo2FA.getExpiracao()
-                .isBefore(LocalDateTime.now())) {
-
-            return Optional.empty();
-        }
-
-        if (!codigo2FA.getCodigo()
-                .equals(codigo)) {
-
-            return Optional.empty();
-        }
-
-        codigo2FA.setUtilizado(true);
-
-        codigo2FARepository.save(codigo2FA);
-
-        Optional<Usuario> usuarioEncontrado =
-                usuarioRepository.findByUsuario(usuario);
-
-        if (usuarioEncontrado.isEmpty()) {
-            return Optional.empty();
-        }
-
-        Usuario usuarioEntity =
-                usuarioEncontrado.get();
-
-        UsuarioLogin resposta =
-                new UsuarioLogin();
-
-        resposta.setId(usuarioEntity.getId());
-        resposta.setNome(usuarioEntity.getNomeUsuario());
-        resposta.setUsuario(usuarioEntity.getUsuario());
-        resposta.setTipoUsuario(
-                usuarioEntity.getTipoUsuario()
-        );
-
-        resposta.setToken(
-                "Bearer " +
-                        jwtService.generateToken(usuario)
-        );
-
-        return Optional.of(resposta);
-    }
-
-    public boolean salvarFcmToken(String email, String token) {
-
-        Optional<Usuario> usuarioOptional =
-                usuarioRepository.findByUsuario(email);
-
-        if (usuarioOptional.isEmpty()) {
-            return false;
-        }
-
-        Usuario usuario = usuarioOptional.get();
-
-        usuario.setFcmToken(token);
-
-        usuarioRepository.save(usuario);
-
-        return true;
-    }
-
 }

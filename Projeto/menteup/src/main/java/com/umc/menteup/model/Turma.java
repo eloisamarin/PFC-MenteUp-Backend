@@ -6,7 +6,6 @@ import jakarta.persistence.FetchType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -32,17 +31,6 @@ public class Turma {
     @ManyToOne
     @JsonIgnoreProperties("atividade")
     private Usuario usuario;
-
-    @ManyToMany
-    @JoinTable(
-            name = "tb_turma_alunos",
-            joinColumns = @JoinColumn(name = "turma_id"),
-            inverseJoinColumns = @JoinColumn(name = "usuario_id")
-    )
-    @JsonIgnoreProperties({"atividade", "turma"})
-    private List<Usuario> alunos = new ArrayList<>();
-
-
 
 
     public Long getId() {
@@ -71,14 +59,6 @@ public class Turma {
 
     public Usuario getUsuario() {
         return usuario;
-    }
-
-    public List<Usuario> getAlunos() {
-        return alunos;
-    }
-
-    public void setAlunos(List<Usuario> alunos) {
-        this.alunos = alunos;
     }
 
     public void setUsuario(Usuario usuario) {

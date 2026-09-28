@@ -55,6 +55,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS).permitAll()
+                        .requestMatchers("/alunos/me/**").hasRole("ALUNO")
+                        .requestMatchers("/log/**").hasRole("ADMINISTRADOR")
                         .anyRequest().authenticated()
                 )
 
