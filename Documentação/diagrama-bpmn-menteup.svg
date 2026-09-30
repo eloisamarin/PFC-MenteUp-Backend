@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1180" viewBox="0 0 1800 1180">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L10,3 L0,6 Z" fill="#374151"/></marker>
+    <style>
+      .title{font:700 28px Arial;fill:#111827}.lane{font:700 18px Arial;fill:#fff}.task{fill:#dbeafe;stroke:#2563eb;stroke-width:2}.service{fill:#dcfce7;stroke:#16a34a;stroke-width:2}.gateway{fill:#fef3c7;stroke:#d97706;stroke-width:2}.event{fill:#fff;stroke:#111827;stroke-width:3}.end{fill:#fee2e2;stroke:#dc2626;stroke-width:3}.label{font:14px Arial;fill:#111827;text-anchor:middle}.small{font:13px Arial;fill:#374151}.flow{stroke:#374151;stroke-width:2;fill:none;marker-end:url(#arrow)}.boundary{stroke:#9ca3af;stroke-width:2;fill:none}
+    </style>
+  </defs>
+  <rect width="1800" height="1180" fill="#f9fafb"/>
+  <text x="900" y="42" class="title" text-anchor="middle">MenteUp — Processo de Gamificação Educacional</text>
+  <text x="900" y="68" class="small" text-anchor="middle">Diagrama BPMN — branch entrega2809</text>
+
+  <!-- lanes -->
+  <rect x="40" y="90" width="1720" height="250" fill="#fff" stroke="#9ca3af"/>
+  <rect x="40" y="90" width="145" height="250" fill="#1d4ed8"/>
+  <text x="112" y="220" class="lane" text-anchor="middle" transform="rotate(-90 112 220)">Autenticação</text>
+
+  <rect x="40" y="340" width="1720" height="260" fill="#fff" stroke="#9ca3af"/>
+  <rect x="40" y="340" width="145" height="260" fill="#047857"/>
+  <text x="112" y="470" class="lane" text-anchor="middle" transform="rotate(-90 112 470)">Estudante</text>
+
+  <rect x="40" y="600" width="1720" height="260" fill="#fff" stroke="#9ca3af"/>
+  <rect x="40" y="600" width="145" height="260" fill="#7c3aed"/>
+  <text x="112" y="730" class="lane" text-anchor="middle" transform="rotate(-90 112 730)">Professor</text>
+
+  <rect x="40" y="860" width="1720" height="260" fill="#fff" stroke="#9ca3af"/>
+  <rect x="40" y="860" width="145" height="260" fill="#b45309"/>
+  <text x="112" y="990" class="lane" text-anchor="middle" transform="rotate(-90 112 990)">Administrador</text>
+
+  <!-- authentication -->
+  <circle cx="235" cy="215" r="18" class="event"/><text x="235" y="255" class="label">Acessa sistema</text>
+  <rect x="300" y="180" rx="12" width="150" height="70" class="task"/><text x="375" y="209" class="label">Inserir</text><text x="375" y="228" class="label">credenciais</text>
+  <polygon points="550,180 590,215 550,250 510,215" class="gateway"/><text x="550" y="278" class="label">Login válido?</text>
+  <rect x="650" y="115" rx="12" width="145" height="60" class="task"/><text x="722" y="151" class="label">Exibir erro</text>
+  <circle cx="870" cy="145" r="18" class="end"/><text x="870" y="185" class="label">Acesso negado</text>
+  <rect x="650" y="255" rx="12" width="145" height="60" class="service"/><text x="722" y="291" class="label">Carregar dashboard</text>
+  <circle cx="870" cy="285" r="18" class="end"/><text x="870" y="325" class="label">Autenticado</text>
+  <path d="M253 215H300 M450 215H510 M550 180V145H650 M795 145H852 M590 215V285H650 M795 285H852" class="flow"/>
+  <text x="605" y="137" class="small">Não</text><text x="605" y="278" class="small">Sim</text>
+
+  <!-- student -->
+  <circle cx="235" cy="470" r="18" class="event"/><text x="235" y="510" class="label">Entra</text>
+  <rect x="285" y="435" rx="12" width="145" height="70" class="task"/><text x="357" y="464" class="label">Visualizar</text><text x="357" y="483" class="label">atividades</text>
+  <rect x="480" y="435" rx="12" width="145" height="70" class="task"/><text x="552" y="464" class="label">Selecionar</text><text x="552" y="483" class="label">atividade</text>
+  <rect x="675" y="435" rx="12" width="155" height="70" class="task"/><text x="752" y="464" class="label">Responder</text><text x="752" y="483" class="label">questionário</text>
+  <rect x="880" y="435" rx="12" width="145" height="70" class="service"/><text x="952" y="464" class="label">Calcular</text><text x="952" y="483" class="label">pontuação</text>
+  <rect x="1075" y="435" rx="12" width="145" height="70" class="task"/><text x="1147" y="473" class="label">Ver progresso</text>
+  <rect x="1270" y="435" rx="12" width="145" height="70" class="task"/><text x="1342" y="473" class="label">Ver ranking</text>
+  <circle cx="1510" cy="470" r="18" class="end"/><text x="1510" y="510" class="label">Finaliza sessão</text>
+  <path d="M253 470H285 M430 470H480 M625 470H675 M830 470H880 M1025 470H1075 M1220 470H1270 M1415 470H1492" class="flow"/>
+
+  <!-- professor -->
+  <circle cx="235" cy="730" r="18" class="event"/><text x="235" y="770" class="label">Entra</text>
+  <rect x="285" y="695" rx="12" width="145" height="70" class="task"/><text x="357" y="733" class="label">Gerenciar turmas</text>
+  <rect x="480" y="695" rx="12" width="155" height="70" class="task"/><text x="557" y="724" class="label">Criar/editar</text><text x="557" y="743" class="label">atividade</text>
+  <rect x="685" y="695" rx="12" width="155" height="70" class="task"/><text x="762" y="724" class="label">Criar</text><text x="762" y="743" class="label">questionário</text>
+  <rect x="890" y="695" rx="12" width="155" height="70" class="task"/><text x="967" y="724" class="label">Ver desempenho</text><text x="967" y="743" class="label">dos estudantes</text>
+  <rect x="1095" y="695" rx="12" width="175" height="70" class="task"/><text x="1182" y="724" class="label">Consultar histórico</text><text x="1182" y="743" class="label">de alterações</text>
+  <circle cx="1370" cy="730" r="18" class="end"/><text x="1370" y="770" class="label">Finaliza sessão</text>
+  <path d="M253 730H285 M430 730H480 M635 730H685 M840 730H890 M1045 730H1095 M1270 730H1352" class="flow"/>
+
+  <!-- admin -->
+  <circle cx="235" cy="990" r="18" class="event"/><text x="235" y="1030" class="label">Entra</text>
+  <rect x="285" y="955" rx="12" width="155" height="70" class="task"/><text x="362" y="993" class="label">Gerenciar usuários</text>
+  <rect x="490" y="955" rx="12" width="155" height="70" class="task"/><text x="567" y="984" class="label">Controlar</text><text x="567" y="1003" class="label">permissões</text>
+  <rect x="695" y="955" rx="12" width="145" height="70" class="task"/><text x="767" y="993" class="label">Visualizar logs</text>
+  <rect x="890" y="955" rx="12" width="155" height="70" class="task"/><text x="967" y="984" class="label">Monitorar</text><text x="967" y="1003" class="label">sistema</text>
+  <circle cx="1150" cy="990" r="18" class="end"/><text x="1150" y="1030" class="label">Finaliza sessão</text>
+  <path d="M253 990H285 M440 990H490 M645 990H695 M840 990H890 M1045 990H1132" class="flow"/>
+
+  <text x="900" y="1155" class="small" text-anchor="middle">Legenda: azul = tarefa do usuário | verde = tarefa automática do sistema | losango = decisão | círculo = evento</text>
+</svg>
