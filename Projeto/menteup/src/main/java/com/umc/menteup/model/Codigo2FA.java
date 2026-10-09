@@ -1,11 +1,13 @@
 package com.umc.menteup.model;
 
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
+
 
 @Entity
 @Table(name = "tb_codigo_2fa")
-public class Codio2FA {
+public class Codigo2FA {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,11 +26,11 @@ public class Codio2FA {
     private boolean utilizado = false;
 
     // Construtor vazio exigido pelo JPA
-    public Codio2FA() {
+    public Codigo2FA() {
     }
 
     // Construtor usado para gerar um novo código
-    public Codio2FA(
+    public Codigo2FA(
             String usuario,
             String codigo,
             LocalDateTime expiracao
@@ -40,7 +42,7 @@ public class Codio2FA {
     }
 
     // Construtor completo, caso precise em algum momento
-    public Codio2FA(
+    public Codigo2FA(
             Long id,
             String usuario,
             String codigo,
