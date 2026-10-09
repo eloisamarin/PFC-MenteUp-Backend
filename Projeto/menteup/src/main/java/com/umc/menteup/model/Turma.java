@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "tb_turma")
@@ -26,7 +27,7 @@ public class Turma {
             cascade = CascadeType.REMOVE
     )
     @JsonIgnoreProperties(value = "turma", allowSetters = true)
-    private List<Atividade> atividade;
+    private List<Atividade> atividade = new ArrayList<>();
 
     @ManyToMany
     @JoinTable(
@@ -35,7 +36,7 @@ public class Turma {
             inverseJoinColumns = @JoinColumn(name = "aluno_id")
     )
     @JsonIgnoreProperties("turmas")
-    private List<Usuario> alunos;
+    private List<Usuario> alunos = new ArrayList<>();
 
 
 
