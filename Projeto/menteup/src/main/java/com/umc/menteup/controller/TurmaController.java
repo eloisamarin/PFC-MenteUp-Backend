@@ -6,9 +6,11 @@ import java.util.Optional;
 import com.umc.menteup.model.Turma;
 import com.umc.menteup.repository.TurmaRepository;
 
+import com.umc.menteup.service.TurmaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,6 +34,9 @@ public class TurmaController {
     @Autowired
     private TurmaRepository turmaRepository;
 
+    @Autowired
+    private TurmaService turmaService;
+
     @GetMapping("/all")
     public ResponseEntity<List<Turma>> getAll() {
         return ResponseEntity.ok(turmaRepository.findAll());
@@ -53,36 +58,42 @@ public class TurmaController {
         );
     }
 
+    // Somente PROFESSOR ou ADMINISTRADOR realiza criação de Turma
     @PostMapping
     public ResponseEntity<Turma> post(
-            @Valid @RequestBody Turma turma) {
-
-        turma.setId(null);
+            @Valid @RequestBody Turma turma,
+            Authentication authentication) {
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(turmaRepository.save(turma));
+                .body(turmaService.criarTurma(turma, authentication.getName()));
     }
 
+    // Somente PROFESSOR ou ADMINISTRADOR realiza vinculamento de alunos com Turmas
+    @PostMapping("/{turmaId}/alunos/{alunoId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void vincularAluno(
+            @PathVariable Long turmaId,
+            @PathVariable Long alunoId,
+            Authentication authentication) {
+
+        turmaService.vincularAluno(turmaId, alunoId, authentication.getName());
+    }
+
+    // Somente PROFESSOR ou ADMINISTRADOR realiza atualizar a Turma
     @PutMapping
     public ResponseEntity<Turma> put(
-            @Valid @RequestBody Turma turma) {
+            @Valid @RequestBody Turma turma,
+            Authentication authentication) {
 
-        return turmaRepository.findById(turma.getId())
-                .map(resposta -> ResponseEntity.status(HttpStatus.OK)
-                        .body(turmaRepository.save(turma)))
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+        return ResponseEntity.ok(
+                turmaService.atualizarTurma(turma, authentication.getName()));
     }
 
+    // Somente PROFESSOR ou ADMINISTRADOR deletar a turma
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
+    public void delete(@PathVariable Long id, Authentication authentication) {
 
-        Optional<Turma> turma = turmaRepository.findById(id);
-
-        if (turma.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        }
-
-        turmaRepository.deleteById(id);
+        turmaService.excluirTurma(id, authentication.getName());
     }
 }

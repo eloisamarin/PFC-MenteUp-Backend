@@ -35,8 +35,8 @@ public class Usuario {
     @JsonIgnoreProperties(value = "usuario", allowSetters = true)
     private List<Atividade> atividade;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "usuario", cascade = CascadeType.REMOVE)
-    @JsonIgnoreProperties(value = "usuario", allowSetters = true)
+    @ManyToMany(mappedBy = "alunos", fetch = FetchType.LAZY)
+    @JsonIgnoreProperties(value = {"alunos", "atividade"}, allowSetters = true)
     private List<Turma> turma;
 
     @Column(name = "fcm_token", length = 500)
