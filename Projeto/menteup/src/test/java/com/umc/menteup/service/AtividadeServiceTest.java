@@ -13,6 +13,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -508,11 +510,13 @@ class AtividadeServiceTest {
             assertEquals(100, lista.get(0).percentualConclusao());
         }
 
-        @Test
-        @DisplayName("percentual é arredondado: 2 de 3 perguntas respondidas = 67%")
-        void percentualArredondado() {
+        @ParameterizedTest(name = "{0} de {1} perguntas respondidas = {2}%")
+        @CsvSource({"0,3,0", "1,3,33", "2,3,67", "3,3,100"})
+        @DisplayName("percentual é arredondado na fronteira de cada pergunta respondida")
+        void deveArredondarPercentualConformePerguntasRespondidas(int respondidas, int totalPerguntas, int percentualEsperado) {
+            // Arrange
             Usuario aluno = aluno(ALUNO_ID, "ALUNO");
-            Atividade atividade = atividade(10L, StatusAtividade.EM_ANDAMENTO, 3);
+            Atividade atividade = atividade(10L, StatusAtividade.EM_ANDAMENTO, totalPerguntas);
 
             when(usuarioRepository.findByUsuario(USERNAME)).thenReturn(Optional.of(aluno));
             when(atividadeRepository.findVisiveisParaAluno(ALUNO_ID, StatusAtividade.PENDENTE))
@@ -520,11 +524,14 @@ class AtividadeServiceTest {
             when(resultadoAtividadeRepository.findAllByUsuario_IdAndAtividade_IdIn(ALUNO_ID, List.of(10L)))
                     .thenReturn(List.of());
             when(progressoAtividadeRepository.findAllByUsuario_IdAndAtividade_IdIn(ALUNO_ID, List.of(10L)))
-                    .thenReturn(List.of(progresso(atividade, aluno, 2)));
+                    .thenReturn(List.of(progresso(atividade, aluno, respondidas)));
 
+            // Act
             List<AtividadeAlunoResponse> lista = service.listarParaAluno(USERNAME);
 
-            assertEquals(67, lista.get(0).percentualConclusao());
+            // Assert
+            assertEquals(StatusAlunoAtividade.EM_ANDAMENTO, lista.get(0).status());
+            assertEquals(percentualEsperado, lista.get(0).percentualConclusao());
         }
 
         @Test

@@ -3,7 +3,10 @@ package com.umc.menteup.controller;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -92,6 +95,10 @@ public class UsuarioControllerTest {
         // Then
         assertEquals(HttpStatus.CREATED, resposta.getStatusCode());
         assertNotNull(resposta.getBody());
+        assertNotNull(resposta.getBody().getId());
+        assertEquals("Paulo Antunes", resposta.getBody().getNomeUsuario());
+        assertEquals("paulo_antunes@email.com.br", resposta.getBody().getUsuario());
+        assertTrue(usuarioRepository.findByUsuario("paulo_antunes@email.com.br").isPresent());
     }
 
     @Test
@@ -131,6 +138,9 @@ public class UsuarioControllerTest {
         // Then
         assertEquals(HttpStatus.OK, resposta.getStatusCode());
         assertNotNull(resposta.getBody());
+        assertEquals(cadastrado.get().getId(), resposta.getBody().getId());
+        assertEquals("Juliana Ramos", resposta.getBody().getNomeUsuario());
+        assertEquals("ju_ramos@email.com.br", resposta.getBody().getUsuario());
     }
 
     @Test
@@ -151,5 +161,8 @@ public class UsuarioControllerTest {
         // Then
         assertEquals(HttpStatus.OK, resposta.getStatusCode());
         assertNotNull(resposta.getBody());
+        List<String> emails = Arrays.stream(resposta.getBody()).map(Usuario::getUsuario).toList();
+        assertTrue(emails.contains("ana_marques@email.com.br"));
+        assertTrue(emails.contains("carlos_moura@email.com.br"));
     }
 }

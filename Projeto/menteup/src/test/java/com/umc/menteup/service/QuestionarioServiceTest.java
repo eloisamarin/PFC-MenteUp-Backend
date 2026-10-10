@@ -40,9 +40,10 @@ class QuestionarioServiceTest {
     void atividadeInexistente() {
         when(atividadeRepository.findById(ATIVIDADE_ID)).thenReturn(Optional.empty());
 
-        // RuntimeException cobre o comportamento atual e também uma futura ApiException 404.
-        assertThrows(RuntimeException.class,
+        RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> service.cadastrarQuesitonario(ATIVIDADE_ID, requestComDuasPerguntas(), USERNAME));
+
+        assertEquals("Atividade não encontrada", ex.getMessage());
 
         verify(atividadeRepository, never()).save(any());
         verifyNoInteractions(logSistemaService);
@@ -146,9 +147,10 @@ class QuestionarioServiceTest {
         when(atividadeRepository.findById(ATIVIDADE_ID)).thenReturn(Optional.of(atividade));
         when(atividadeRepository.save(any(Atividade.class))).thenThrow(new RuntimeException("banco fora do ar"));
 
-        assertThrows(RuntimeException.class,
+        RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> service.cadastrarQuesitonario(ATIVIDADE_ID, requestComDuasPerguntas(), USERNAME));
 
+        assertEquals("banco fora do ar", ex.getMessage());
         verifyNoInteractions(logSistemaService);
     }
 
