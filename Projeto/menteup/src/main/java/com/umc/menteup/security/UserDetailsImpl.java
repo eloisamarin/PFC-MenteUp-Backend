@@ -1,6 +1,7 @@
 package com.umc.menteup.security;
 
 import com.umc.menteup.model.Usuario;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -8,15 +9,18 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.Collections;
 
+
 public class UserDetailsImpl implements UserDetails {
 
     private static final long serialVersionUID = 1L;
 
+    private Long id;
     private String username;
     private String password;
     private String tipoUsuario;
 
     public UserDetailsImpl(Usuario user) {
+        this.id = user.getId();
         this.username = user.getUsuario();
         this.password = user.getSenha();
         this.tipoUsuario = user.getTipoUsuario();
@@ -29,6 +33,8 @@ public class UserDetailsImpl implements UserDetails {
                 new SimpleGrantedAuthority("ROLE_" + tipoUsuario.toUpperCase())
         );
     }
+
+    public Long getId(){return id;}
 
     @Override
     public String getPassword() {

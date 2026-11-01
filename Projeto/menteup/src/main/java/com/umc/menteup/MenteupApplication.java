@@ -13,5 +13,4 @@ public class MenteupApplication {
         TimeZone.setDefault(TimeZone.getTimeZone("America/Sao_Paulo"));
         SpringApplication.run(MenteupApplication.class, args);
     }
-
 }
