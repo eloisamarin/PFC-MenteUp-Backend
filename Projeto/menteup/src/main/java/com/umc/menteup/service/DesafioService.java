@@ -53,9 +53,7 @@ public class DesafioService {
     public DesafioResponse criar(CriarDesafioRequest request, String username) {
         Usuario autor = exigirProfessorOuAdministrador(username);
 
-        Turma turma = turmaRepository.findById(request.turmaId())
-                .orElseThrow(() -> ApiException.naoEncontrado(
-                        "TURMA_NAO_ENCONTRADA", "Turma não encontrada."));
+        Turma turma = carregarTurma(request.turmaId());
 
         Desafio desafio = new Desafio();
         desafio.setTitulo(request.titulo());
@@ -80,6 +78,40 @@ public class DesafioService {
                 : desafioRepository.findAllByOrderByDataCriacaoDesc();
 
         return desafios.stream().map(DesafioService::toResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public DesafioEdicaoResponse buscarParaEdicao(Long desafioId, String username) {
+        exigirProfessorOuAdministrador(username);
+
+        Desafio desafio = carregarDesafio(desafioId);
+
+        exigirAguardando(desafio);
+
+        return toEdicaoResponse(desafio);
+    }
+
+    @Transactional
+    public DesafioResponse atualizar(Long desafioId, CriarDesafioRequest request, String username) {
+        exigirProfessorOuAdministrador(username);
+
+        Desafio desafio = carregarDesafio(desafioId);
+
+        exigirAguardando(desafio);
+
+        desafio.setTitulo(request.titulo());
+        desafio.setDescricao(request.descricao());
+        desafio.setTurma(carregarTurma(request.turmaId()));
+
+        // Sem respostas enquanto aguarda, então as perguntas podem ser trocadas por inteiro
+        desafio.getPerguntas().clear();
+
+        int ordem = 0;
+        for (PerguntaDesafioRequest perguntaRequest : request.perguntas()) {
+            desafio.getPerguntas().add(montarPergunta(perguntaRequest, desafio, ordem++));
+        }
+
+        return toResponse(desafioRepository.save(desafio));
     }
 
     @Transactional
@@ -379,6 +411,19 @@ public class DesafioService {
                         "DESAFIO_NAO_ENCONTRADO", "Desafio não encontrado."));
     }
 
+    private Turma carregarTurma(Long turmaId) {
+        return turmaRepository.findById(turmaId)
+                .orElseThrow(() -> ApiException.naoEncontrado(
+                        "TURMA_NAO_ENCONTRADA", "Turma não encontrada."));
+    }
+
+    private static void exigirAguardando(Desafio desafio) {
+        if (desafio.getStatus() != StatusDesafio.AGUARDANDO) {
+            throw ApiException.conflito(
+                    "DESAFIO_NAO_EDITAVEL", "Só é possível editar um desafio antes de iniciá-lo.");
+        }
+    }
+
     private Usuario carregarUsuario(String username) {
         return usuarioRepository.findByUsuario(username)
                 .orElseThrow(() -> ApiException.naoAutenticado(
@@ -410,6 +455,24 @@ public class DesafioService {
                 new TurmaResponse(desafio.getTurma().getId(), desafio.getTurma().getNome()),
                 desafio.getPerguntas().size(),
                 desafio.getDataCriacao()
+        );
+    }
+
+    private static DesafioEdicaoResponse toEdicaoResponse(Desafio desafio) {
+        return new DesafioEdicaoResponse(
+                desafio.getId(),
+                desafio.getTitulo(),
+                desafio.getDescricao(),
+                desafio.getTurma().getId(),
+                desafio.getPerguntas().stream()
+                        .map(pergunta -> new PerguntaDesafioRequest(
+                                pergunta.getEnunciado(),
+                                pergunta.getTempoSegundos(),
+                                pergunta.getAlternativas().stream()
+                                        .map(alternativa -> new AlternativaRequest(
+                                                alternativa.getTexto(), alternativa.getCorreta()))
+                                        .toList()))
+                        .toList()
         );
     }
 

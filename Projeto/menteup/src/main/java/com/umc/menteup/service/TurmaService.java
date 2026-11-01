@@ -89,6 +89,33 @@ public class TurmaService {
     }
 
     @Transactional
+    public void removerAluno(Long turmaId, Long alunoId, String username) {
+        Usuario autor = exigirProfessorOuAdministrador(username);
+
+        Turma turma = turmaRepository.findById(turmaId)
+                .orElseThrow(() -> ApiException.naoEncontrado(
+                        "TURMA_NAO_ENCONTRADA", "Turma não encontrada."));
+
+        Usuario aluno = turma.getAlunos().stream()
+                .filter(matriculado -> matriculado.getId().equals(alunoId))
+                .findFirst()
+                .orElseThrow(() -> ApiException.naoEncontrado(
+                        "ALUNO_NAO_VINCULADO", "O aluno não está vinculado a esta turma."));
+
+        turma.getAlunos().remove(aluno);
+        turmaRepository.save(turma);
+
+        logSistemaService.registrarSucesso(
+                autor,
+                AcaoLog.REMOVER_ALUNO_TURMA,
+                EntidadeLog.TURMA,
+                turma.getId(),
+                "Aluno \"" + aluno.getNomeUsuario() + "\" removido da turma \"" + turma.getNome() + "\".",
+                Map.of("alunoId", aluno.getId(), "turmaId", turma.getId())
+        );
+    }
+
+    @Transactional
     public Turma atualizarTurma(Turma dados, String username) {
         exigirProfessorOuAdministrador(username);
 
