@@ -1,6 +1,7 @@
 package com.umc.menteup.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -29,15 +30,19 @@ public class Usuario {
 
     @NotBlank(message = "O Atributo Senha é Obrigatório!")
     @Size(min = 8, message = "A Senha deve ter no mínimo 8 caracteres")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // aceita na entrada, nunca sai nas respostas
     private String senha;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "usuario", cascade = CascadeType.REMOVE)
     @JsonIgnoreProperties(value = "usuario", allowSetters = true)
     private List<Atividade> atividade;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "usuario", cascade = CascadeType.REMOVE)
-    @JsonIgnoreProperties(value = "usuario", allowSetters = true)
+    @ManyToMany(mappedBy = "alunos", fetch = FetchType.LAZY)
+    @JsonIgnoreProperties(value = {"alunos", "atividade"}, allowSetters = true)
     private List<Turma> turma;
+
+    @Column(name = "fcm_token", length = 500)
+    private String fcmToken;
 
     public Long getId() {
         return id;
@@ -93,5 +98,13 @@ public class Usuario {
 
     public void setTurma(List<Turma> turma) {
         this.turma = turma;
+    }
+
+    public String getFcmToken() {
+        return fcmToken;
+    }
+
+    public void setFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;
     }
 }

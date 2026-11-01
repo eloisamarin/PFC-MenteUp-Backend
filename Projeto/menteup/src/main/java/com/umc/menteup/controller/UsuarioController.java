@@ -1,8 +1,12 @@
 package com.umc.menteup.controller;
 
+
 import java.util.List;
 import java.util.Optional;
 
+
+
+import com.umc.menteup.model.Codigo2FARequest;
 import com.umc.menteup.model.Usuario;
 import com.umc.menteup.model.UsuarioLogin;
 import com.umc.menteup.service.UsuarioService;
@@ -17,23 +21,21 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-
+import com.umc.menteup.dto.FcmTokenRequest;
 import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/usuarios")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
-
 public class UsuarioController {
+
     @Autowired
     private UsuarioService usuarioService;
 
     @GetMapping("/all")
     public ResponseEntity<List<Usuario>> getAll() {
-
         return ResponseEntity.ok(usuarioService.getAll());
-
     }
 
     @GetMapping("/{id}")
@@ -51,16 +53,46 @@ public class UsuarioController {
     }
 
     @PutMapping("/atualizar")
-    public ResponseEntity<Usuario> put(@Valid @RequestBody Usuario usuario) {
-        return usuarioService.atualizarUsuario(usuario)
+    public ResponseEntity<Usuario> put(
+            @Valid @RequestBody Usuario usuario,
+            Authentication authentication) {
+
+        return usuarioService.atualizarUsuario(usuario, authentication.getName())
                 .map(resposta -> ResponseEntity.status(HttpStatus.OK).body(resposta))
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
+    // Passo 1: valida usuário e senha e envia o código 2FA por e-mail
     @PostMapping("/logar")
     public ResponseEntity<UsuarioLogin> autenticar(@Valid @RequestBody Optional<UsuarioLogin> usuarioLogin) {
         return usuarioService.autenticarUsuario(usuarioLogin)
                 .map(resposta -> ResponseEntity.status(HttpStatus.OK).body(resposta))
                 .orElse(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+    }
+
+    // Passo 2: valida o código 2FA e devolve o token JWT
+    @PostMapping("/validar-2fa")
+    public ResponseEntity<UsuarioLogin> validarCodigo2FA(@RequestBody Codigo2FARequest request) {
+        return usuarioService.validarCodigo2FA(request.getUsuario(), request.getCodigo())
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+    }
+
+    @PostMapping("/fcm-token")
+    public ResponseEntity<?> registrarToken(
+            @Valid @RequestBody FcmTokenRequest request,
+            Authentication authentication) {
+
+        String email = authentication.getName();
+
+        boolean salvo = usuarioService.salvarFcmToken(email, request.getFcmToken());
+
+        if (!salvo) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("Usuário não encontrado.");
+        }
+
+        return ResponseEntity.ok("Token Firebase registrado com sucesso.");
     }
 }

@@ -23,8 +23,13 @@ public class SecurityConfig {
     private static final String[] PUBLIC_ENDPOINTS = {
             "/usuarios/logar",
             "/usuarios/cadastrar",
+            "/usuarios/validar-2fa",
             "/error/**",
-            "/", "/docs", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**"
+            "/",
+            "/docs",
+            "/swagger-ui/**",
+            "/v3/api-docs/**",
+            "/swagger-resources/**"
     };
 
     @Autowired
@@ -50,6 +55,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS).permitAll()
+                        .requestMatchers("/alunos/me/**").hasRole("ALUNO")
+                        .requestMatchers("/logs/**").hasRole("ADMINISTRADOR")
                         .anyRequest().authenticated()
                 )
 
