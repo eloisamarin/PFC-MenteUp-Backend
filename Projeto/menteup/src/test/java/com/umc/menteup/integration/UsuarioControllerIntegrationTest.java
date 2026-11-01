@@ -255,6 +255,92 @@ class UsuarioControllerIntegrationTest extends IntegracaoBase {
     }
 
     @Test
+    void atualizar_semId_deveRetornar400ComCodigo() {
+        // Arrange
+        Sessao sessao = novaSessao("ALUNO");
+        Map<String, Object> dados = buildUsuario("Sem Id", sessao.email(), "ALUNO");
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta = atualizar(sessao, dados);
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(resposta.getBody()).containsEntry("codigo", "ID_USUARIO_OBRIGATORIO");
+    }
+
+    @Test
+    void atualizar_outroUsuarioComoAluno_deveRetornar403ENaoAlterar() {
+        // Arrange
+        Sessao aluno = novaSessao("ALUNO");
+        Sessao vitima = novaSessao("ALUNO");
+        Map<String, Object> dados = buildUsuario("Alterado", vitima.email(), "ADMINISTRADOR");
+        dados.put("id", vitima.id());
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta = atualizar(aluno, dados);
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(resposta.getBody()).containsEntry("codigo", "SOMENTE_PROPRIO_USUARIO");
+        Usuario salvo = usuarioRepository.findById(vitima.id()).orElseThrow();
+        assertThat(salvo.getNomeUsuario()).isEqualTo("Usuário Teste");
+        assertThat(salvo.getTipoUsuario()).isEqualTo("ALUNO");
+    }
+
+    @Test
+    void atualizar_outroUsuarioComoProfessor_deveRetornar403ENaoAlterar() {
+        // Arrange
+        Sessao professor = novaSessao("PROFESSOR");
+        Sessao aluno = novaSessao("ALUNO");
+        Map<String, Object> dados = buildUsuario("Alterado", aluno.email(), "ALUNO");
+        dados.put("id", aluno.id());
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta = atualizar(professor, dados);
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(resposta.getBody()).containsEntry("codigo", "SOMENTE_PROPRIO_USUARIO");
+        assertThat(usuarioRepository.findById(aluno.id()).orElseThrow().getNomeUsuario())
+                .isEqualTo("Usuário Teste");
+    }
+
+    @Test
+    void atualizar_proprioTipoComoAluno_deveRetornar403ENaoPromover() {
+        // Arrange
+        Sessao aluno = novaSessao("ALUNO");
+        Map<String, Object> dados = buildUsuario("Quero Ser Professor", aluno.email(), "PROFESSOR");
+        dados.put("id", aluno.id());
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta = atualizar(aluno, dados);
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(resposta.getBody()).containsEntry("codigo", "ALTERACAO_DE_TIPO_NEGADA");
+        Usuario salvo = usuarioRepository.findById(aluno.id()).orElseThrow();
+        assertThat(salvo.getTipoUsuario()).isEqualTo("ALUNO");
+        assertThat(salvo.getNomeUsuario()).isEqualTo("Usuário Teste");
+    }
+
+    @Test
+    void atualizar_outroUsuarioComoAdministrador_deveRetornar200EAlterarOTipo() {
+        // Arrange
+        Sessao administrador = novaSessao("ADMINISTRADOR");
+        Sessao aluno = novaSessao("ALUNO");
+        Map<String, Object> dados = buildUsuario("Agora Professor", aluno.email(), "PROFESSOR");
+        dados.put("id", aluno.id());
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta = atualizar(administrador, dados);
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(resposta.getBody()).containsEntry("tipoUsuario", "PROFESSOR");
+        assertThat(usuarioRepository.findById(aluno.id()).orElseThrow().getTipoUsuario()).isEqualTo("PROFESSOR");
+    }
+
+    @Test
     void atualizar_semToken_deveRetornar401() {
         // Arrange
         Map<String, Object> dados = buildUsuario("Sem Token", emailUnico("semtoken"), "ALUNO");
@@ -410,6 +496,15 @@ class UsuarioControllerIntegrationTest extends IntegracaoBase {
         assertThat(resposta.getBody()).isEqualTo("Token Firebase registrado com sucesso.");
         assertThat(usuarioRepository.findById(sessao.id()).orElseThrow().getFcmToken())
                 .isEqualTo("token-do-dispositivo");
+    }
+
+    private ResponseEntity<Map<String, Object>> atualizar(Sessao sessao, Map<String, Object> dados) {
+        return client.put().uri(BASE_PATH + "/atualizar")
+                .header(HttpHeaders.AUTHORIZATION, sessao.token())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(dados)
+                .retrieve()
+                .toEntity(JSON);
     }
 
     @Test
