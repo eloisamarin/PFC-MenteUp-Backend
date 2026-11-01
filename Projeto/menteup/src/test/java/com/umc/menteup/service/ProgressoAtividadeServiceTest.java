@@ -45,6 +45,8 @@ class ProgressoAtividadeServiceTest {
     private ResultadoAtividadeRepository resultadoRepository;
     @Mock
     private LogSistemaService logSistemaService;
+    @Mock
+    private MatriculaService matriculaService;
 
     @InjectMocks
     private ProgressoAtividadeService service;

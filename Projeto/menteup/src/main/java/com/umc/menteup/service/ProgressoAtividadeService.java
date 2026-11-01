@@ -21,19 +21,22 @@ public class ProgressoAtividadeService {
     private final ProgressoAtividadeRepository progressoRepository;
     private final ResultadoAtividadeRepository resultadoRepository;
     private final LogSistemaService logSistemaService;
+    private final MatriculaService matriculaService;
 
     public ProgressoAtividadeService(
             UsuarioRepository usuarioRepository,
             AtividadeRepository atividadeRepository,
             ProgressoAtividadeRepository progressoRepository,
             ResultadoAtividadeRepository resultadoRepository,
-            LogSistemaService logSistemaService
+            LogSistemaService logSistemaService,
+            MatriculaService matriculaService
     ) {
         this.usuarioRepository = usuarioRepository;
         this.atividadeRepository = atividadeRepository;
         this.progressoRepository = progressoRepository;
         this.resultadoRepository = resultadoRepository;
         this.logSistemaService = logSistemaService;
+        this.matriculaService = matriculaService;
     }
 
     @Transactional
@@ -59,6 +62,9 @@ public class ProgressoAtividadeService {
                         "Atividade não encontrada."
                 )
         );
+
+        matriculaService.exigirMatricula(atividade, usuario);
+
         if (resultadoRepository.existsByUsuario_IdAndAtividade_Id(
                 usuario.getId(),
                 atividadeId
@@ -68,6 +74,9 @@ public class ProgressoAtividadeService {
                     "Esta atividade não está disponível para respostas."
             );
         }
+
+        exigirAtividadeAberta(atividade);
+
         Pergunta pergunta = atividade.getPerguntas()
                 .stream()
                 .filter(p -> p.getId().equals(request.perguntaId()))
@@ -146,6 +155,21 @@ public class ProgressoAtividadeService {
         );
 
         return montarResponse(progresso, atividade);
+    }
+
+    private void exigirAtividadeAberta(Atividade atividade) {
+        switch (atividade.getStatus()) {
+            case PENDENTE -> throw ApiException.naoEncontrado(
+                    "ATIVIDADE_NAO_ENCONTRADA",
+                    "Atividade não encontrada."
+            );
+            case CONCLUIDO -> throw ApiException.conflito(
+                    "ATIVIDADE_ENCERRADA",
+                    "Esta atividade foi encerrada pelo professor e não aceita mais respostas."
+            );
+            case EM_ANDAMENTO -> {
+            }
+        }
     }
 
     private ProgressoAtividadeResponse montarResponse(
