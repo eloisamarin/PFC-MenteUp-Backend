@@ -6,7 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -68,6 +70,17 @@ public class UsuarioControllerTest {
 
     private String token;
 
+    // A senha não é serializada a partir da entidade, então o corpo da requisição é montado à mão
+    private static Map<String, Object> corpo(Usuario usuario, String senha) {
+        Map<String, Object> corpo = new HashMap<>();
+        corpo.put("id", usuario.getId());
+        corpo.put("nomeUsuario", usuario.getNomeUsuario());
+        corpo.put("usuario", usuario.getUsuario());
+        corpo.put("tipoUsuario", usuario.getTipoUsuario());
+        corpo.put("senha", senha);
+        return corpo;
+    }
+
     @BeforeAll
     void start() {
         codigo2FARepository.deleteAll();
@@ -88,7 +101,7 @@ public class UsuarioControllerTest {
         Usuario usuario = TestBuilder.criarUsuario(null, "Paulo Antunes", "paulo_antunes@email.com.br", "12345678");
 
         // When
-        HttpEntity<Usuario> requisicao = new HttpEntity<>(usuario);
+        HttpEntity<Map<String, Object>> requisicao = new HttpEntity<>(corpo(usuario, "12345678"));
         ResponseEntity<Usuario> resposta = testRestTemplate.exchange(
                 BASE_URL + "/cadastrar", HttpMethod.POST, requisicao, Usuario.class);
 
@@ -110,7 +123,7 @@ public class UsuarioControllerTest {
         usuarioService.cadastrarUsuario(usuario);
 
         // When
-        HttpEntity<Usuario> requisicao = new HttpEntity<>(usuario);
+        HttpEntity<Map<String, Object>> requisicao = new HttpEntity<>(corpo(usuario, "12345678"));
         ResponseEntity<Usuario> resposta = testRestTemplate.exchange(
                 BASE_URL + "/cadastrar", HttpMethod.POST, requisicao, Usuario.class);
 
@@ -131,7 +144,8 @@ public class UsuarioControllerTest {
                 "ju_ramos@email.com.br", "12345678");
 
         // When
-        HttpEntity<Usuario> requisicao = JwtHelper.criarRequisicaoComToken(usuarioUpdate, token);
+        HttpEntity<Map<String, Object>> requisicao =
+                JwtHelper.criarRequisicaoComToken(corpo(usuarioUpdate, "12345678"), token);
         ResponseEntity<Usuario> resposta = testRestTemplate.exchange(
                 BASE_URL + "/atualizar", HttpMethod.PUT, requisicao, Usuario.class);
 

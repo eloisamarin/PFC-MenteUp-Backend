@@ -231,6 +231,238 @@ class DesafioControllerIntegrationTest extends IntegracaoBase {
         assertThat(resposta.getBody()).containsEntry("codigo", "DESAFIO_NAO_ENCONTRADO");
     }
 
+    // -------------------------------------------------------------------- Editar
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void buscarParaEdicao_comoProfessor_deveRetornarDadosComGabarito() {
+        // Arrange
+        Cenario c = cenario(2);
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta = buscarParaEdicao(c.professor(), c.desafioId());
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(((Number) resposta.getBody().get("turmaId")).longValue()).isEqualTo(c.turmaId());
+        List<Map<String, Object>> perguntas = (List<Map<String, Object>>) resposta.getBody().get("perguntas");
+        assertThat(perguntas).hasSize(2);
+        assertThat(perguntas.get(0)).containsEntry("enunciado", "Pergunta 1")
+                .containsEntry("tempoSegundos", 30);
+        assertThat((List<Map<String, Object>>) perguntas.get(0).get("alternativas")).containsExactly(
+                Map.of("texto", "Certa 1", "correta", true),
+                Map.of("texto", "Errada 1", "correta", false));
+    }
+
+    @Test
+    void buscarParaEdicao_comoAluno_deveRetornar403SemExporOGabarito() {
+        // Arrange
+        Cenario c = cenario(1);
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta = buscarParaEdicao(c.aluno(), c.desafioId());
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(resposta.getBody()).containsEntry("codigo", "SOMENTE_PROFESSOR_OU_ADMINISTRADOR")
+                .doesNotContainKey("perguntas");
+    }
+
+    @Test
+    void buscarParaEdicao_desafioIniciado_deveRetornar409ComCodigo() {
+        // Arrange
+        Cenario c = cenario(1);
+        iniciar(c.professor(), c.desafioId());
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta = buscarParaEdicao(c.professor(), c.desafioId());
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(resposta.getBody()).containsEntry("codigo", "DESAFIO_NAO_EDITAVEL");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void atualizar_comoProfessor_deveRetornar200ESubstituirDadosEPerguntas() {
+        // Arrange
+        Cenario c = cenario(1);
+        Long outraTurma = criarTurma(c.professor());
+        Map<String, Object> alteracao = buildDesafio(outraTurma, 3);
+        alteracao.put("titulo", "Título editado");
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta = atualizar(c.professor(), c.desafioId(), alteracao);
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(resposta.getBody()).containsEntry("titulo", "Título editado")
+                .containsEntry("status", "AGUARDANDO")
+                .containsEntry("totalPerguntas", 3);
+        assertThat(id((Map<String, Object>) resposta.getBody().get("turma"))).isEqualTo(outraTurma);
+
+        Map<String, Object> gravado = buscarParaEdicao(c.professor(), c.desafioId()).getBody();
+        assertThat((List<Map<String, Object>>) gravado.get("perguntas"))
+                .extracting(pergunta -> pergunta.get("enunciado"))
+                .containsExactly("Pergunta 1", "Pergunta 2", "Pergunta 3");
+    }
+
+    @Test
+    void atualizar_comoAdministrador_deveRetornar200() {
+        // Arrange
+        Cenario c = cenario(1);
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta =
+                atualizar(novaSessao("ADMINISTRADOR"), c.desafioId(), buildDesafio(c.turmaId(), 1));
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void atualizar_eDepoisIniciar_deveMostrarAsPerguntasNovas() {
+        // Arrange
+        Cenario c = cenario(1);
+        Map<String, Object> alteracao = buildDesafio(c.turmaId(), 2);
+        atualizar(c.professor(), c.desafioId(), alteracao);
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta = iniciar(c.professor(), c.desafioId());
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(resposta.getBody()).containsEntry("totalPerguntas", 2);
+    }
+
+    @Test
+    void atualizar_comoAluno_deveRetornar403ENaoAlterar() {
+        // Arrange
+        Cenario c = cenario(1);
+        String tituloOriginal = desafioRepository.findById(c.desafioId()).orElseThrow().getTitulo();
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta =
+                atualizar(c.aluno(), c.desafioId(), buildDesafio(c.turmaId(), 1));
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(resposta.getBody()).containsEntry("codigo", "SOMENTE_PROFESSOR_OU_ADMINISTRADOR");
+        assertThat(desafioRepository.findById(c.desafioId()).orElseThrow().getTitulo()).isEqualTo(tituloOriginal);
+    }
+
+    @Test
+    void atualizar_semToken_deveRetornar401() {
+        // Act
+        ResponseEntity<Void> resposta = client.put().uri(BASE_PATH + "/{id}", 1L)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(buildDesafio(1L, 1))
+                .retrieve()
+                .toBodilessEntity();
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void atualizar_desafioEmAndamentoComRespostas_deveRetornar409EManterRespostasEDados() {
+        // Arrange
+        Cenario c = cenario(2);
+        Map<String, Object> pergunta = perguntaDe(iniciar(c.professor(), c.desafioId()).getBody());
+        responder(c.aluno(), c.desafioId(), id(pergunta), alternativa(pergunta, 0));
+        String tituloOriginal = desafioRepository.findById(c.desafioId()).orElseThrow().getTitulo();
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta =
+                atualizar(c.professor(), c.desafioId(), buildDesafio(c.turmaId(), 1));
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(resposta.getBody()).containsEntry("codigo", "DESAFIO_NAO_EDITAVEL");
+        assertThat(desafioRepository.findById(c.desafioId()).orElseThrow().getTitulo()).isEqualTo(tituloOriginal);
+        assertThat(respostaRepository.buscarTodasDoDesafio(c.desafioId())).hasSize(1);
+    }
+
+    @Test
+    void atualizar_desafioEncerrado_deveRetornar409() {
+        // Arrange
+        Cenario c = cenario(1);
+        iniciar(c.professor(), c.desafioId());
+        esgotarTempo(c.desafioId());
+        avancar(c.professor(), c.desafioId());
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta =
+                atualizar(c.professor(), c.desafioId(), buildDesafio(c.turmaId(), 1));
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(resposta.getBody()).containsEntry("codigo", "DESAFIO_NAO_EDITAVEL");
+    }
+
+    @Test
+    void atualizar_comIdInexistente_deveRetornar404ComCodigo() {
+        // Arrange
+        Cenario c = cenario(1);
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta =
+                atualizar(c.professor(), Long.MAX_VALUE, buildDesafio(c.turmaId(), 1));
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(resposta.getBody()).containsEntry("codigo", "DESAFIO_NAO_ENCONTRADO");
+    }
+
+    @Test
+    void atualizar_comTurmaInexistente_deveRetornar404ComCodigo() {
+        // Arrange
+        Cenario c = cenario(1);
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta =
+                atualizar(c.professor(), c.desafioId(), buildDesafio(Long.MAX_VALUE, 1));
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(resposta.getBody()).containsEntry("codigo", "TURMA_NAO_ENCONTRADA");
+    }
+
+    @Test
+    void atualizar_semPerguntas_deveRetornar400ComCodigo() {
+        // Arrange
+        Cenario c = cenario(1);
+        Map<String, Object> alteracao = buildDesafio(c.turmaId(), 1);
+        alteracao.put("perguntas", List.of());
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta = atualizar(c.professor(), c.desafioId(), alteracao);
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(resposta.getBody()).containsEntry("codigo", "VALIDACAO_FALHOU");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void atualizar_comDuasAlternativasCorretas_deveRetornar400EManterAsPerguntasOriginais() {
+        // Arrange
+        Cenario c = cenario(2);
+        Map<String, Object> alteracao = buildDesafio(c.turmaId(), 1);
+        ((List<Map<String, Object>>) alteracao.get("perguntas")).get(0).put("alternativas", List.of(
+                Map.of("texto", "Certa", "correta", true),
+                Map.of("texto", "Também certa", "correta", true)));
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta = atualizar(c.professor(), c.desafioId(), alteracao);
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(resposta.getBody()).containsEntry("codigo", "ALTERNATIVA_CORRETA_INVALIDA");
+        assertThat((List<Object>) buscarParaEdicao(c.professor(), c.desafioId()).getBody().get("perguntas"))
+                .hasSize(2);
+    }
+
     // ------------------------------------------------------------------- Listar
 
     @Test
@@ -631,6 +863,22 @@ class DesafioControllerIntegrationTest extends IntegracaoBase {
 
     private ResponseEntity<Map<String, Object>> criar(Sessao sessao, Map<String, Object> desafio) {
         return client.post().uri(BASE_PATH)
+                .header(HttpHeaders.AUTHORIZATION, sessao.token())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(desafio)
+                .retrieve()
+                .toEntity(JSON);
+    }
+
+    private ResponseEntity<Map<String, Object>> buscarParaEdicao(Sessao sessao, Long desafioId) {
+        return client.get().uri(BASE_PATH + "/{id}/edicao", desafioId)
+                .header(HttpHeaders.AUTHORIZATION, sessao.token())
+                .retrieve()
+                .toEntity(JSON);
+    }
+
+    private ResponseEntity<Map<String, Object>> atualizar(Sessao sessao, Long desafioId, Map<String, Object> desafio) {
+        return client.put().uri(BASE_PATH + "/{id}", desafioId)
                 .header(HttpHeaders.AUTHORIZATION, sessao.token())
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(desafio)
