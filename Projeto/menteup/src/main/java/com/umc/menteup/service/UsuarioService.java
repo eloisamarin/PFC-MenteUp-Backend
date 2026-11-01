@@ -1,6 +1,8 @@
 package com.umc.menteup.service;
 
+import com.umc.menteup.exception.ApiException;
 import com.umc.menteup.model.Codigo2FA;
+import com.umc.menteup.model.TipoUsuario;
 import com.umc.menteup.model.Usuario;
 import com.umc.menteup.model.UsuarioLogin;
 import com.umc.menteup.repository.Codigo2FARepository;
@@ -63,10 +65,34 @@ public class UsuarioService {
         return Optional.of(usuarioRepository.save(usuario));
     }
 
-    public Optional<Usuario> atualizarUsuario(Usuario usuario) {
+    public Optional<Usuario> atualizarUsuario(Usuario usuario, String username) {
 
-        if (!usuarioRepository.findById(usuario.getId()).isPresent()) {
+        if (usuario.getId() == null) {
+            throw ApiException.requisicaoInvalida(
+                    "ID_USUARIO_OBRIGATORIO", "O id do usuário é obrigatório para atualizar.");
+        }
+
+        Usuario autor = usuarioRepository.findByUsuario(username)
+                .orElseThrow(() -> ApiException.naoAutenticado(
+                        "USUARIO_NAO_ENCONTRADO", "Usuário não encontrado."));
+
+        boolean administrador = TipoUsuario.ehAdministrador(autor);
+
+        if (!administrador && !autor.getId().equals(usuario.getId())) {
+            throw ApiException.proibido(
+                    "SOMENTE_PROPRIO_USUARIO", "Você só pode alterar os seus próprios dados.");
+        }
+
+        Optional<Usuario> alvo = usuarioRepository.findById(usuario.getId());
+
+        if (alvo.isEmpty()) {
             return Optional.empty();
+        }
+
+        // Só o administrador muda o perfil: sem isso, um aluno poderia se promover a professor
+        if (!administrador && !alvo.get().getTipoUsuario().equalsIgnoreCase(usuario.getTipoUsuario())) {
+            throw ApiException.proibido(
+                    "ALTERACAO_DE_TIPO_NEGADA", "Somente administradores podem alterar o tipo de usuário.");
         }
 
         Optional<Usuario> usuarioExistente = usuarioRepository.findByUsuario(usuario.getUsuario());
