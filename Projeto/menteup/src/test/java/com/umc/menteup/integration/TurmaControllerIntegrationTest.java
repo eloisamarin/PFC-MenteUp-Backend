@@ -320,6 +320,93 @@ class TurmaControllerIntegrationTest extends IntegracaoBase {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    void removerAluno_comoProfessor_deveRetornar204ERemoverSoEsseAluno() {
+        // Arrange
+        Sessao professor = novaSessao("PROFESSOR");
+        Sessao aluno = novaSessao("ALUNO");
+        Sessao colega = novaSessao("ALUNO");
+        Long turmaId = criarTurma(professor);
+        vincularAluno(professor, turmaId, aluno.id());
+        vincularAluno(professor, turmaId, colega.id());
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta = remover(professor, turmaId, aluno.id());
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        assertThat(turmaRepository.contarMatricula(turmaId, aluno.id())).isZero();
+
+        List<Map<String, Object>> alunos =
+                (List<Map<String, Object>>) buscar(professor, turmaId).getBody().get("alunos");
+        assertThat(alunos).extracting(matriculado -> matriculado.get("usuario")).containsExactly(colega.email());
+    }
+
+    @Test
+    void removerAluno_comoAdministrador_deveRetornar204() {
+        // Arrange
+        Sessao professor = novaSessao("PROFESSOR");
+        Sessao administrador = novaSessao("ADMINISTRADOR");
+        Sessao aluno = novaSessao("ALUNO");
+        Long turmaId = criarTurma(professor);
+        vincularAluno(professor, turmaId, aluno.id());
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta = remover(administrador, turmaId, aluno.id());
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        assertThat(turmaRepository.contarMatricula(turmaId, aluno.id())).isZero();
+    }
+
+    @Test
+    void removerAluno_foraDaTurma_deveRetornar404ComCodigo() {
+        // Arrange
+        Sessao professor = novaSessao("PROFESSOR");
+        Sessao aluno = novaSessao("ALUNO");
+        Long turmaId = criarTurma(professor);
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta = remover(professor, turmaId, aluno.id());
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(resposta.getBody()).containsEntry("codigo", "ALUNO_NAO_VINCULADO");
+    }
+
+    @Test
+    void removerAluno_comTurmaInexistente_deveRetornar404ComCodigo() {
+        // Arrange
+        Sessao professor = novaSessao("PROFESSOR");
+        Sessao aluno = novaSessao("ALUNO");
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta = remover(professor, Long.MAX_VALUE, aluno.id());
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(resposta.getBody()).containsEntry("codigo", "TURMA_NAO_ENCONTRADA");
+    }
+
+    @Test
+    void removerAluno_comoAluno_deveRetornar403EManterAMatricula() {
+        // Arrange
+        Sessao professor = novaSessao("PROFESSOR");
+        Sessao aluno = novaSessao("ALUNO");
+        Sessao colega = novaSessao("ALUNO");
+        Long turmaId = criarTurma(professor);
+        vincularAluno(professor, turmaId, colega.id());
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta = remover(aluno, turmaId, colega.id());
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(resposta.getBody()).containsEntry("codigo", "SOMENTE_PROFESSOR_OU_ADMINISTRADOR");
+        assertThat(turmaRepository.contarMatricula(turmaId, colega.id())).isEqualTo(1);
+    }
+
+    @Test
     void atualizar_comoProfessor_deveRetornar200EManterOsAlunos() {
         // Arrange
         Sessao professor = novaSessao("PROFESSOR");
@@ -473,6 +560,13 @@ class TurmaControllerIntegrationTest extends IntegracaoBase {
 
     private ResponseEntity<Map<String, Object>> vincular(Sessao sessao, Long turmaId, Long alunoId) {
         return client.post().uri(BASE_PATH + "/{turmaId}/alunos/{alunoId}", turmaId, alunoId)
+                .header(HttpHeaders.AUTHORIZATION, sessao.token())
+                .retrieve()
+                .toEntity(JSON);
+    }
+
+    private ResponseEntity<Map<String, Object>> remover(Sessao sessao, Long turmaId, Long alunoId) {
+        return client.delete().uri(BASE_PATH + "/{turmaId}/alunos/{alunoId}", turmaId, alunoId)
                 .header(HttpHeaders.AUTHORIZATION, sessao.token())
                 .retrieve()
                 .toEntity(JSON);
