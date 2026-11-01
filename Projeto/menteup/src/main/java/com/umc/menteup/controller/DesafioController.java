@@ -36,6 +36,25 @@ public class DesafioController {
                 .body(desafioService.criar(request, authentication.getName()));
     }
 
+    // Somente PROFESSOR ou ADMINISTRADOR consulta o desafio, com gabarito, para editar
+    @GetMapping("/{id}/edicao")
+    public ResponseEntity<DesafioEdicaoResponse> buscarParaEdicao(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        return ResponseEntity.ok(desafioService.buscarParaEdicao(id, authentication.getName()));
+    }
+
+    // Somente PROFESSOR ou ADMINISTRADOR edita, e apenas antes de iniciar o desafio
+    @PutMapping("/{id}")
+    public ResponseEntity<DesafioResponse> atualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody CriarDesafioRequest request,
+            Authentication authentication) {
+
+        return ResponseEntity.ok(desafioService.atualizar(id, request, authentication.getName()));
+    }
+
     // Somente PROFESSOR ou ADMINISTRADOR exclui desafio
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
