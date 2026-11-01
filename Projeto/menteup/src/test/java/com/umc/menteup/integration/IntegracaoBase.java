@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,14 +33,13 @@ import com.umc.menteup.service.EmailService;
  */
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "Banco da Integracao" /* Banco  (menteup_integracao) e dados únicos por execução (System.nanoTime()):
-        * nenhum teste depende de outro nem da ordem. Só o EmailService é mockado, por ser externo.
- */
+        properties = "spring.datasource.url=jdbc:h2:mem:menteup_integracao;MODE=PostgreSQL;DB_CLOSE_DELAY=-1"
 )
 @ActiveProfiles("test")
 abstract class IntegracaoBase {
 
-    protected static final String SENHA = ""; /* Inserir a senha */
+    // Gerada a cada execução: é só de teste e não deixa nenhuma senha fixa no repositório
+    protected static final String SENHA = UUID.randomUUID().toString();
 
     protected static final ParameterizedTypeReference<Map<String, Object>> JSON =
             new ParameterizedTypeReference<>() {
