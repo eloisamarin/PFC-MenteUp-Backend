@@ -70,6 +70,8 @@ public class AtividadeController {
             @Valid @RequestBody Atividade atividade,
             Authentication authentication) {
 
+        exigirTurmaInformada(atividade);
+
         if (turmaRepository.existsById(atividade.getTurma().getId())) {
 
             atividade.setId(null);
@@ -106,6 +108,16 @@ public class AtividadeController {
     public ResponseEntity<Atividade> put(
             @Valid @RequestBody Atividade atividade,
             Authentication authentication) {
+
+        if (atividade.getId() == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "O id da atividade é obrigatório para atualizar.",
+                    null
+            );
+        }
+
+        exigirTurmaInformada(atividade);
 
         Atividade existente = atividadeRepository.findById(atividade.getId())
                 .orElseThrow(() ->
@@ -202,5 +214,15 @@ public class AtividadeController {
                         "titulo", atividade.getTitulo()
                 )
         );
+    }
+
+    private void exigirTurmaInformada(Atividade atividade) {
+        if (atividade.getTurma() == null || atividade.getTurma().getId() == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "A turma da atividade é obrigatória.",
+                    null
+            );
+        }
     }
 }

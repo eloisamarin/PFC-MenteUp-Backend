@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.umc.menteup.model.Turma;
 import com.umc.menteup.model.Usuario;
@@ -22,6 +23,7 @@ import com.umc.menteup.util.TestBuilder;
  * depende dos dados de outro.
  */
 @DataJpaTest
+@ActiveProfiles("test")
 class TurmaRepositoryTest {
 
     @Autowired
