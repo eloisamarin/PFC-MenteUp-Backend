@@ -79,6 +79,17 @@ public class TurmaController {
         turmaService.vincularAluno(turmaId, alunoId, authentication.getName());
     }
 
+    // Somente PROFESSOR ou ADMINISTRADOR remove alunos de Turmas
+    @DeleteMapping("/{turmaId}/alunos/{alunoId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removerAluno(
+            @PathVariable Long turmaId,
+            @PathVariable Long alunoId,
+            Authentication authentication) {
+
+        turmaService.removerAluno(turmaId, alunoId, authentication.getName());
+    }
+
     // Somente PROFESSOR ou ADMINISTRADOR realiza atualizar a Turma
     @PutMapping
     public ResponseEntity<Turma> put(
