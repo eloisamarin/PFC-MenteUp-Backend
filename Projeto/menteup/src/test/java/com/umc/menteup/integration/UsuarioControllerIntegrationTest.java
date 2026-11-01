@@ -31,7 +31,7 @@ class UsuarioControllerIntegrationTest extends IntegracaoBase {
     private PasswordEncoder passwordEncoder;
 
     @Test
-    void cadastrar_comDadosValidos_deveRetornar201ComIdESenhaCriptografada() {
+    void cadastrar_comDadosValidos_deveRetornar201ComIdEGravarSenhaCriptografada() {
         // Arrange
         String email = emailUnico("novo");
 
@@ -47,7 +47,8 @@ class UsuarioControllerIntegrationTest extends IntegracaoBase {
         assertThat(resposta.getHeaders().getContentType().isCompatibleWith(MediaType.APPLICATION_JSON)).isTrue();
         assertThat(resposta.getBody()).containsEntry("nomeUsuario", "Paulo Antunes")
                 .containsEntry("usuario", email)
-                .containsEntry("tipoUsuario", "ALUNO");
+                .containsEntry("tipoUsuario", "ALUNO")
+                .doesNotContainKey("senha");
 
         Usuario salvo = usuarioRepository.findById(id(resposta.getBody())).orElseThrow();
         assertThat(salvo.getUsuario()).isEqualTo(email);
