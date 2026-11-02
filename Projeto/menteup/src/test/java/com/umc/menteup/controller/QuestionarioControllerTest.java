@@ -32,6 +32,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -82,20 +83,50 @@ class QuestionarioControllerTest {
     }
 
     @Test
-    @DisplayName("a resposta nunca expõe o gabarito (campo 'correta' das alternativas)")
-    void naoVazaGabarito() throws Exception {
+    @DisplayName("a resposta é do professor e traz o gabarito (campo 'correta' das alternativas)")
+    void devolveGabaritoAoProfessor() throws Exception {
         when(questionarioService.cadastrarQuesitonario(eq(10L), any(QuestionarioRequest.class), eq(USERNAME)))
                 .thenReturn(atividadeComUmaPergunta());
 
-        MvcResult resultado = mockMvc.perform(post(URL)
+        mockMvc.perform(post(URL)
                         .principal(autenticado)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(QUESTIONARIO_VALIDO))
                 .andExpect(status().isOk())
-                .andReturn();
+                .andExpect(jsonPath("$.perguntas[0].alternativas[0].correta").value(false))
+                .andExpect(jsonPath("$.perguntas[0].alternativas[1].correta").value(true))
+                .andExpect(jsonPath("$.perguntas[0].alternativas[0].ordem").doesNotExist());
+    }
 
-        assertFalse(resultado.getResponse().getContentAsString().contains("correta"),
-                "o JSON de resposta não pode conter o campo 'correta'");
+    @Test
+    @DisplayName("PUT 200: substitui as questões e devolve o questionário com gabarito")
+    void substituiQuestionario() throws Exception {
+        when(questionarioService.substituirQuestionario(eq(10L), any(QuestionarioRequest.class), eq(USERNAME)))
+                .thenReturn(atividadeComUmaPergunta());
+
+        mockMvc.perform(put(URL)
+                        .principal(autenticado)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(QUESTIONARIO_VALIDO))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.perguntas.length()").value(1))
+                .andExpect(jsonPath("$.perguntas[0].alternativas[1].correta").value(true));
+
+        verify(questionarioService).substituirQuestionario(eq(10L), any(QuestionarioRequest.class), eq(USERNAME));
+    }
+
+    @Test
+    @DisplayName("PUT 409: propaga ATIVIDADE_COM_RESPOSTAS do service")
+    void substituirComRespostas() throws Exception {
+        when(questionarioService.substituirQuestionario(eq(10L), any(QuestionarioRequest.class), eq(USERNAME)))
+                .thenThrow(ApiException.conflito("ATIVIDADE_COM_RESPOSTAS", "Alunos já responderam."));
+
+        mockMvc.perform(put(URL)
+                        .principal(autenticado)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(QUESTIONARIO_VALIDO))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.codigo").value("ATIVIDADE_COM_RESPOSTAS"));
     }
 
     @Test

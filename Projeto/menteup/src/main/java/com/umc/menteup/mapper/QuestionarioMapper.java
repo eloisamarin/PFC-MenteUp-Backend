@@ -42,6 +42,27 @@ public final class QuestionarioMapper {
                 .toList();
     }
 
+    public static List<PerguntaResponse> toPerguntasComGabarito(Atividade atividade) {
+        return atividade.getPerguntas().stream()
+                .map(pergunta -> new PerguntaResponse(
+                        pergunta.getId(),
+                        pergunta.getEnunciado(),
+                        pergunta.getAlternativas().stream()
+                                .map(alternativa -> new AlternativaResponse(
+                                        alternativa.getId(),
+                                        alternativa.getTexto(),
+                                        alternativa.getCorreta(),
+                                        alternativa.getOrdem()
+                                ))
+                                .toList()
+                ))
+                .toList();
+    }
+
+    public static QuestionarioResponse toQuestionarioProfessor(Atividade atividade) {
+        return toQuestionario(atividade, toPerguntasComGabarito(atividade), null, null);
+    }
+
     public static ProgressoAtividadeResponse toProgresso(
             com.umc.menteup.model.ProgressoAtividade progresso,
             int totalQuestoes

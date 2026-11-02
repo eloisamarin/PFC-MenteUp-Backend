@@ -6,7 +6,10 @@ import com.umc.menteup.dto.QuestionarioRequest;
 import com.umc.menteup.model.*;
 import com.umc.menteup.template.QuizTemplate;
 import com.umc.menteup.template.TemplateResolver;
+import com.umc.menteup.exception.ApiException;
 import com.umc.menteup.repository.AtividadeRepository;
+import com.umc.menteup.repository.ProgressoAtividadeRepository;
+import com.umc.menteup.repository.ResultadoAtividadeRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +37,8 @@ class QuestionarioServiceTest {
 
     @Mock private AtividadeRepository atividadeRepository;
     @Mock private LogSistemaService logSistemaService;
+    @Mock private ProgressoAtividadeRepository progressoRepository;
+    @Mock private ResultadoAtividadeRepository resultadoRepository;
 
     @Spy private TemplateResolver templateResolver = new TemplateResolver(List.of(new QuizTemplate()));
 
@@ -157,6 +162,99 @@ class QuestionarioServiceTest {
 
         assertEquals("banco fora do ar", ex.getMessage());
         verifyNoInteractions(logSistemaService);
+    }
+
+    @Test
+    @DisplayName("substituir: apaga as questões antigas, cria as novas e registra os logs")
+    void substituiQuestoes() {
+        Atividade atividade = atividadeVazia();
+        Pergunta antiga = new Pergunta();
+        antiga.setId(1L);
+        antiga.setEnunciado("Pergunta antiga");
+        antiga.setAtividade(atividade);
+        atividade.getPerguntas().add(antiga);
+
+        when(atividadeRepository.findById(ATIVIDADE_ID)).thenReturn(Optional.of(atividade));
+        when(atividadeRepository.save(any(Atividade.class))).thenAnswer(inv -> simularIdentity(inv.getArgument(0)));
+
+        Atividade salva = service.substituirQuestionario(ATIVIDADE_ID, requestComDuasPerguntas(), USERNAME);
+
+        assertEquals(2, salva.getPerguntas().size());
+        assertFalse(salva.getPerguntas().contains(antiga));
+        assertEquals("Quanto e 1 + 1?", salva.getPerguntas().get(0).getEnunciado());
+
+        verify(logSistemaService).registrarPorUsername(
+                eq(USERNAME), eq(AcaoLog.EDITAR_ATIVIDADE), eq(EntidadeLog.ATIVIDADE),
+                eq(ATIVIDADE_ID), eq(ResultadoLog.SUCESSO), anyString(), any());
+        verify(logSistemaService, times(2)).registrarPorUsername(
+                any(), eq(AcaoLog.CRIAR_QUESTAO), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("substituir: permite trocar o tipo da atividade")
+    void substituirTrocaOTipo() {
+        Atividade atividade = atividadeVazia();
+        Pergunta antiga = new Pergunta();
+        antiga.setId(1L);
+        antiga.setAtividade(atividade);
+        atividade.getPerguntas().add(antiga);
+
+        when(atividadeRepository.findById(ATIVIDADE_ID)).thenReturn(Optional.of(atividade));
+        when(atividadeRepository.save(any(Atividade.class))).thenAnswer(inv -> simularIdentity(inv.getArgument(0)));
+
+        QuestionarioRequest verdadeiroFalso = new QuestionarioRequest(TipoAtividade.VERDADEIRO_FALSO, List.of(
+                new PerguntaRequest("O Sol é uma estrela.", List.of(
+                        new AlternativaRequest("Verdadeiro", true),
+                        new AlternativaRequest("Falso", false)
+                ))
+        ));
+        TemplateResolver comVerdadeiroFalso = new TemplateResolver(List.of(
+                new QuizTemplate(), new com.umc.menteup.template.VerdadeiroFalsoTemplate()));
+        QuestionarioService servico = new QuestionarioService(
+                atividadeRepository, logSistemaService, comVerdadeiroFalso, progressoRepository, resultadoRepository);
+
+        Atividade salva = servico.substituirQuestionario(ATIVIDADE_ID, verdadeiroFalso, USERNAME);
+
+        assertEquals(TipoAtividade.VERDADEIRO_FALSO, salva.getTipo());
+        assertEquals(1, salva.getPerguntas().size());
+    }
+
+    @Test
+    @DisplayName("substituir: 409 ATIVIDADE_COM_RESPOSTAS quando algum aluno já começou")
+    void substituirComProgresso() {
+        when(atividadeRepository.findById(ATIVIDADE_ID)).thenReturn(Optional.of(atividadeVazia()));
+        when(progressoRepository.existsByAtividade_Id(ATIVIDADE_ID)).thenReturn(true);
+
+        ApiException ex = assertThrows(ApiException.class,
+                () -> service.substituirQuestionario(ATIVIDADE_ID, requestComDuasPerguntas(), USERNAME));
+
+        assertEquals("ATIVIDADE_COM_RESPOSTAS", ex.getCodigo());
+        verify(atividadeRepository, never()).save(any());
+        verifyNoInteractions(logSistemaService);
+    }
+
+    @Test
+    @DisplayName("substituir: 409 ATIVIDADE_COM_RESPOSTAS quando algum aluno já concluiu")
+    void substituirComResultado() {
+        when(atividadeRepository.findById(ATIVIDADE_ID)).thenReturn(Optional.of(atividadeVazia()));
+        when(resultadoRepository.existsByAtividade_Id(ATIVIDADE_ID)).thenReturn(true);
+
+        ApiException ex = assertThrows(ApiException.class,
+                () -> service.substituirQuestionario(ATIVIDADE_ID, requestComDuasPerguntas(), USERNAME));
+
+        assertEquals("ATIVIDADE_COM_RESPOSTAS", ex.getCodigo());
+        verify(atividadeRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("substituir: 404 ATIVIDADE_NAO_ENCONTRADA quando a atividade não existe")
+    void substituirAtividadeInexistente() {
+        when(atividadeRepository.findById(ATIVIDADE_ID)).thenReturn(Optional.empty());
+
+        ApiException ex = assertThrows(ApiException.class,
+                () -> service.substituirQuestionario(ATIVIDADE_ID, requestComDuasPerguntas(), USERNAME));
+
+        assertEquals("ATIVIDADE_NAO_ENCONTRADA", ex.getCodigo());
     }
 
     private static Atividade atividadeVazia() {

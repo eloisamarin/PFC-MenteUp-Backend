@@ -36,8 +36,25 @@ public class QuestionarioController {
                 );
 
         QuestionarioResponse response =
-                QuestionarioMapper.toQuestionario(atividade, null, null);
+                QuestionarioMapper.toQuestionarioProfessor(atividade);
 
         return ResponseEntity.ok(response);
+    }
+
+    /// Substitui as questões da atividade
+    @PutMapping("/{atividadeId}/questionario")
+    public ResponseEntity<QuestionarioResponse> substituirQuestionario(
+            @PathVariable Long atividadeId,
+            @Valid @RequestBody QuestionarioRequest request,
+            Authentication authentication
+    ) {
+        Atividade atividade =
+                questionarioService.substituirQuestionario(
+                        atividadeId,
+                        request,
+                        authentication.getName()
+                );
+
+        return ResponseEntity.ok(QuestionarioMapper.toQuestionarioProfessor(atividade));
     }
 }

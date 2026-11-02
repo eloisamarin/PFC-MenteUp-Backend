@@ -243,6 +243,25 @@ class AtividadeControllerIntegrationTest extends IntegracaoBase {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    void buscarPorId_comProfessor_deveRetornar200ComGabarito() {
+        // Arrange
+        Sessao professor = novaSessao("PROFESSOR");
+        Long turmaId = criarTurma(professor);
+        Long atividadeId = criarAtividade(professor, turmaId, "EM_ANDAMENTO");
+        cadastrarQuestionario(professor, atividadeId, 1);
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta = buscarAtividade(professor, atividadeId);
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.OK);
+        List<Map<String, Object>> perguntas = (List<Map<String, Object>>) resposta.getBody().get("perguntas");
+        List<Map<String, Object>> alternativas = (List<Map<String, Object>>) perguntas.get(0).get("alternativas");
+        assertThat(alternativas).hasSize(2).allSatisfy(alternativa -> assertThat(alternativa).containsKey("correta"));
+    }
+
+    @Test
     void atualizar_dePendenteParaEmAndamento_deveRetornar200EGravarOStatusNovo() {
         // Arrange
         Sessao professor = novaSessao("PROFESSOR");
