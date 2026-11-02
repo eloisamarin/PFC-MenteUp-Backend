@@ -120,7 +120,7 @@ public class QuestionarioService {
     private List<Pergunta> adicionarPerguntas(Atividade atividade, List<PerguntaRequest> perguntas) {
         List<Pergunta> criadasNestaChamada = new ArrayList<>();
 
-        for (PerguntaRequest perguntaRequest : perguntas){
+        for (PerguntaRequest perguntaRequest : request.perguntas()){
             Pergunta pergunta = new Pergunta();
 
             pergunta.setEnunciado(perguntaRequest.enunciado());
@@ -131,7 +131,6 @@ public class QuestionarioService {
 
                 alternativa.setTexto(alternativaRequest.texto());
                 alternativa.setCorreta(alternativaRequest.correta());
-                alternativa.setOrdem(alternativaRequest.ordem());
                 alternativa.setPergunta(pergunta);
 
                 pergunta.getAlternativas().add(alternativa);
