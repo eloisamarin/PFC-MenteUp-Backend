@@ -1,0 +1,433 @@
+diff -ruN --strip-trailing-cr orig3/src/main/java/com/umc/menteup/mapper/QuestionarioMapper.java menteup/src/main/java/com/umc/menteup/mapper/QuestionarioMapper.java
+--- orig3/src/main/java/com/umc/menteup/mapper/QuestionarioMapper.java	2026-11-02 14:26:08.808704863 -0300
++++ menteup/src/main/java/com/umc/menteup/mapper/QuestionarioMapper.java	2026-11-02 14:26:22.509484797 -0300
+@@ -80,9 +80,19 @@
+             ResultadoAtividadeResponse meuResultado,
+             ProgressoAtividadeResponse meuProgresso
+     ) {
++        return toQuestionario(atividade, toPerguntas(atividade), meuResultado, meuProgresso);
++    }
++
++    ///Usado quando as perguntas são montadas pelo template (visão do aluno)
++    public static QuestionarioResponse toQuestionario(
++            Atividade atividade,
++            List<PerguntaResponse> perguntas,
++            ResultadoAtividadeResponse meuResultado,
++            ProgressoAtividadeResponse meuProgresso
++    ) {
+         return new QuestionarioResponse(
+                 toAtividadeResponse(atividade),
+-                toPerguntas(atividade),
++                perguntas,
+                 meuResultado,
+                 meuProgresso
+         );
+diff -ruN --strip-trailing-cr orig3/src/main/java/com/umc/menteup/service/AtividadeService.java menteup/src/main/java/com/umc/menteup/service/AtividadeService.java
+--- orig3/src/main/java/com/umc/menteup/service/AtividadeService.java	2026-11-02 14:26:08.808789181 -0300
++++ menteup/src/main/java/com/umc/menteup/service/AtividadeService.java	2026-11-02 14:26:22.510306311 -0300
+@@ -19,6 +19,7 @@
+ import com.umc.menteup.repository.TurmaRepository;
+ import com.umc.menteup.repository.UsuarioRepository;
+ import com.umc.menteup.service.NotificacaoService;
++import com.umc.menteup.template.TemplateResolver;
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.stereotype.Service;
+ import com.umc.menteup.model.Usuario;
+@@ -56,6 +57,9 @@
+     @Autowired
+     private MatriculaService matriculaService;
+ 
++    @Autowired
++    private TemplateResolver templateResolver;
++
+     public List<Atividade> listarTodas() {
+         return atividadeRepository.findAll();
+     }
+@@ -210,7 +214,17 @@
+             }
+         }
+ 
+-        return QuestionarioMapper.toQuestionario(atividade, meuResultado, meuProgresso);
++        if (!TipoUsuario.ehAluno(usuario)) {
++            return QuestionarioMapper.toQuestionario(atividade, meuResultado, meuProgresso);
++        }
++
++        ///Para o aluno, o template decide como as alternativas aparecem (ex.: associação embaralha a coluna B)
++        return QuestionarioMapper.toQuestionario(
++                atividade,
++                templateResolver.resolver(atividade).perguntasParaAluno(atividade),
++                meuResultado,
++                meuProgresso
++        );
+     }
+ 
+     @Transactional(readOnly = true)
+diff -ruN --strip-trailing-cr orig3/src/main/java/com/umc/menteup/service/QuestionarioService.java menteup/src/main/java/com/umc/menteup/service/QuestionarioService.java
+--- orig3/src/main/java/com/umc/menteup/service/QuestionarioService.java	2026-11-02 14:26:08.808728654 -0300
++++ menteup/src/main/java/com/umc/menteup/service/QuestionarioService.java	2026-11-02 14:26:22.508422289 -0300
+@@ -43,7 +43,7 @@
+ 
+         TipoAtividade tipo = definirTipo(atividade, request.tipo());
+         TemplateAtividade template = templateResolver.resolver(tipo);
+-        request.perguntas().forEach(template::validarCriacao);
++        template.validarQuestionario(atividade, request.perguntas());
+         atividade.setTipo(tipo);
+ 
+         List<Pergunta> criadasNestaChamada = new ArrayList<>();
+diff -ruN --strip-trailing-cr orig3/src/main/java/com/umc/menteup/template/AssociacaoTemplate.java menteup/src/main/java/com/umc/menteup/template/AssociacaoTemplate.java
+--- orig3/src/main/java/com/umc/menteup/template/AssociacaoTemplate.java	1969-12-31 21:00:00.000000000 -0300
++++ menteup/src/main/java/com/umc/menteup/template/AssociacaoTemplate.java	2026-11-02 14:26:39.605491607 -0300
+@@ -0,0 +1,126 @@
++package com.umc.menteup.template;
++
++import com.umc.menteup.dto.AlternativaResponse;
++import com.umc.menteup.dto.PerguntaRequest;
++import com.umc.menteup.dto.PerguntaResponse;
++import com.umc.menteup.dto.SalvarRespostaRequest;
++import com.umc.menteup.exception.ApiException;
++import com.umc.menteup.model.Alternativa;
++import com.umc.menteup.model.Atividade;
++import com.umc.menteup.model.Pergunta;
++import com.umc.menteup.model.RespostaAtividade;
++import com.umc.menteup.model.TipoAtividade;
++import org.springframework.stereotype.Component;
++
++import java.util.ArrayList;
++import java.util.Collections;
++import java.util.HashSet;
++import java.util.List;
++import java.util.Random;
++import java.util.Set;
++
++///Associação de colunas: cada pergunta é um item da coluna A e sua única alternativa é o par correto na coluna B
++///O aluno pode ligar um item da coluna A a qualquer item da coluna B (de qualquer pergunta da atividade)
++@Component
++public class AssociacaoTemplate implements TemplateAtividade {
++
++    @Override
++    public TipoAtividade tipo() {
++        return TipoAtividade.ASSOCIACAO;
++    }
++
++    ///Cada item da coluna A tem exatamente 1 par, marcado como correto
++    @Override
++    public void validarCriacao(PerguntaRequest pergunta) {
++        if (pergunta.alternativas().size() != 1
++                || !Boolean.TRUE.equals(pergunta.alternativas().get(0).correta())) {
++            throw invalida("O item \"" + pergunta.enunciado() + "\" deve ter exatamente 1 par correto.");
++        }
++    }
++
++    ///Além de cada par, valida a atividade toda: no mínimo 2 pares e sem textos repetidos na coluna B
++    @Override
++    public void validarQuestionario(Atividade atividade, List<PerguntaRequest> perguntas) {
++        perguntas.forEach(this::validarCriacao);
++
++        if (atividade.getPerguntas().size() + perguntas.size() < 2) {
++            throw invalida("A associação de colunas precisa de pelo menos 2 pares.");
++        }
++
++        Set<String> textosColunaB = new HashSet<>();
++        atividade.getPerguntas().forEach(p ->
++                p.getAlternativas().forEach(a -> textosColunaB.add(normalizar(a.getTexto()))));
++
++        for (PerguntaRequest pergunta : perguntas) {
++            String texto = pergunta.alternativas().get(0).texto();
++            if (!textosColunaB.add(normalizar(texto))) {
++                throw invalida("O texto \"" + texto + "\" aparece mais de uma vez na coluna B.");
++            }
++        }
++    }
++
++    ///Todas as perguntas recebem a mesma coluna B embaralhada, para não revelar qual é o par de cada item
++    @Override
++    public List<PerguntaResponse> perguntasParaAluno(Atividade atividade) {
++        List<AlternativaResponse> colunaB = new ArrayList<>(
++                colunaB(atividade).stream()
++                        .map(a -> new AlternativaResponse(a.getId(), a.getTexto()))
++                        .toList()
++        );
++        ///Semente fixa pelo id da atividade: a ordem não muda quando o aluno recarrega a página
++        Collections.shuffle(colunaB, new Random(atividade.getId() == null ? 0L : atividade.getId()));
++
++        List<AlternativaResponse> colunaFinal = List.copyOf(colunaB);
++
++        return atividade.getPerguntas().stream()
++                .map(p -> new PerguntaResponse(p.getId(), p.getEnunciado(), colunaFinal))
++                .toList();
++    }
++
++    @Override
++    public void validarResposta(Pergunta pergunta, SalvarRespostaRequest request) {
++        buscarNaColunaB(pergunta, request.alternativaId());
++    }
++
++    @Override
++    public void preencherResposta(RespostaAtividade resposta, Pergunta pergunta, SalvarRespostaRequest request) {
++        resposta.setAlternativa(buscarNaColunaB(pergunta, request.alternativaId()));
++    }
++
++    ///Está correta quando o item escolhido na coluna B é o par cadastrado para esta pergunta
++    @Override
++    public boolean estaCorreta(Pergunta pergunta, RespostaAtividade resposta) {
++        Alternativa escolhida = buscarNaColunaB(pergunta, resposta.getAlternativa().getId());
++
++        return pergunta.getAlternativas()
++                .stream()
++                .anyMatch(a -> a.getId().equals(escolhida.getId()));
++    }
++
++    ///Junta as alternativas de todas as perguntas da atividade
++    private List<Alternativa> colunaB(Atividade atividade) {
++        return atividade.getPerguntas().stream()
++                .flatMap(p -> p.getAlternativas().stream())
++                .toList();
++    }
++
++    ///Diferente do quiz, a alternativa pode ser de outra pergunta, desde que seja da mesma atividade
++    private Alternativa buscarNaColunaB(Pergunta pergunta, Long alternativaId) {
++        return colunaB(pergunta.getAtividade())
++                .stream()
++                .filter(a -> a.getId().equals(alternativaId))
++                .findFirst()
++                .orElseThrow(() -> ApiException.requisicaoInvalida(
++                        "ALTERNATIVA_INVALIDA",
++                        "A alternativa " + alternativaId + " não pertence a esta atividade."
++                ));
++    }
++
++    private static String normalizar(String texto) {
++        return texto == null ? "" : texto.trim().toLowerCase();
++    }
++
++    private static ApiException invalida(String mensagem) {
++        return ApiException.requisicaoInvalida("ASSOCIACAO_INVALIDA", mensagem);
++    }
++}
+diff -ruN --strip-trailing-cr orig3/src/main/java/com/umc/menteup/template/TemplateAtividade.java menteup/src/main/java/com/umc/menteup/template/TemplateAtividade.java
+--- orig3/src/main/java/com/umc/menteup/template/TemplateAtividade.java	2026-11-02 14:26:08.811301604 -0300
++++ menteup/src/main/java/com/umc/menteup/template/TemplateAtividade.java	2026-11-02 14:26:22.508053451 -0300
+@@ -1,11 +1,16 @@
+ package com.umc.menteup.template;
+ 
+ import com.umc.menteup.dto.PerguntaRequest;
++import com.umc.menteup.dto.PerguntaResponse;
+ import com.umc.menteup.dto.SalvarRespostaRequest;
++import com.umc.menteup.mapper.QuestionarioMapper;
++import com.umc.menteup.model.Atividade;
+ import com.umc.menteup.model.Pergunta;
+ import com.umc.menteup.model.RespostaAtividade;
+ import com.umc.menteup.model.TipoAtividade;
+ 
++import java.util.List;
++
+ public interface TemplateAtividade {
+ 
+     TipoAtividade tipo();
+@@ -13,6 +18,16 @@
+     default void validarCriacao(PerguntaRequest pergunta) {
+     }
+ 
++    ///Valida o questionário inteiro; por padrão valida cada pergunta separadamente
++    default void validarQuestionario(Atividade atividade, List<PerguntaRequest> perguntas) {
++        perguntas.forEach(this::validarCriacao);
++    }
++
++    ///Monta as perguntas que o aluno vê; por padrão cada pergunta mostra as suas próprias alternativas
++    default List<PerguntaResponse> perguntasParaAluno(Atividade atividade) {
++        return QuestionarioMapper.toPerguntas(atividade);
++    }
++
+     void validarResposta(Pergunta pergunta, SalvarRespostaRequest request);
+ 
+     void preencherResposta(RespostaAtividade resposta, Pergunta pergunta, SalvarRespostaRequest request);
+diff -ruN --strip-trailing-cr orig3/src/test/java/com/umc/menteup/service/AtividadeServiceTest.java menteup/src/test/java/com/umc/menteup/service/AtividadeServiceTest.java
+--- orig3/src/test/java/com/umc/menteup/service/AtividadeServiceTest.java	2026-11-02 14:26:08.805790617 -0300
++++ menteup/src/test/java/com/umc/menteup/service/AtividadeServiceTest.java	2026-11-02 14:26:48.992777450 -0300
+@@ -15,8 +15,13 @@
+ import org.junit.jupiter.api.extension.ExtendWith;
+ import org.junit.jupiter.params.ParameterizedTest;
+ import org.junit.jupiter.params.provider.CsvSource;
++import com.umc.menteup.template.AssociacaoTemplate;
++import com.umc.menteup.template.QuizTemplate;
++import com.umc.menteup.template.TemplateResolver;
++import com.umc.menteup.template.VerdadeiroFalsoTemplate;
+ import org.mockito.InjectMocks;
+ import org.mockito.Mock;
++import org.mockito.Spy;
+ import org.mockito.junit.jupiter.MockitoExtension;
+ import org.springframework.http.HttpStatus;
+ 
+@@ -44,6 +49,9 @@
+     @Mock private ProgressoAtividadeRepository progressoAtividadeRepository;
+     @Mock private MatriculaService matriculaService;
+ 
++    @Spy private TemplateResolver templateResolver = new TemplateResolver(
++            List.of(new QuizTemplate(), new VerdadeiroFalsoTemplate(), new AssociacaoTemplate()));
++
+     @InjectMocks
+     private AtividadeService service;
+ 
+diff -ruN --strip-trailing-cr orig3/src/test/java/com/umc/menteup/template/AssociacaoTemplateTest.java menteup/src/test/java/com/umc/menteup/template/AssociacaoTemplateTest.java
+--- orig3/src/test/java/com/umc/menteup/template/AssociacaoTemplateTest.java	1969-12-31 21:00:00.000000000 -0300
++++ menteup/src/test/java/com/umc/menteup/template/AssociacaoTemplateTest.java	2026-11-02 14:27:08.903556351 -0300
+@@ -0,0 +1,159 @@
++package com.umc.menteup.template;
++
++import com.umc.menteup.dto.AlternativaRequest;
++import com.umc.menteup.dto.AlternativaResponse;
++import com.umc.menteup.dto.PerguntaRequest;
++import com.umc.menteup.dto.PerguntaResponse;
++import com.umc.menteup.dto.SalvarRespostaRequest;
++import com.umc.menteup.exception.ApiException;
++import com.umc.menteup.model.Alternativa;
++import com.umc.menteup.model.Atividade;
++import com.umc.menteup.model.Pergunta;
++import com.umc.menteup.model.RespostaAtividade;
++import com.umc.menteup.model.TipoAtividade;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.api.function.Executable;
++import org.springframework.http.HttpStatus;
++
++import java.util.List;
++import java.util.Set;
++import java.util.stream.Collectors;
++
++import static org.junit.jupiter.api.Assertions.*;
++
++class AssociacaoTemplateTest {
++
++    private final AssociacaoTemplate template = new AssociacaoTemplate();
++
++    private Atividade atividade;
++    private Pergunta brasil;
++    private Pergunta franca;
++    private Alternativa brasilia;
++    private Alternativa paris;
++
++    @BeforeEach
++    void setUp() {
++        atividade = new Atividade();
++        atividade.setId(10L);
++        atividade.setTipo(TipoAtividade.ASSOCIACAO);
++
++        brasil = pergunta(1L, "Brasil");
++        franca = pergunta(2L, "França");
++        brasilia = par(11L, "Brasília", brasil);
++        paris = par(21L, "Paris", franca);
++    }
++
++    @Test
++    @DisplayName("criação: aceita pares válidos")
++    void criacaoValida() {
++        Atividade nova = new Atividade();
++        assertDoesNotThrow(() -> template.validarQuestionario(nova, List.of(
++                itemA("Brasil", "Brasília", true),
++                itemA("França", "Paris", true)
++        )));
++    }
++
++    @Test
++    @DisplayName("criação: item com mais de um par é rejeitado")
++    void criacaoComDoisPares() {
++        PerguntaRequest item = new PerguntaRequest("Brasil", List.of(
++                new AlternativaRequest("Brasília", true),
++                new AlternativaRequest("Rio", true)
++        ));
++        assertErro("ASSOCIACAO_INVALIDA", () -> template.validarCriacao(item));
++    }
++
++    @Test
++    @DisplayName("criação: par não marcado como correto é rejeitado")
++    void criacaoParNaoCorreto() {
++        assertErro("ASSOCIACAO_INVALIDA", () -> template.validarCriacao(itemA("Brasil", "Brasília", false)));
++    }
++
++    @Test
++    @DisplayName("criação: precisa de pelo menos 2 pares")
++    void criacaoComUmPar() {
++        assertErro("ASSOCIACAO_INVALIDA", () -> template.validarQuestionario(new Atividade(), List.of(
++                itemA("Brasil", "Brasília", true)
++        )));
++    }
++
++    @Test
++    @DisplayName("criação: texto repetido na coluna B é rejeitado (inclusive contra pares já salvos)")
++    void criacaoComTextoRepetido() {
++        assertErro("ASSOCIACAO_INVALIDA", () -> template.validarQuestionario(atividade, List.of(
++                itemA("Capital federal", " brasília ", true)
++        )));
++    }
++
++    @Test
++    @DisplayName("visão do aluno: todas as perguntas recebem a coluna B completa e na mesma ordem")
++    void perguntasParaAluno() {
++        List<PerguntaResponse> perguntas = template.perguntasParaAluno(atividade);
++
++        assertEquals(2, perguntas.size());
++        Set<Long> ids = perguntas.get(0).alternativas().stream()
++                .map(AlternativaResponse::id)
++                .collect(Collectors.toSet());
++        assertEquals(Set.of(11L, 21L), ids);
++        assertEquals(perguntas.get(0).alternativas(), perguntas.get(1).alternativas());
++        assertEquals(perguntas, template.perguntasParaAluno(atividade));
++    }
++
++    @Test
++    @DisplayName("resposta: aceita alternativa de outra pergunta da mesma atividade")
++    void respostaComParDeOutraPergunta() {
++        assertDoesNotThrow(() -> template.validarResposta(brasil, new SalvarRespostaRequest(1L, 21L)));
++    }
++
++    @Test
++    @DisplayName("resposta: rejeita alternativa que não é da atividade")
++    void respostaForaDaAtividade() {
++        assertErro("ALTERNATIVA_INVALIDA",
++                () -> template.validarResposta(brasil, new SalvarRespostaRequest(1L, 999L)));
++    }
++
++    @Test
++    @DisplayName("correção: certo quando liga ao próprio par, errado quando liga ao par de outro item")
++    void correcao() {
++        assertTrue(template.estaCorreta(brasil, resposta(brasilia)));
++        assertFalse(template.estaCorreta(brasil, resposta(paris)));
++        assertTrue(template.estaCorreta(franca, resposta(paris)));
++    }
++
++    private Pergunta pergunta(Long id, String enunciado) {
++        Pergunta pergunta = new Pergunta();
++        pergunta.setId(id);
++        pergunta.setEnunciado(enunciado);
++        pergunta.setAtividade(atividade);
++        atividade.getPerguntas().add(pergunta);
++        return pergunta;
++    }
++
++    private static Alternativa par(Long id, String texto, Pergunta pergunta) {
++        Alternativa alternativa = new Alternativa();
++        alternativa.setId(id);
++        alternativa.setTexto(texto);
++        alternativa.setCorreta(true);
++        alternativa.setPergunta(pergunta);
++        pergunta.getAlternativas().add(alternativa);
++        return alternativa;
++    }
++
++    private static PerguntaRequest itemA(String enunciado, String par, boolean correta) {
++        return new PerguntaRequest(enunciado, List.of(new AlternativaRequest(par, correta)));
++    }
++
++    private static RespostaAtividade resposta(Alternativa alternativa) {
++        RespostaAtividade resposta = new RespostaAtividade();
++        resposta.setAlternativa(alternativa);
++        return resposta;
++    }
++
++    private static void assertErro(String codigo, Executable acao) {
++        ApiException erro = assertThrows(ApiException.class, acao);
++        assertEquals(HttpStatus.BAD_REQUEST, erro.getStatus());
++        assertEquals(codigo, erro.getCodigo());
++    }
++}

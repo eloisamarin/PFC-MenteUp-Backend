@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(
         name = "resposta_atividade",
@@ -29,7 +32,18 @@ public class RespostaAtividade {
     @JoinColumn( name = "pergunta_id", nullable = false )
     private Pergunta pergunta;
 
+    ///Quiz, V/F e associação: alternativa escolhida. Ordenação e lacunas: fica nulo
     @ManyToOne ( fetch = FetchType.LAZY )
-    @JoinColumn ( name = "alternativa_id", nullable = false )
+    @JoinColumn ( name = "alternativa_id" )
     private Alternativa alternativa;
+
+    ///Ordenação e lacunas: ids das alternativas na ordem em que o aluno respondeu
+    @ElementCollection
+    @CollectionTable(
+            name = "resposta_atividade_sequencia",
+            joinColumns = @JoinColumn(name = "resposta_id")
+    )
+    @OrderColumn(name = "posicao")
+    @Column(name = "alternativa_id", nullable = false)
+    private List<Long> alternativasIds = new ArrayList<>();
 }

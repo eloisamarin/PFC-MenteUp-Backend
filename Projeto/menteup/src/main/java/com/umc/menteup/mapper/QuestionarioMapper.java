@@ -6,10 +6,7 @@ import com.umc.menteup.model.ResultadoAtividade;
 
 import java.util.List;
 
-/**
- * Conversões entidade -> DTO compartilhadas pelos controllers e services,
- * para que todas as telas enxerguem exatamente o mesmo formato.
- */
+///Converte as DTO's compartilhadas pelos controllers e services para que todas as telas vejam exatamente o mesmo formato
 public final class QuestionarioMapper {
 
     private QuestionarioMapper() {
@@ -28,7 +25,8 @@ public final class QuestionarioMapper {
                 atividade.getUsuario() == null
                         ? null
                         : new UsuarioResponse(atividade.getUsuario().getId(), atividade.getUsuario().getNomeUsuario()),
-                atividade.getDataCriacao()
+                atividade.getDataCriacao(),
+                atividade.getTipo()
         );
     }
 
@@ -59,12 +57,7 @@ public final class QuestionarioMapper {
         List<RespostaProgressoResponse> respostas =
                 progresso.getRespostas()
                         .stream()
-                        .map(resposta ->
-                                new RespostaProgressoResponse(
-                                        resposta.getPergunta().getId(),
-                                        resposta.getAlternativa().getId()
-                                )
-                        )
+                        .map(QuestionarioMapper::toRespostaProgresso)
                         .toList();
         return new ProgressoAtividadeResponse(
                 percentual,
@@ -79,9 +72,18 @@ public final class QuestionarioMapper {
             ResultadoAtividadeResponse meuResultado,
             ProgressoAtividadeResponse meuProgresso
     ) {
+        return toQuestionario(atividade, toPerguntas(atividade), meuResultado, meuProgresso);
+    }
+
+    public static QuestionarioResponse toQuestionario(
+            Atividade atividade,
+            List<PerguntaResponse> perguntas,
+            ResultadoAtividadeResponse meuResultado,
+            ProgressoAtividadeResponse meuProgresso
+    ) {
         return new QuestionarioResponse(
                 toAtividadeResponse(atividade),
-                toPerguntas(atividade),
+                perguntas,
                 meuResultado,
                 meuProgresso
         );
@@ -99,4 +101,14 @@ public final class QuestionarioMapper {
                 resultado.getPontuacao()
         );
     }
+
+    public static RespostaProgressoResponse toRespostaProgresso(com.umc.menteup.model.RespostaAtividade resposta) {
+        return new RespostaProgressoResponse(
+                resposta.getPergunta().getId(),
+                resposta.getAlternativa() == null ? null : resposta.getAlternativa().getId(),
+                resposta.getAlternativasIds().isEmpty() ? null : List.copyOf(resposta.getAlternativasIds())
+        );
+    }
 }
+
+

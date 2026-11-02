@@ -4,14 +4,18 @@ import com.umc.menteup.dto.ProgressoAtividadeResponse;
 import com.umc.menteup.dto.RespostaProgressoResponse;
 import com.umc.menteup.dto.SalvarRespostaRequest;
 import com.umc.menteup.exception.ApiException;
+import com.umc.menteup.mapper.QuestionarioMapper;
 import com.umc.menteup.model.*;
 import com.umc.menteup.repository.AtividadeRepository;
 import com.umc.menteup.repository.ProgressoAtividadeRepository;
 import com.umc.menteup.repository.ResultadoAtividadeRepository;
 import com.umc.menteup.repository.UsuarioRepository;
+import com.umc.menteup.template.TemplateAtividade;
+import com.umc.menteup.template.TemplateResolver;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Service
@@ -22,6 +26,7 @@ public class ProgressoAtividadeService {
     private final ResultadoAtividadeRepository resultadoRepository;
     private final LogSistemaService logSistemaService;
     private final MatriculaService matriculaService;
+    private final TemplateResolver templateResolver;
 
     public ProgressoAtividadeService(
             UsuarioRepository usuarioRepository,
@@ -29,7 +34,8 @@ public class ProgressoAtividadeService {
             ProgressoAtividadeRepository progressoRepository,
             ResultadoAtividadeRepository resultadoRepository,
             LogSistemaService logSistemaService,
-            MatriculaService matriculaService
+            MatriculaService matriculaService,
+            TemplateResolver templateResolver
     ) {
         this.usuarioRepository = usuarioRepository;
         this.atividadeRepository = atividadeRepository;
@@ -37,6 +43,7 @@ public class ProgressoAtividadeService {
         this.resultadoRepository = resultadoRepository;
         this.logSistemaService = logSistemaService;
         this.matriculaService = matriculaService;
+        this.templateResolver = templateResolver;
     }
 
     @Transactional
@@ -87,16 +94,8 @@ public class ProgressoAtividadeService {
                                 "A pergunta não pertence a esta atividade."
                         )
                 );
-        Alternativa alternativa = pergunta.getAlternativas()
-                .stream()
-                .filter(p -> p.getId().equals(request.alternativaId()))
-                .findFirst()
-                .orElseThrow(() ->
-                        ApiException.requisicaoInvalida(
-                                "ALTERNATIVA_INVALIDA",
-                                "A alternativa não pertence a esta perguta."
-                        )
-                );
+        TemplateAtividade template = templateResolver.resolver(atividade);
+        template.validarResposta(pergunta, request);
 
         ProgressoAtividade progresso = progressoRepository.findByUsuario_IdAndAtividade_Id(
                         usuario.getId(),
@@ -123,10 +122,10 @@ public class ProgressoAtividadeService {
             RespostaAtividade resposta = new RespostaAtividade();
             resposta.setProgresso(progresso);
             resposta.setPergunta(pergunta);
-            resposta.setAlternativa(alternativa);
+            template.preencherResposta(resposta, pergunta, request);
             progresso.getRespostas().add(resposta);
         } else {
-            respostaExistente.setAlternativa(alternativa);
+            template.preencherResposta(respostaExistente, pergunta, request);
         }
         progressoRepository.save(progresso);
 
@@ -147,11 +146,7 @@ public class ProgressoAtividadeService {
                 EntidadeLog.QUESTAO,
                 pergunta.getId(),
                 "Aluno respondeu a questão " + pergunta.getId() + " da atividade \"" + atividade.getTitulo() + "\".",
-                Map.of(
-                        "atividadeId", atividade.getId(),
-                        "perguntaId", pergunta.getId(),
-                        "alternativaId", alternativa.getId()
-                )
+                dadosDaResposta(atividade, pergunta, request)
         );
 
         return montarResponse(progresso, atividade);
@@ -190,11 +185,27 @@ public class ProgressoAtividadeService {
                 total,
                 progreso.getRespostas()
                         .stream()
-                        .map(r -> new RespostaProgressoResponse(
-                                r.getPergunta().getId(),
-                                r.getAlternativa().getId()
-                        ))
+                        .map(QuestionarioMapper::toRespostaProgresso)
                         .toList()
         );
     }
+
+    private static Map<String, Object> dadosDaResposta(
+            Atividade atividade,
+            Pergunta pergunta,
+            SalvarRespostaRequest request
+    ) {
+        Map<String, Object> dados = new LinkedHashMap<>();
+        dados.put("atividadeId", atividade.getId());
+        dados.put("perguntaId", pergunta.getId());
+        if (request.alternativaId() != null) {
+            dados.put("alternativaId", request.alternativaId());
+        }
+        if (request.alternativasIds() != null) {
+            dados.put("alternativasIds", request.alternativasIds());
+        }
+        return dados;
+    }
 }
+
+

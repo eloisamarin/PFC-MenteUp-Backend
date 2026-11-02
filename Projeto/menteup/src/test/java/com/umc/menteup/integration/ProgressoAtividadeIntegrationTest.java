@@ -163,7 +163,7 @@ class ProgressoAtividadeIntegrationTest extends IntegracaoBase {
         assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(resposta.getBody()).containsEntry("codigo", "VALIDACAO_FALHOU");
         assertThat((Map<String, String>) resposta.getBody().get("campos"))
-                .containsEntry("alternativaId", "alternativaId é obrigatório");
+                .containsEntry("respostaInformada", "Informe alternativaId ou alternativasIds");
     }
 
     @Test

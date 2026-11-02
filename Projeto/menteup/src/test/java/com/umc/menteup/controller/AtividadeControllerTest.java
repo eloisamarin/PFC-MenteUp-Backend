@@ -121,7 +121,7 @@ class AtividadeControllerTest {
         void retornaQuestionario() throws Exception {
             QuestionarioResponse resposta = new QuestionarioResponse(
                     new AtividadeResponse(10L, "Fracoes basicas", "Atividade sobre fracoes",
-                            new TurmaResponse(5L, "Turma A"), 10, StatusAtividade.EM_ANDAMENTO, null, null),
+                            new TurmaResponse(5L, "Turma A"), 10, StatusAtividade.EM_ANDAMENTO, null, null, TipoAtividade.QUIZ),
                     List.of(),
                     null,
                     null
@@ -418,7 +418,7 @@ class AtividadeControllerTest {
         }
 
         @Test
-        @DisplayName("400 VALIDACAO_FALHOU quando falta o alternativaId: o service nem é chamado")
+        @DisplayName("400 VALIDACAO_FALHOU quando não vem alternativaId nem alternativasIds: o service nem é chamado")
         void semAlternativa() throws Exception {
             mockMvc.perform(put("/atividades/10/progresso")
                             .principal(autenticado)
@@ -426,7 +426,7 @@ class AtividadeControllerTest {
                             .content("{\"perguntaId\":1}"))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.codigo").value("VALIDACAO_FALHOU"))
-                    .andExpect(jsonPath("$.campos.alternativaId").exists());
+                    .andExpect(jsonPath("$.campos.respostaInformada").exists());
 
             verifyNoInteractions(progressoAtividadeService);
         }

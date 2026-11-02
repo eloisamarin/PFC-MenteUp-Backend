@@ -4,6 +4,8 @@ import com.umc.menteup.dto.ProgressoAtividadeResponse;
 import com.umc.menteup.dto.SalvarRespostaRequest;
 import com.umc.menteup.exception.ApiException;
 import com.umc.menteup.model.*;
+import com.umc.menteup.template.QuizTemplate;
+import com.umc.menteup.template.TemplateResolver;
 import com.umc.menteup.repository.AtividadeRepository;
 import com.umc.menteup.repository.ProgressoAtividadeRepository;
 import com.umc.menteup.repository.ResultadoAtividadeRepository;
@@ -16,9 +18,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -47,6 +51,9 @@ class ProgressoAtividadeServiceTest {
     private LogSistemaService logSistemaService;
     @Mock
     private MatriculaService matriculaService;
+
+    @Spy
+    private TemplateResolver templateResolver = new TemplateResolver(List.of(new QuizTemplate()));
 
     @InjectMocks
     private ProgressoAtividadeService service;
