@@ -6,6 +6,8 @@ import com.umc.menteup.dto.QuestionarioRequest;
 import com.umc.menteup.exception.ApiException;
 import com.umc.menteup.model.*;
 import com.umc.menteup.repository.AtividadeRepository;
+import com.umc.menteup.repository.ProgressoAtividadeRepository;
+import com.umc.menteup.repository.ResultadoAtividadeRepository;
 import com.umc.menteup.template.TemplateAtividade;
 import com.umc.menteup.template.TemplateResolver;
 import jakarta.transaction.Transactional;
@@ -20,15 +22,21 @@ public class QuestionarioService {
     private final AtividadeRepository atividadeRepository;
     private final LogSistemaService logSistemaService;
     private final TemplateResolver templateResolver;
+    private final ProgressoAtividadeRepository progressoRepository;
+    private final ResultadoAtividadeRepository resultadoRepository;
 
      public QuestionarioService(
             AtividadeRepository atividadeRepository,
             LogSistemaService logSistemaService,
-            TemplateResolver templateResolver
+            TemplateResolver templateResolver,
+            ProgressoAtividadeRepository progressoRepository,
+            ResultadoAtividadeRepository resultadoRepository
     ){
         this.atividadeRepository = atividadeRepository;
         this.logSistemaService = logSistemaService;
         this.templateResolver = templateResolver;
+        this.progressoRepository = progressoRepository;
+        this.resultadoRepository = resultadoRepository;
     }
 
     @Transactional
@@ -46,9 +54,73 @@ public class QuestionarioService {
         template.validarQuestionario(atividade, request.perguntas());
         atividade.setTipo(tipo);
 
+        List<Pergunta> criadasNestaChamada = adicionarPerguntas(atividade, request.perguntas());
+
+        Atividade salva = atividadeRepository.save(atividade);
+
+        registrarQuestoesCriadas(username, salva, criadasNestaChamada);
+
+        return salva;
+    }
+
+    ///Substitui todas as questões, desde que nenhum aluno tenha iniciado a atividade
+    @Transactional
+    public Atividade substituirQuestionario(
+            Long atividadeId,
+            QuestionarioRequest request,
+            String username
+    ){
+        Atividade atividade = atividadeRepository.findById(atividadeId)
+                .orElseThrow(() -> ApiException.naoEncontrado(
+                        "ATIVIDADE_NAO_ENCONTRADA",
+                        "Atividade não encontrada."
+                ));
+
+        if (progressoRepository.existsByAtividade_Id(atividadeId)
+                || resultadoRepository.existsByAtividade_Id(atividadeId)) {
+            throw ApiException.conflito(
+                    "ATIVIDADE_COM_RESPOSTAS",
+                    "As questões não podem ser alteradas porque alunos já começaram ou concluíram esta atividade."
+            );
+        }
+
+        int removidas = atividade.getPerguntas().size();
+
+        atividade.getPerguntas().clear();
+
+        ///o tipo pode ser alterado livremente
+        TipoAtividade tipo = request.tipo() == null ? atividade.getTipo() : request.tipo();
+        TemplateAtividade template = templateResolver.resolver(tipo);
+        template.validarQuestionario(atividade, request.perguntas());
+        atividade.setTipo(tipo);
+
+        List<Pergunta> criadas = adicionarPerguntas(atividade, request.perguntas());
+
+        Atividade salva = atividadeRepository.save(atividade);
+
+        logSistemaService.registrarPorUsername(
+                username,
+                AcaoLog.EDITAR_ATIVIDADE,
+                EntidadeLog.ATIVIDADE,
+                salva.getId(),
+                ResultadoLog.SUCESSO,
+                "Questões da atividade \"" + salva.getTitulo() + "\" substituídas.",
+                Map.of(
+                        "tipo", tipo.name(),
+                        "questoesRemovidas", removidas,
+                        "questoesCriadas", criadas.size()
+                )
+        );
+        registrarQuestoesCriadas(username, salva, criadas);
+
+        return salva;
+    }
+
+    ///Cria as perguntas e alternativas do request e vincula à atividade
+    private List<Pergunta> adicionarPerguntas(Atividade atividade, List<PerguntaRequest> perguntas) {
         List<Pergunta> criadasNestaChamada = new ArrayList<>();
 
-        for (PerguntaRequest perguntaRequest : request.perguntas()){
+        for (PerguntaRequest perguntaRequest : perguntas){
             Pergunta pergunta = new Pergunta();
 
             pergunta.setEnunciado(perguntaRequest.enunciado());
@@ -67,10 +139,11 @@ public class QuestionarioService {
             atividade.getPerguntas().add(pergunta);
             criadasNestaChamada.add(pergunta);
         }
+        return criadasNestaChamada;
+    }
 
-        Atividade salva = atividadeRepository.save(atividade);
-
-        for (Pergunta pergunta : criadasNestaChamada) {
+    private void registrarQuestoesCriadas(String username, Atividade salva, List<Pergunta> criadas) {
+        for (Pergunta pergunta : criadas) {
             logSistemaService.registrarPorUsername(
                     username,
                     AcaoLog.CRIAR_QUESTAO,
@@ -84,8 +157,6 @@ public class QuestionarioService {
                     )
             );
         }
-
-        return salva;
     }
 
     private TipoAtividade definirTipo(Atividade atividade, TipoAtividade tipoSolicitado) {

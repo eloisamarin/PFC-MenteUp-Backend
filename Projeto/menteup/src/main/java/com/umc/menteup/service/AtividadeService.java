@@ -214,11 +214,12 @@ public class AtividadeService {
             }
         }
 
+        ///Professor e administrador vão receber o gabarito para visualização e editação
         if (!TipoUsuario.ehAluno(usuario)) {
-            return QuestionarioMapper.toQuestionario(atividade, meuResultado, meuProgresso);
+            return QuestionarioMapper.toQuestionarioProfessor(atividade);
         }
 
-        ///O template que irá determinar como as alternativas irão aparecer para o aluno
+        ///O que vai aparecer para o aluno agora depende do tamplate
         return QuestionarioMapper.toQuestionario(
                 atividade,
                 templateResolver.resolver(atividade).perguntasParaAluno(atividade),

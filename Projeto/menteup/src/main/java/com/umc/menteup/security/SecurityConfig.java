@@ -57,6 +57,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS).permitAll()
                         .requestMatchers("/alunos/me/**").hasRole("ALUNO")
                         .requestMatchers("/logs/**").hasRole("ADMINISTRADOR")
+                        ///só os professores e administradores cadastram ou editam questões
+                        .requestMatchers("/atividades/*/questionario").hasAnyRole("PROFESSOR", "ADMINISTRADOR")
                         .anyRequest().authenticated()
                 )
 
