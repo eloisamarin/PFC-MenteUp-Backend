@@ -1,0 +1,847 @@
+diff -ruN --strip-trailing-cr orig4/src/main/java/com/umc/menteup/dto/AlternativaRequest.java menteup/src/main/java/com/umc/menteup/dto/AlternativaRequest.java
+--- orig4/src/main/java/com/umc/menteup/dto/AlternativaRequest.java	2026-11-02 14:58:02.721997828 -0300
++++ menteup/src/main/java/com/umc/menteup/dto/AlternativaRequest.java	2026-11-02 14:59:07.818219713 -0300
+@@ -1,5 +1,6 @@
+ package com.umc.menteup.dto;
+ 
++import com.fasterxml.jackson.annotation.JsonCreator;
+ import jakarta.validation.constraints.NotBlank;
+ import jakarta.validation.constraints.NotNull;
+ 
+@@ -8,6 +9,17 @@
+         String texto,
+ 
+         @NotNull
+-        Boolean correta
++        Boolean correta,
++
++        ///Ordenação: posição correta do item. Lacunas: número da lacuna. Opcional nos outros tipos
++        Integer ordem
+ ) {
++    @JsonCreator
++    public AlternativaRequest {
++    }
++
++    ///Mantém funcionando quem cria a alternativa sem ordem (quiz, V/F, associação e desafios)
++    public AlternativaRequest(String texto, Boolean correta) {
++        this(texto, correta, null);
++    }
+ }
+diff -ruN --strip-trailing-cr orig4/src/main/java/com/umc/menteup/dto/RespostaProgressoResponse.java menteup/src/main/java/com/umc/menteup/dto/RespostaProgressoResponse.java
+--- orig4/src/main/java/com/umc/menteup/dto/RespostaProgressoResponse.java	2026-11-02 14:58:02.722061587 -0300
++++ menteup/src/main/java/com/umc/menteup/dto/RespostaProgressoResponse.java	2026-11-02 14:59:07.818455496 -0300
+@@ -1,7 +1,14 @@
+ package com.umc.menteup.dto;
+ 
++import java.util.List;
++
+ public record RespostaProgressoResponse(
+         Long perguntaId,
+-        Long alternativaId
++        Long alternativaId,
++        ///Preenchido apenas em ordenação e lacunas
++        List<Long> alternativasIds
+ ) {
++    public RespostaProgressoResponse(Long perguntaId, Long alternativaId) {
++        this(perguntaId, alternativaId, null);
++    }
+ }
+diff -ruN --strip-trailing-cr orig4/src/main/java/com/umc/menteup/dto/SalvarRespostaRequest.java menteup/src/main/java/com/umc/menteup/dto/SalvarRespostaRequest.java
+--- orig4/src/main/java/com/umc/menteup/dto/SalvarRespostaRequest.java	2026-11-02 14:58:02.722044137 -0300
++++ menteup/src/main/java/com/umc/menteup/dto/SalvarRespostaRequest.java	2026-11-02 14:59:07.818341929 -0300
+@@ -1,12 +1,35 @@
+ package com.umc.menteup.dto;
+ 
++import com.fasterxml.jackson.annotation.JsonCreator;
++import com.fasterxml.jackson.annotation.JsonIgnore;
++import jakarta.validation.constraints.AssertTrue;
+ import jakarta.validation.constraints.NotNull;
+ 
++import java.util.List;
++
+ public record SalvarRespostaRequest(
+         @NotNull ( message = "perguntaId é obrigatório" )
+         Long perguntaId,
+ 
+-        @NotNull ( message = "alternativaId é obrigatório" )
+-        Long alternativaId
++        ///Quiz, V/F e associação: a alternativa escolhida
++        Long alternativaId,
++
++        ///Ordenação e lacunas: ids das alternativas na ordem escolhida pelo aluno
++        List<Long> alternativasIds
+ ) {
++    @JsonCreator
++    public SalvarRespostaRequest {
++    }
++
++    ///Mantém funcionando quem envia só a alternativa (quiz, V/F e associação)
++    public SalvarRespostaRequest(Long perguntaId, Long alternativaId) {
++        this(perguntaId, alternativaId, null);
++    }
++
++    ///Exige uma das duas formas de resposta; o template de cada tipo valida qual delas ele usa
++    @JsonIgnore
++    @AssertTrue(message = "Informe alternativaId ou alternativasIds")
++    public boolean isRespostaInformada() {
++        return alternativaId != null || (alternativasIds != null && !alternativasIds.isEmpty());
++    }
+ }
+diff -ruN --strip-trailing-cr orig4/src/main/java/com/umc/menteup/mapper/QuestionarioMapper.java menteup/src/main/java/com/umc/menteup/mapper/QuestionarioMapper.java
+--- orig4/src/main/java/com/umc/menteup/mapper/QuestionarioMapper.java	2026-11-02 14:58:02.722208528 -0300
++++ menteup/src/main/java/com/umc/menteup/mapper/QuestionarioMapper.java	2026-11-02 14:59:07.819482726 -0300
+@@ -57,12 +57,7 @@
+         List<RespostaProgressoResponse> respostas =
+                 progresso.getRespostas()
+                         .stream()
+-                        .map(resposta ->
+-                                new RespostaProgressoResponse(
+-                                        resposta.getPergunta().getId(),
+-                                        resposta.getAlternativa().getId()
+-                                )
+-                        )
++                        .map(QuestionarioMapper::toRespostaProgresso)
+                         .toList();
+         return new ProgressoAtividadeResponse(
+                 percentual,
+@@ -107,4 +102,13 @@
+                 resultado.getPontuacao()
+         );
+     }
++
++    ///Converte a resposta salva; cada tipo preenche alternativaId ou alternativasIds
++    public static RespostaProgressoResponse toRespostaProgresso(com.umc.menteup.model.RespostaAtividade resposta) {
++        return new RespostaProgressoResponse(
++                resposta.getPergunta().getId(),
++                resposta.getAlternativa() == null ? null : resposta.getAlternativa().getId(),
++                resposta.getAlternativasIds().isEmpty() ? null : List.copyOf(resposta.getAlternativasIds())
++        );
++    }
+ }
+diff -ruN --strip-trailing-cr orig4/src/main/java/com/umc/menteup/model/Alternativa.java menteup/src/main/java/com/umc/menteup/model/Alternativa.java
+--- orig4/src/main/java/com/umc/menteup/model/Alternativa.java	2026-11-02 14:58:02.721760581 -0300
++++ menteup/src/main/java/com/umc/menteup/model/Alternativa.java	2026-11-02 14:59:07.817785388 -0300
+@@ -24,6 +24,9 @@
+     @Column(nullable = false)
+     private Boolean correta;
+ 
++    ///Ordenação: posição correta do item. Lacunas: número da lacuna. Nos outros tipos fica nulo
++    private Integer ordem;
++
+     @ManyToOne(fetch = FetchType.LAZY)
+     @JoinColumn(name = "pergunta_id", nullable = false)
+     @JsonIgnore
+diff -ruN --strip-trailing-cr orig4/src/main/java/com/umc/menteup/model/RespostaAtividade.java menteup/src/main/java/com/umc/menteup/model/RespostaAtividade.java
+--- orig4/src/main/java/com/umc/menteup/model/RespostaAtividade.java	2026-11-02 14:58:02.721776959 -0300
++++ menteup/src/main/java/com/umc/menteup/model/RespostaAtividade.java	2026-11-02 14:59:07.818093996 -0300
+@@ -4,6 +4,9 @@
+ import lombok.Getter;
+ import lombok.Setter;
+ 
++import java.util.ArrayList;
++import java.util.List;
++
+ @Entity
+ @Table(
+         name = "resposta_atividade",
+@@ -29,7 +32,18 @@
+     @JoinColumn( name = "pergunta_id", nullable = false )
+     private Pergunta pergunta;
+ 
++    ///Quiz, V/F e associação: alternativa escolhida. Ordenação e lacunas: fica nulo
+     @ManyToOne ( fetch = FetchType.LAZY )
+-    @JoinColumn ( name = "alternativa_id", nullable = false )
++    @JoinColumn ( name = "alternativa_id" )
+     private Alternativa alternativa;
++
++    ///Ordenação e lacunas: ids das alternativas na ordem em que o aluno respondeu
++    @ElementCollection
++    @CollectionTable(
++            name = "resposta_atividade_sequencia",
++            joinColumns = @JoinColumn(name = "resposta_id")
++    )
++    @OrderColumn(name = "posicao")
++    @Column(name = "alternativa_id", nullable = false)
++    private List<Long> alternativasIds = new ArrayList<>();
+ }
+diff -ruN --strip-trailing-cr orig4/src/main/java/com/umc/menteup/service/ProgressoAtividadeService.java menteup/src/main/java/com/umc/menteup/service/ProgressoAtividadeService.java
+--- orig4/src/main/java/com/umc/menteup/service/ProgressoAtividadeService.java	2026-11-02 14:58:02.722263139 -0300
++++ menteup/src/main/java/com/umc/menteup/service/ProgressoAtividadeService.java	2026-11-02 14:59:07.820155729 -0300
+@@ -4,6 +4,7 @@
+ import com.umc.menteup.dto.RespostaProgressoResponse;
+ import com.umc.menteup.dto.SalvarRespostaRequest;
+ import com.umc.menteup.exception.ApiException;
++import com.umc.menteup.mapper.QuestionarioMapper;
+ import com.umc.menteup.model.*;
+ import com.umc.menteup.repository.AtividadeRepository;
+ import com.umc.menteup.repository.ProgressoAtividadeRepository;
+@@ -14,6 +15,7 @@
+ import jakarta.transaction.Transactional;
+ import org.springframework.stereotype.Service;
+ 
++import java.util.LinkedHashMap;
+ import java.util.Map;
+ 
+ @Service
+@@ -144,11 +146,7 @@
+                 EntidadeLog.QUESTAO,
+                 pergunta.getId(),
+                 "Aluno respondeu a questão " + pergunta.getId() + " da atividade \"" + atividade.getTitulo() + "\".",
+-                Map.of(
+-                        "atividadeId", atividade.getId(),
+-                        "perguntaId", pergunta.getId(),
+-                        "alternativaId", request.alternativaId()
+-                )
++                dadosDaResposta(atividade, pergunta, request)
+         );
+ 
+         return montarResponse(progresso, atividade);
+@@ -187,11 +185,26 @@
+                 total,
+                 progreso.getRespostas()
+                         .stream()
+-                        .map(r -> new RespostaProgressoResponse(
+-                                r.getPergunta().getId(),
+-                                r.getAlternativa().getId()
+-                        ))
++                        .map(QuestionarioMapper::toRespostaProgresso)
+                         .toList()
+         );
+     }
++
++    ///Map.of não aceita nulo; cada tipo de atividade envia alternativaId ou alternativasIds
++    private static Map<String, Object> dadosDaResposta(
++            Atividade atividade,
++            Pergunta pergunta,
++            SalvarRespostaRequest request
++    ) {
++        Map<String, Object> dados = new LinkedHashMap<>();
++        dados.put("atividadeId", atividade.getId());
++        dados.put("perguntaId", pergunta.getId());
++        if (request.alternativaId() != null) {
++            dados.put("alternativaId", request.alternativaId());
++        }
++        if (request.alternativasIds() != null) {
++            dados.put("alternativasIds", request.alternativasIds());
++        }
++        return dados;
++    }
+ }
+diff -ruN --strip-trailing-cr orig4/src/main/java/com/umc/menteup/service/QuestionarioService.java menteup/src/main/java/com/umc/menteup/service/QuestionarioService.java
+--- orig4/src/main/java/com/umc/menteup/service/QuestionarioService.java	2026-11-02 14:58:02.722230108 -0300
++++ menteup/src/main/java/com/umc/menteup/service/QuestionarioService.java	2026-11-02 14:59:07.819641336 -0300
+@@ -59,6 +59,7 @@
+ 
+                 alternativa.setTexto(alternativaRequest.texto());
+                 alternativa.setCorreta(alternativaRequest.correta());
++                alternativa.setOrdem(alternativaRequest.ordem());
+                 alternativa.setPergunta(pergunta);
+ 
+                 pergunta.getAlternativas().add(alternativa);
+diff -ruN --strip-trailing-cr orig4/src/main/java/com/umc/menteup/template/LacunasTemplate.java menteup/src/main/java/com/umc/menteup/template/LacunasTemplate.java
+--- orig4/src/main/java/com/umc/menteup/template/LacunasTemplate.java	1969-12-31 21:00:00.000000000 -0300
++++ menteup/src/main/java/com/umc/menteup/template/LacunasTemplate.java	2026-11-02 14:59:52.957214065 -0300
+@@ -0,0 +1,105 @@
++package com.umc.menteup.template;
++
++import com.umc.menteup.dto.AlternativaRequest;
++import com.umc.menteup.dto.PerguntaRequest;
++import com.umc.menteup.exception.ApiException;
++import com.umc.menteup.model.Alternativa;
++import com.umc.menteup.model.Pergunta;
++import com.umc.menteup.model.TipoAtividade;
++import org.springframework.stereotype.Component;
++
++import java.util.ArrayList;
++import java.util.HashSet;
++import java.util.List;
++import java.util.Map;
++import java.util.Set;
++import java.util.regex.Matcher;
++import java.util.regex.Pattern;
++import java.util.stream.Collectors;
++import java.util.stream.IntStream;
++
++///Preencher lacunas: o enunciado é o texto com marcadores {{1}}, {{2}}... e as alternativas formam o banco de palavras
++///As palavras corretas têm correta = true e ordem = número da lacuna; as palavras extras (distratores) têm correta = false e sem ordem
++@Component
++public class LacunasTemplate extends SequenciaTemplate {
++
++    private static final Pattern LACUNA = Pattern.compile("\\{\\{(\\d{1,3})}}");
++
++    @Override
++    public TipoAtividade tipo() {
++        return TipoAtividade.LACUNAS;
++    }
++
++    ///Lacunas numeradas de 1 a N no texto e exatamente uma palavra correta para cada lacuna
++    @Override
++    public void validarCriacao(PerguntaRequest pergunta) {
++        List<Integer> lacunas = lacunasDoTexto(pergunta.enunciado());
++
++        if (lacunas.isEmpty()) {
++            throw invalida("O texto deve ter pelo menos uma lacuna, por exemplo: \"A capital do Brasil é {{1}}.\"");
++        }
++
++        Set<Integer> esperadas = IntStream.rangeClosed(1, lacunas.size()).boxed().collect(Collectors.toSet());
++        if (!new HashSet<>(lacunas).equals(esperadas)) {
++            throw invalida("As lacunas devem ser numeradas de {{1}} a {{" + lacunas.size() + "}}, sem repetir.");
++        }
++
++        List<AlternativaRequest> corretas = pergunta.alternativas().stream()
++                .filter(a -> Boolean.TRUE.equals(a.correta()))
++                .toList();
++        Set<Integer> ordensCorretas = corretas.stream()
++                .map(AlternativaRequest::ordem)
++                .collect(Collectors.toSet());
++
++        if (corretas.size() != lacunas.size() || !ordensCorretas.equals(esperadas)) {
++            throw invalida("Cada lacuna deve ter exatamente uma palavra correta, com ordem igual ao número da lacuna.");
++        }
++
++        boolean distratorComOrdem = pergunta.alternativas().stream()
++                .anyMatch(a -> !Boolean.TRUE.equals(a.correta()) && a.ordem() != null);
++        if (distratorComOrdem) {
++            throw invalida("Palavras extras (distratores) não devem ter ordem.");
++        }
++    }
++
++    ///O aluno preenche uma palavra por lacuna
++    @Override
++    protected int tamanhoEsperado(Pergunta pergunta) {
++        return (int) pergunta.getAlternativas().stream()
++                .filter(a -> Boolean.TRUE.equals(a.getCorreta()))
++                .count();
++    }
++
++    ///Compara pelo texto, assim palavras iguais cadastradas mais de uma vez valem em qualquer lacuna onde se encaixam
++    @Override
++    protected boolean sequenciaCorreta(Pergunta pergunta, List<Alternativa> sequencia) {
++        Map<Integer, String> respostaPorLacuna = pergunta.getAlternativas().stream()
++                .filter(a -> Boolean.TRUE.equals(a.getCorreta()))
++                .collect(Collectors.toMap(Alternativa::getOrdem, a -> normalizar(a.getTexto())));
++
++        for (int i = 0; i < sequencia.size(); i++) {
++            if (!normalizar(sequencia.get(i).getTexto()).equals(respostaPorLacuna.get(i + 1))) {
++                return false;
++            }
++        }
++        return true;
++    }
++
++    ///Lê os números das lacunas na ordem em que aparecem no texto
++    private static List<Integer> lacunasDoTexto(String texto) {
++        List<Integer> lacunas = new ArrayList<>();
++        Matcher matcher = LACUNA.matcher(texto == null ? "" : texto);
++        while (matcher.find()) {
++            lacunas.add(Integer.parseInt(matcher.group(1)));
++        }
++        return lacunas;
++    }
++
++    private static String normalizar(String texto) {
++        return texto == null ? "" : texto.trim().toLowerCase();
++    }
++
++    private static ApiException invalida(String mensagem) {
++        return ApiException.requisicaoInvalida("LACUNAS_INVALIDA", mensagem);
++    }
++}
+diff -ruN --strip-trailing-cr orig4/src/main/java/com/umc/menteup/template/OrdenacaoTemplate.java menteup/src/main/java/com/umc/menteup/template/OrdenacaoTemplate.java
+--- orig4/src/main/java/com/umc/menteup/template/OrdenacaoTemplate.java	1969-12-31 21:00:00.000000000 -0300
++++ menteup/src/main/java/com/umc/menteup/template/OrdenacaoTemplate.java	2026-11-02 14:59:44.201405581 -0300
+@@ -0,0 +1,69 @@
++package com.umc.menteup.template;
++
++import com.umc.menteup.dto.AlternativaRequest;
++import com.umc.menteup.dto.PerguntaRequest;
++import com.umc.menteup.exception.ApiException;
++import com.umc.menteup.model.Alternativa;
++import com.umc.menteup.model.Pergunta;
++import com.umc.menteup.model.TipoAtividade;
++import org.springframework.stereotype.Component;
++
++import java.util.List;
++import java.util.Objects;
++import java.util.Set;
++import java.util.stream.Collectors;
++import java.util.stream.IntStream;
++
++///Ordenação: a pergunta é a instrução e as alternativas são os itens, cada um com sua posição correta em "ordem"
++///O aluno envia todos os itens na ordem que acha correta e só acerta se a sequência inteira estiver certa
++@Component
++public class OrdenacaoTemplate extends SequenciaTemplate {
++
++    @Override
++    public TipoAtividade tipo() {
++        return TipoAtividade.ORDENACAO;
++    }
++
++    ///Pelo menos 2 itens e as ordens devem ir de 1 até a quantidade de itens, sem repetir
++    @Override
++    public void validarCriacao(PerguntaRequest pergunta) {
++        List<AlternativaRequest> itens = pergunta.alternativas();
++
++        if (itens.size() < 2) {
++            throw invalida("A pergunta \"" + pergunta.enunciado() + "\" precisa de pelo menos 2 itens para ordenar.");
++        }
++
++        if (itens.stream().map(AlternativaRequest::ordem).anyMatch(Objects::isNull)) {
++            throw invalida("Todos os itens de \"" + pergunta.enunciado() + "\" precisam informar a ordem.");
++        }
++
++        Set<Integer> ordens = itens.stream().map(AlternativaRequest::ordem).collect(Collectors.toSet());
++        Set<Integer> esperadas = IntStream.rangeClosed(1, itens.size()).boxed().collect(Collectors.toSet());
++
++        if (ordens.size() != itens.size() || !ordens.equals(esperadas)) {
++            throw invalida("A ordem dos itens de \"" + pergunta.enunciado()
++                    + "\" deve ir de 1 a " + itens.size() + ", sem repetir.");
++        }
++    }
++
++    ///O aluno precisa posicionar todos os itens
++    @Override
++    protected int tamanhoEsperado(Pergunta pergunta) {
++        return pergunta.getAlternativas().size();
++    }
++
++    ///Correta quando o item da posição i tem ordem i + 1
++    @Override
++    protected boolean sequenciaCorreta(Pergunta pergunta, List<Alternativa> sequencia) {
++        for (int i = 0; i < sequencia.size(); i++) {
++            if (!Objects.equals(sequencia.get(i).getOrdem(), i + 1)) {
++                return false;
++            }
++        }
++        return true;
++    }
++
++    private static ApiException invalida(String mensagem) {
++        return ApiException.requisicaoInvalida("ORDENACAO_INVALIDA", mensagem);
++    }
++}
+diff -ruN --strip-trailing-cr orig4/src/main/java/com/umc/menteup/template/SequenciaTemplate.java menteup/src/main/java/com/umc/menteup/template/SequenciaTemplate.java
+--- orig4/src/main/java/com/umc/menteup/template/SequenciaTemplate.java	1969-12-31 21:00:00.000000000 -0300
++++ menteup/src/main/java/com/umc/menteup/template/SequenciaTemplate.java	2026-11-02 14:59:44.200227161 -0300
+@@ -0,0 +1,96 @@
++package com.umc.menteup.template;
++
++import com.umc.menteup.dto.AlternativaResponse;
++import com.umc.menteup.dto.PerguntaResponse;
++import com.umc.menteup.dto.SalvarRespostaRequest;
++import com.umc.menteup.exception.ApiException;
++import com.umc.menteup.model.Alternativa;
++import com.umc.menteup.model.Atividade;
++import com.umc.menteup.model.Pergunta;
++import com.umc.menteup.model.RespostaAtividade;
++
++import java.util.ArrayList;
++import java.util.Collections;
++import java.util.HashSet;
++import java.util.List;
++import java.util.Random;
++
++///Base dos templates em que o aluno responde com uma lista de alternativas em ordem (ordenação e lacunas)
++public abstract class SequenciaTemplate implements TemplateAtividade {
++
++    ///Quantos itens a resposta do aluno deve ter nesta pergunta
++    protected abstract int tamanhoEsperado(Pergunta pergunta);
++
++    ///Compara a sequência escolhida pelo aluno com a sequência correta
++    protected abstract boolean sequenciaCorreta(Pergunta pergunta, List<Alternativa> sequencia);
++
++    ///O aluno recebe as alternativas de cada pergunta embaralhadas, para não revelar a ordem cadastrada
++    @Override
++    public List<PerguntaResponse> perguntasParaAluno(Atividade atividade) {
++        return atividade.getPerguntas().stream()
++                .map(p -> new PerguntaResponse(p.getId(), p.getEnunciado(), embaralhar(p)))
++                .toList();
++    }
++
++    @Override
++    public void validarResposta(Pergunta pergunta, SalvarRespostaRequest request) {
++        buscarSequencia(pergunta, request.alternativasIds());
++    }
++
++    @Override
++    public void preencherResposta(RespostaAtividade resposta, Pergunta pergunta, SalvarRespostaRequest request) {
++        buscarSequencia(pergunta, request.alternativasIds());
++        resposta.setAlternativa(null);
++        resposta.getAlternativasIds().clear();
++        resposta.getAlternativasIds().addAll(request.alternativasIds());
++    }
++
++    @Override
++    public boolean estaCorreta(Pergunta pergunta, RespostaAtividade resposta) {
++        return sequenciaCorreta(pergunta, buscarSequencia(pergunta, resposta.getAlternativasIds()));
++    }
++
++    ///Confere tamanho, repetição e se todos os ids são desta pergunta, devolvendo as alternativas na ordem do aluno
++    protected List<Alternativa> buscarSequencia(Pergunta pergunta, List<Long> alternativasIds) {
++        int esperado = tamanhoEsperado(pergunta);
++
++        if (alternativasIds == null || alternativasIds.size() != esperado) {
++            throw ApiException.requisicaoInvalida(
++                    "SEQUENCIA_INVALIDA",
++                    "A resposta da pergunta " + pergunta.getId() + " deve ter " + esperado + " itens."
++            );
++        }
++        if (new HashSet<>(alternativasIds).size() != alternativasIds.size()) {
++            throw ApiException.requisicaoInvalida(
++                    "SEQUENCIA_INVALIDA",
++                    "Um item não pode ser usado mais de uma vez na mesma resposta."
++            );
++        }
++
++        return alternativasIds.stream()
++                .map(id -> pergunta.getAlternativas().stream()
++                        .filter(a -> a.getId().equals(id))
++                        .findFirst()
++                        .orElseThrow(() -> ApiException.requisicaoInvalida(
++                                "ALTERNATIVA_INVALIDA",
++                                "A alternativa " + id + " não pertence à pergunta " + pergunta.getId() + "."
++                        )))
++                .toList();
++    }
++
++    ///Semente fixa pelo id da pergunta: a ordem não muda quando o aluno recarrega a página
++    private List<AlternativaResponse> embaralhar(Pergunta pergunta) {
++        List<AlternativaResponse> cadastradas = pergunta.getAlternativas().stream()
++                .map(a -> new AlternativaResponse(a.getId(), a.getTexto()))
++                .toList();
++
++        List<AlternativaResponse> embaralhadas = new ArrayList<>(cadastradas);
++        Collections.shuffle(embaralhadas, new Random(pergunta.getId() == null ? 0L : pergunta.getId()));
++
++        ///Se o embaralhamento cair na mesma ordem do cadastro, desloca uma posição
++        if (embaralhadas.size() > 1 && embaralhadas.equals(cadastradas)) {
++            Collections.rotate(embaralhadas, 1);
++        }
++        return List.copyOf(embaralhadas);
++    }
++}
+diff -ruN --strip-trailing-cr orig4/src/test/java/com/umc/menteup/controller/AtividadeControllerTest.java menteup/src/test/java/com/umc/menteup/controller/AtividadeControllerTest.java
+--- orig4/src/test/java/com/umc/menteup/controller/AtividadeControllerTest.java	2026-11-02 14:58:02.721258524 -0300
++++ menteup/src/test/java/com/umc/menteup/controller/AtividadeControllerTest.java	2026-11-02 14:59:52.969951617 -0300
+@@ -418,7 +418,7 @@
+         }
+ 
+         @Test
+-        @DisplayName("400 VALIDACAO_FALHOU quando falta o alternativaId: o service nem é chamado")
++        @DisplayName("400 VALIDACAO_FALHOU quando não vem alternativaId nem alternativasIds: o service nem é chamado")
+         void semAlternativa() throws Exception {
+             mockMvc.perform(put("/atividades/10/progresso")
+                             .principal(autenticado)
+@@ -426,7 +426,7 @@
+                             .content("{\"perguntaId\":1}"))
+                     .andExpect(status().isBadRequest())
+                     .andExpect(jsonPath("$.codigo").value("VALIDACAO_FALHOU"))
+-                    .andExpect(jsonPath("$.campos.alternativaId").exists());
++                    .andExpect(jsonPath("$.campos.respostaInformada").exists());
+ 
+             verifyNoInteractions(progressoAtividadeService);
+         }
+diff -ruN --strip-trailing-cr orig4/src/test/java/com/umc/menteup/integration/ProgressoAtividadeIntegrationTest.java menteup/src/test/java/com/umc/menteup/integration/ProgressoAtividadeIntegrationTest.java
+--- orig4/src/test/java/com/umc/menteup/integration/ProgressoAtividadeIntegrationTest.java	2026-11-02 14:58:02.721378229 -0300
++++ menteup/src/test/java/com/umc/menteup/integration/ProgressoAtividadeIntegrationTest.java	2026-11-02 14:59:52.970553606 -0300
+@@ -163,7 +163,7 @@
+         assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+         assertThat(resposta.getBody()).containsEntry("codigo", "VALIDACAO_FALHOU");
+         assertThat((Map<String, String>) resposta.getBody().get("campos"))
+-                .containsEntry("alternativaId", "alternativaId é obrigatório");
++                .containsEntry("respostaInformada", "Informe alternativaId ou alternativasIds");
+     }
+ 
+     @Test
+diff -ruN --strip-trailing-cr orig4/src/test/java/com/umc/menteup/template/LacunasTemplateTest.java menteup/src/test/java/com/umc/menteup/template/LacunasTemplateTest.java
+--- orig4/src/test/java/com/umc/menteup/template/LacunasTemplateTest.java	1969-12-31 21:00:00.000000000 -0300
++++ menteup/src/test/java/com/umc/menteup/template/LacunasTemplateTest.java	2026-11-02 15:00:28.096867095 -0300
+@@ -0,0 +1,149 @@
++package com.umc.menteup.template;
++
++import com.umc.menteup.dto.AlternativaRequest;
++import com.umc.menteup.dto.AlternativaResponse;
++import com.umc.menteup.dto.PerguntaRequest;
++import com.umc.menteup.dto.PerguntaResponse;
++import com.umc.menteup.dto.SalvarRespostaRequest;
++import com.umc.menteup.exception.ApiException;
++import com.umc.menteup.model.Alternativa;
++import com.umc.menteup.model.Atividade;
++import com.umc.menteup.model.Pergunta;
++import com.umc.menteup.model.RespostaAtividade;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.api.function.Executable;
++import org.springframework.http.HttpStatus;
++
++import java.util.List;
++
++import static org.junit.jupiter.api.Assertions.*;
++
++class LacunasTemplateTest {
++
++    private static final String TEXTO = "A capital do Brasil é {{1}} e a da França é {{2}}.";
++
++    private final LacunasTemplate template = new LacunasTemplate();
++
++    private Atividade atividade;
++    private Pergunta pergunta;
++
++    @BeforeEach
++    void setUp() {
++        atividade = new Atividade();
++        atividade.setId(10L);
++
++        pergunta = new Pergunta();
++        pergunta.setId(1L);
++        pergunta.setEnunciado(TEXTO);
++        pergunta.setAtividade(atividade);
++        atividade.getPerguntas().add(pergunta);
++
++        palavra(11L, "Brasília", true, 1);
++        palavra(12L, "Paris", true, 2);
++        palavra(13L, "Roma", false, null);
++    }
++
++    @Test
++    @DisplayName("criação: aceita texto com lacunas, palavras corretas e distratores")
++    void criacaoValida() {
++        assertDoesNotThrow(() -> template.validarCriacao(texto(TEXTO,
++                new AlternativaRequest("Brasília", true, 1),
++                new AlternativaRequest("Paris", true, 2),
++                new AlternativaRequest("Roma", false)
++        )));
++    }
++
++    @Test
++    @DisplayName("criação: rejeita texto sem lacuna, numeração errada, palavra faltando e distrator com ordem")
++    void criacaoInvalida() {
++        assertErro("LACUNAS_INVALIDA", () -> template.validarCriacao(texto("Sem lacunas.",
++                new AlternativaRequest("x", true, 1))));
++        assertErro("LACUNAS_INVALIDA", () -> template.validarCriacao(texto("{{1}} e {{3}}",
++                new AlternativaRequest("a", true, 1), new AlternativaRequest("b", true, 3))));
++        assertErro("LACUNAS_INVALIDA", () -> template.validarCriacao(texto(TEXTO,
++                new AlternativaRequest("Brasília", true, 1))));
++        assertErro("LACUNAS_INVALIDA", () -> template.validarCriacao(texto(TEXTO,
++                new AlternativaRequest("Brasília", true, 1),
++                new AlternativaRequest("Paris", true, 2),
++                new AlternativaRequest("Roma", false, 3))));
++    }
++
++    @Test
++    @DisplayName("visão do aluno: texto com os marcadores e banco de palavras completo embaralhado")
++    void perguntasParaAluno() {
++        PerguntaResponse vista = template.perguntasParaAluno(atividade).get(0);
++        List<Long> ids = vista.alternativas().stream().map(AlternativaResponse::id).toList();
++
++        assertEquals(TEXTO, vista.texto());
++        assertEquals(3, ids.size());
++        assertTrue(ids.containsAll(List.of(11L, 12L, 13L)));
++        assertNotEquals(List.of(11L, 12L, 13L), ids);
++    }
++
++    @Test
++    @DisplayName("resposta: uma palavra por lacuna, sem repetir")
++    void respostaInvalida() {
++        assertErro("SEQUENCIA_INVALIDA", () -> template.validarResposta(pergunta, sequencia(11L)));
++        assertErro("SEQUENCIA_INVALIDA", () -> template.validarResposta(pergunta, sequencia(11L, 11L)));
++        assertErro("ALTERNATIVA_INVALIDA", () -> template.validarResposta(pergunta, sequencia(11L, 99L)));
++        assertDoesNotThrow(() -> template.validarResposta(pergunta, sequencia(13L, 12L)));
++    }
++
++    @Test
++    @DisplayName("correção: acerta só com a palavra certa em cada lacuna")
++    void correcao() {
++        assertTrue(template.estaCorreta(pergunta, resposta(11L, 12L)));
++        assertFalse(template.estaCorreta(pergunta, resposta(12L, 11L)));
++        assertFalse(template.estaCorreta(pergunta, resposta(13L, 12L)));
++    }
++
++    @Test
++    @DisplayName("correção: palavras iguais cadastradas duas vezes valem em qualquer lacuna correspondente")
++    void correcaoComPalavrasRepetidas() {
++        Pergunta repetida = new Pergunta();
++        repetida.setId(2L);
++        repetida.setEnunciado("{{1}} mais {{2}} é quatro.");
++        Alternativa dois1 = palavraEm(repetida, 21L, "dois", 1);
++        Alternativa dois2 = palavraEm(repetida, 22L, "dois", 2);
++
++        assertTrue(template.estaCorreta(repetida, resposta(dois2.getId(), dois1.getId())));
++    }
++
++    private void palavra(Long id, String texto, boolean correta, Integer ordem) {
++        Alternativa alternativa = palavraEm(pergunta, id, texto, ordem);
++        alternativa.setCorreta(correta);
++    }
++
++    private static Alternativa palavraEm(Pergunta pergunta, Long id, String texto, Integer ordem) {
++        Alternativa alternativa = new Alternativa();
++        alternativa.setId(id);
++        alternativa.setTexto(texto);
++        alternativa.setCorreta(true);
++        alternativa.setOrdem(ordem);
++        alternativa.setPergunta(pergunta);
++        pergunta.getAlternativas().add(alternativa);
++        return alternativa;
++    }
++
++    private static PerguntaRequest texto(String enunciado, AlternativaRequest... palavras) {
++        return new PerguntaRequest(enunciado, List.of(palavras));
++    }
++
++    private static SalvarRespostaRequest sequencia(Long... ids) {
++        return new SalvarRespostaRequest(1L, null, List.of(ids));
++    }
++
++    private static RespostaAtividade resposta(Long... ids) {
++        RespostaAtividade resposta = new RespostaAtividade();
++        resposta.getAlternativasIds().addAll(List.of(ids));
++        return resposta;
++    }
++
++    private static void assertErro(String codigo, Executable acao) {
++        ApiException erro = assertThrows(ApiException.class, acao);
++        assertEquals(HttpStatus.BAD_REQUEST, erro.getStatus());
++        assertEquals(codigo, erro.getCodigo());
++    }
++}
+diff -ruN --strip-trailing-cr orig4/src/test/java/com/umc/menteup/template/OrdenacaoTemplateTest.java menteup/src/test/java/com/umc/menteup/template/OrdenacaoTemplateTest.java
+--- orig4/src/test/java/com/umc/menteup/template/OrdenacaoTemplateTest.java	1969-12-31 21:00:00.000000000 -0300
++++ menteup/src/test/java/com/umc/menteup/template/OrdenacaoTemplateTest.java	2026-11-02 15:00:28.095389181 -0300
+@@ -0,0 +1,135 @@
++package com.umc.menteup.template;
++
++import com.umc.menteup.dto.AlternativaRequest;
++import com.umc.menteup.dto.AlternativaResponse;
++import com.umc.menteup.dto.PerguntaRequest;
++import com.umc.menteup.dto.PerguntaResponse;
++import com.umc.menteup.dto.SalvarRespostaRequest;
++import com.umc.menteup.exception.ApiException;
++import com.umc.menteup.model.Alternativa;
++import com.umc.menteup.model.Atividade;
++import com.umc.menteup.model.Pergunta;
++import com.umc.menteup.model.RespostaAtividade;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.api.function.Executable;
++import org.springframework.http.HttpStatus;
++
++import java.util.List;
++
++import static org.junit.jupiter.api.Assertions.*;
++
++class OrdenacaoTemplateTest {
++
++    private final OrdenacaoTemplate template = new OrdenacaoTemplate();
++
++    private Atividade atividade;
++    private Pergunta pergunta;
++
++    @BeforeEach
++    void setUp() {
++        atividade = new Atividade();
++        atividade.setId(10L);
++
++        pergunta = new Pergunta();
++        pergunta.setId(1L);
++        pergunta.setEnunciado("Ordene do menor para o maior");
++        pergunta.setAtividade(atividade);
++        atividade.getPerguntas().add(pergunta);
++
++        item(11L, "1", 1);
++        item(12L, "5", 2);
++        item(13L, "10", 3);
++    }
++
++    @Test
++    @DisplayName("criação: aceita itens com ordens de 1 a N")
++    void criacaoValida() {
++        assertDoesNotThrow(() -> template.validarCriacao(instrucao(
++                new AlternativaRequest("1", true, 1),
++                new AlternativaRequest("5", true, 2)
++        )));
++    }
++
++    @Test
++    @DisplayName("criação: rejeita menos de 2 itens, ordem ausente, repetida ou fora da faixa")
++    void criacaoInvalida() {
++        assertErro("ORDENACAO_INVALIDA", () -> template.validarCriacao(instrucao(
++                new AlternativaRequest("1", true, 1))));
++        assertErro("ORDENACAO_INVALIDA", () -> template.validarCriacao(instrucao(
++                new AlternativaRequest("1", true, 1), new AlternativaRequest("5", true))));
++        assertErro("ORDENACAO_INVALIDA", () -> template.validarCriacao(instrucao(
++                new AlternativaRequest("1", true, 1), new AlternativaRequest("5", true, 1))));
++        assertErro("ORDENACAO_INVALIDA", () -> template.validarCriacao(instrucao(
++                new AlternativaRequest("1", true, 1), new AlternativaRequest("5", true, 3))));
++    }
++
++    @Test
++    @DisplayName("visão do aluno: mesmos itens, fora da ordem cadastrada e estável entre chamadas")
++    void perguntasParaAluno() {
++        List<PerguntaResponse> perguntas = template.perguntasParaAluno(atividade);
++        List<Long> ids = perguntas.get(0).alternativas().stream().map(AlternativaResponse::id).toList();
++
++        assertEquals(3, ids.size());
++        assertTrue(ids.containsAll(List.of(11L, 12L, 13L)));
++        assertNotEquals(List.of(11L, 12L, 13L), ids);
++        assertEquals(perguntas, template.perguntasParaAluno(atividade));
++    }
++
++    @Test
++    @DisplayName("resposta: exige todos os itens, sem repetir e da própria pergunta")
++    void respostaInvalida() {
++        assertErro("SEQUENCIA_INVALIDA", () -> template.validarResposta(pergunta, sequencia(11L, 12L)));
++        assertErro("SEQUENCIA_INVALIDA", () -> template.validarResposta(pergunta, sequencia(11L, 11L, 12L)));
++        assertErro("SEQUENCIA_INVALIDA", () -> template.validarResposta(pergunta, new SalvarRespostaRequest(1L, 11L)));
++        assertErro("ALTERNATIVA_INVALIDA", () -> template.validarResposta(pergunta, sequencia(11L, 12L, 99L)));
++    }
++
++    @Test
++    @DisplayName("resposta: guarda a sequência e limpa a alternativa única")
++    void preencherResposta() {
++        RespostaAtividade resposta = new RespostaAtividade();
++        template.preencherResposta(resposta, pergunta, sequencia(13L, 11L, 12L));
++
++        assertNull(resposta.getAlternativa());
++        assertEquals(List.of(13L, 11L, 12L), resposta.getAlternativasIds());
++    }
++
++    @Test
++    @DisplayName("correção: só acerta com a sequência inteira correta")
++    void correcao() {
++        assertTrue(template.estaCorreta(pergunta, resposta(11L, 12L, 13L)));
++        assertFalse(template.estaCorreta(pergunta, resposta(12L, 11L, 13L)));
++    }
++
++    private void item(Long id, String texto, int ordem) {
++        Alternativa alternativa = new Alternativa();
++        alternativa.setId(id);
++        alternativa.setTexto(texto);
++        alternativa.setCorreta(true);
++        alternativa.setOrdem(ordem);
++        alternativa.setPergunta(pergunta);
++        pergunta.getAlternativas().add(alternativa);
++    }
++
++    private static PerguntaRequest instrucao(AlternativaRequest... itens) {
++        return new PerguntaRequest("Ordene", List.of(itens));
++    }
++
++    private static SalvarRespostaRequest sequencia(Long... ids) {
++        return new SalvarRespostaRequest(1L, null, List.of(ids));
++    }
++
++    private static RespostaAtividade resposta(Long... ids) {
++        RespostaAtividade resposta = new RespostaAtividade();
++        resposta.getAlternativasIds().addAll(List.of(ids));
++        return resposta;
++    }
++
++    private static void assertErro(String codigo, Executable acao) {
++        ApiException erro = assertThrows(ApiException.class, acao);
++        assertEquals(HttpStatus.BAD_REQUEST, erro.getStatus());
++        assertEquals(codigo, erro.getCodigo());
++    }
++}
