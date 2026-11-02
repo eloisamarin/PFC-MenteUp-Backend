@@ -4,6 +4,8 @@ import com.umc.menteup.dto.AlternativaRequest;
 import com.umc.menteup.dto.PerguntaRequest;
 import com.umc.menteup.dto.QuestionarioRequest;
 import com.umc.menteup.model.*;
+import com.umc.menteup.template.QuizTemplate;
+import com.umc.menteup.template.TemplateResolver;
 import com.umc.menteup.repository.AtividadeRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
@@ -31,6 +34,8 @@ class QuestionarioServiceTest {
 
     @Mock private AtividadeRepository atividadeRepository;
     @Mock private LogSistemaService logSistemaService;
+
+    @Spy private TemplateResolver templateResolver = new TemplateResolver(List.of(new QuizTemplate()));
 
     @InjectMocks
     private QuestionarioService service;
@@ -165,7 +170,7 @@ class QuestionarioServiceTest {
     }
 
     private static QuestionarioRequest requestComDuasPerguntas() {
-        return new QuestionarioRequest(List.of(
+        return new QuestionarioRequest(TipoAtividade.QUIZ, List.of(
                 new PerguntaRequest("Quanto e 1 + 1?", List.of(
                         new AlternativaRequest("1", false),
                         new AlternativaRequest("2", true),

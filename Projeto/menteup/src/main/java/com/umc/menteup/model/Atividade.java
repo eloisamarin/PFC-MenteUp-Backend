@@ -48,6 +48,14 @@ public class Atividade {
     @NotNull(message = "O Status da atividade é obrigatório!")
     private StatusAtividade status = StatusAtividade.PENDENTE;
 
+    /**
+     * Template escolhido na etapa 2 da criação. A coluna é anulável para não quebrar
+     * as linhas já existentes no banco; o getter trata nulo como QUIZ.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo", length = 30)
+    private TipoAtividade tipo = TipoAtividade.QUIZ;
+
     @CreationTimestamp
     @Column(name = "data_criacao", updatable = false)
     @Setter(AccessLevel.NONE)
@@ -70,4 +78,8 @@ public class Atividade {
             orphanRemoval = true
     )
     private List<Pergunta> perguntas = new ArrayList<>();
+
+    public TipoAtividade getTipo() {
+        return TipoAtividade.ouPadrao(tipo);
+    }
 }

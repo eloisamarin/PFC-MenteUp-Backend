@@ -3,8 +3,11 @@ package com.umc.menteup.service;
 import com.umc.menteup.dto.AlternativaRequest;
 import com.umc.menteup.dto.PerguntaRequest;
 import com.umc.menteup.dto.QuestionarioRequest;
+import com.umc.menteup.exception.ApiException;
 import com.umc.menteup.model.*;
 import com.umc.menteup.repository.AtividadeRepository;
+import com.umc.menteup.template.TemplateAtividade;
+import com.umc.menteup.template.TemplateResolver;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -16,10 +19,16 @@ import java.util.Map;
 public class QuestionarioService {
     private final AtividadeRepository atividadeRepository;
     private final LogSistemaService logSistemaService;
+    private final TemplateResolver templateResolver;
 
-    public QuestionarioService(AtividadeRepository atividadeRepository, LogSistemaService logSistemaService){
+     public QuestionarioService(
+            AtividadeRepository atividadeRepository,
+            LogSistemaService logSistemaService,
+            TemplateResolver templateResolver
+    ){
         this.atividadeRepository = atividadeRepository;
         this.logSistemaService = logSistemaService;
+        this.templateResolver = templateResolver;
     }
 
     @Transactional
@@ -31,6 +40,11 @@ public class QuestionarioService {
         Atividade atividade = atividadeRepository.findById(atividadeId)
                 .orElseThrow(() ->new RuntimeException("Atividade não encontrada")
                 );
+
+        TipoAtividade tipo = definirTipo(atividade, request.tipo());
+        TemplateAtividade template = templateResolver.resolver(tipo);
+        template.validarQuestionario(atividade, request.perguntas());
+        atividade.setTipo(tipo);
 
         List<Pergunta> criadasNestaChamada = new ArrayList<>();
 
@@ -45,6 +59,7 @@ public class QuestionarioService {
 
                 alternativa.setTexto(alternativaRequest.texto());
                 alternativa.setCorreta(alternativaRequest.correta());
+                alternativa.setOrdem(alternativaRequest.ordem());
                 alternativa.setPergunta(pergunta);
 
                 pergunta.getAlternativas().add(alternativa);
@@ -71,5 +86,22 @@ public class QuestionarioService {
         }
 
         return salva;
+    }
+
+    private TipoAtividade definirTipo(Atividade atividade, TipoAtividade tipoSolicitado) {
+        TipoAtividade tipoAtual = atividade.getTipo();
+
+        if (tipoSolicitado == null || tipoSolicitado == tipoAtual) {
+            return tipoAtual;
+        }
+
+        if (!atividade.getPerguntas().isEmpty()) {
+            throw ApiException.conflito(
+                    "TIPO_ATIVIDADE_IMUTAVEL",
+                    "Esta atividade já possui questões do tipo " + tipoAtual
+                            + ". Remova as questões antes de trocar o tipo."
+            );
+        }
+        return tipoSolicitado;
     }
 }

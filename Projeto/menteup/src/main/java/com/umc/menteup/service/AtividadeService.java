@@ -19,6 +19,7 @@ import com.umc.menteup.repository.ResultadoAtividadeRepository;
 import com.umc.menteup.repository.TurmaRepository;
 import com.umc.menteup.repository.UsuarioRepository;
 import com.umc.menteup.service.NotificacaoService;
+import com.umc.menteup.template.TemplateResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.umc.menteup.model.Usuario;
@@ -55,6 +56,9 @@ public class AtividadeService {
 
     @Autowired
     private MatriculaService matriculaService;
+
+    @Autowired
+    private TemplateResolver templateResolver;
 
     public List<Atividade> listarTodas() {
         return atividadeRepository.findAll();
@@ -210,7 +214,17 @@ public class AtividadeService {
             }
         }
 
-        return QuestionarioMapper.toQuestionario(atividade, meuResultado, meuProgresso);
+        if (!TipoUsuario.ehAluno(usuario)) {
+            return QuestionarioMapper.toQuestionario(atividade, meuResultado, meuProgresso);
+        }
+
+        ///O template que irá determinar como as alternativas irão aparecer para o aluno
+        return QuestionarioMapper.toQuestionario(
+                atividade,
+                templateResolver.resolver(atividade).perguntasParaAluno(atividade),
+                meuResultado,
+                meuProgresso
+        );
     }
 
     @Transactional(readOnly = true)
