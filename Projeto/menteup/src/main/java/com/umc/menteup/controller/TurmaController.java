@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.validation.Valid;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/turmas")
@@ -67,9 +66,18 @@ public class TurmaController {
     public ResponseEntity<Turma> put(
             @Valid @RequestBody Turma turma) {
 
+        if (turma.getId() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        // Atualiza apenas os campos editáveis, preservando os alunos matriculados
         return turmaRepository.findById(turma.getId())
-                .map(resposta -> ResponseEntity.status(HttpStatus.OK)
-                        .body(turmaRepository.save(turma)))
+                .map(existente -> {
+                    existente.setNome(turma.getNome());
+                    existente.setUsuario(turma.getUsuario());
+                    return ResponseEntity.status(HttpStatus.OK)
+                            .body(turmaRepository.save(existente));
+                })
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
