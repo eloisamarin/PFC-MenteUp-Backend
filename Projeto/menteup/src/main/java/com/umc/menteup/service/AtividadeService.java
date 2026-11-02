@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 import java.util.List;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -101,12 +102,16 @@ public class AtividadeService {
                         + turma.getId()
         );
 
+        List<Usuario> alunos = turma.getAlunos() == null
+                ? Collections.emptyList()
+                : turma.getAlunos();
+
         System.out.println(
                 "QUANTIDADE DE ALUNOS: "
-                        + turma.getAlunos().size()
+                        + alunos.size()
         );
 
-        for (Usuario aluno : turma.getAlunos()) {
+        for (Usuario aluno : alunos) {
 
             System.out.println(
                     "ALUNO: "
