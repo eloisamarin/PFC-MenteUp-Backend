@@ -8,6 +8,8 @@ import com.umc.menteup.repository.ProgressoAtividadeRepository;
 import com.umc.menteup.repository.ResultadoAtividadeRepository;
 import com.umc.menteup.repository.TurmaRepository;
 import com.umc.menteup.repository.UsuarioRepository;
+import com.umc.menteup.template.QuizTemplate;
+import com.umc.menteup.template.TemplateResolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
@@ -58,7 +60,8 @@ class ResultadoAtividadeServiceTest {
                 resultadoRepository,
                 new MatriculaService(turmaRepository, usuarioRepository, logSistemaService),
                 progressoRepository,
-                logSistemaService
+                logSistemaService,
+                new TemplateResolver(List.of(new QuizTemplate()))
         );
 
         aluno = usuario(ALUNO_ID, "ALUNO");
