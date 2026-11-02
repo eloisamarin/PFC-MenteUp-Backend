@@ -1,12 +1,11 @@
 package com.umc.menteup.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.persistence.FetchType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -27,24 +26,17 @@ public class Turma {
             cascade = CascadeType.REMOVE
     )
     @JsonIgnoreProperties(value = "turma", allowSetters = true)
-    private List<Atividade> atividade;
+    private List<Atividade> atividade = new ArrayList<>();
 
-    // Professor responsável pela turma
-    @ManyToOne
-    @JsonIgnoreProperties("atividade")
-    private Usuario usuario;
-
-    // Alunos matriculados na turma (gerenciados pelo MatriculaService).
-    // @JsonIgnore evita expor dados dos alunos (inclusive o hash da senha)
-    // e impede que o JSON de entrada sobrescreva as matrículas.
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany
     @JoinTable(
-            name = "tb_turma_alunos",
+            name = "tb_turma_aluno",
             joinColumns = @JoinColumn(name = "turma_id"),
-            inverseJoinColumns = @JoinColumn(name = "alunos_id")
+            inverseJoinColumns = @JoinColumn(name = "aluno_id")
     )
-    @JsonIgnore
+    @JsonIgnoreProperties("turmas")
     private List<Usuario> alunos = new ArrayList<>();
+
 
 
     public Long getId() {
@@ -69,14 +61,6 @@ public class Turma {
 
     public void setAtividade(List<Atividade> atividade) {
         this.atividade = atividade;
-    }
-
-    public Usuario getUsuario() {
-        return usuario;
-    }
-
-    public void setUsuario(Usuario usuario) {
-        this.usuario = usuario;
     }
 
     public List<Usuario> getAlunos() {

@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.validation.Valid;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/turmas")
@@ -30,6 +31,9 @@ public class TurmaController {
 
     @Autowired
     private TurmaRepository turmaRepository;
+
+    @Autowired
+    private TurmaService turmaService;
 
     @GetMapping("/all")
     public ResponseEntity<List<Turma>> getAll() {
@@ -52,45 +56,53 @@ public class TurmaController {
         );
     }
 
+    // Somente PROFESSOR ou ADMINISTRADOR realiza criação de Turma
     @PostMapping
     public ResponseEntity<Turma> post(
-            @Valid @RequestBody Turma turma) {
-
-        turma.setId(null);
+            @Valid @RequestBody Turma turma,
+            Authentication authentication) {
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(turmaRepository.save(turma));
+                .body(turmaService.criarTurma(turma, authentication.getName()));
     }
 
+    // Somente PROFESSOR ou ADMINISTRADOR realiza vinculamento de alunos com Turmas
+    @PostMapping("/{turmaId}/alunos/{alunoId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void vincularAluno(
+            @PathVariable Long turmaId,
+            @PathVariable Long alunoId,
+            Authentication authentication) {
+
+        turmaService.vincularAluno(turmaId, alunoId, authentication.getName());
+    }
+
+    // Somente PROFESSOR ou ADMINISTRADOR remove alunos de Turmas
+    @DeleteMapping("/{turmaId}/alunos/{alunoId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removerAluno(
+            @PathVariable Long turmaId,
+            @PathVariable Long alunoId,
+            Authentication authentication) {
+
+        turmaService.removerAluno(turmaId, alunoId, authentication.getName());
+    }
+
+    // Somente PROFESSOR ou ADMINISTRADOR realiza atualizar a Turma
     @PutMapping
     public ResponseEntity<Turma> put(
-            @Valid @RequestBody Turma turma) {
+            @Valid @RequestBody Turma turma,
+            Authentication authentication) {
 
-        if (turma.getId() == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-
-        // Atualiza apenas os campos editáveis, preservando os alunos matriculados
-        return turmaRepository.findById(turma.getId())
-                .map(existente -> {
-                    existente.setNome(turma.getNome());
-                    existente.setUsuario(turma.getUsuario());
-                    return ResponseEntity.status(HttpStatus.OK)
-                            .body(turmaRepository.save(existente));
-                })
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+        return ResponseEntity.ok(
+                turmaService.atualizarTurma(turma, authentication.getName()));
     }
 
+    // Somente PROFESSOR ou ADMINISTRADOR deletar a turma
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
+    public void delete(@PathVariable Long id, Authentication authentication) {
 
-        Optional<Turma> turma = turmaRepository.findById(id);
-
-        if (turma.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        }
-
-        turmaRepository.deleteById(id);
+        turmaService.excluirTurma(id, authentication.getName());
     }
 }
