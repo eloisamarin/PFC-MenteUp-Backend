@@ -42,6 +42,9 @@ public class TurmaService {
                 "Turma \"" + salva.getNome() + "\" criada.",
                 Map.of("turmaId", salva.getId())
         );
+        if (TipoUsuario.ehProfessor(autor)) {
+            turma.setProfessor(autor);
+        }
 
         return salva;
     }
