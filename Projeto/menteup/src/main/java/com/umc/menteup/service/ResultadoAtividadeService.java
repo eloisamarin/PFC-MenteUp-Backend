@@ -172,7 +172,6 @@ public class ResultadoAtividadeService {
             throw jaRespondida();
         }
 
-        progressoRepository.delete(progresso);
 
         logSistemaService.registrarSucesso(
                 usuario,
@@ -225,7 +224,10 @@ public class ResultadoAtividadeService {
                     throw respostasIncompletas();
                 }
 
-                if (template.estaCorreta(pergunta, resposta)) {
+                boolean correta = template.estaCorreta(pergunta, resposta);
+                resposta.setCorreta(correta);
+
+                if (correta) {
                     acertos++;
                 }
             }
