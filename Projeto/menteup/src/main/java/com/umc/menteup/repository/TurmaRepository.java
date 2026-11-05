@@ -11,6 +11,7 @@ public interface TurmaRepository extends JpaRepository<Turma,Long> {
     public List<Turma> findAllByNomeContainingIgnoreCase(String nome);
 
     List<Turma> findAllByAlunos_Id(Long alunoId);
+    List<Turma> findAllByProfessor_Id(Long professorId);
 
     @Query("""
             select count(t)

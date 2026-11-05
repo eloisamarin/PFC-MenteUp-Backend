@@ -10,6 +10,8 @@ import com.umc.menteup.repository.AtividadeRepository;
 import com.umc.menteup.repository.ProgressoAtividadeRepository;
 import com.umc.menteup.repository.ResultadoAtividadeRepository;
 import com.umc.menteup.repository.UsuarioRepository;
+import com.umc.menteup.template.TemplateAtividade;
+import com.umc.menteup.template.TemplateResolver;
 import jakarta.transaction.Transactional;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -30,6 +32,7 @@ public class ResultadoAtividadeService {
     private final MatriculaService matriculaService;
     private final ProgressoAtividadeRepository progressoRepository;
     private final LogSistemaService logSistemaService;
+    private final TemplateResolver templateResolver;
 
     public ResultadoAtividadeService(
             AtividadeRepository atividadeRepository,
@@ -37,7 +40,8 @@ public class ResultadoAtividadeService {
             ResultadoAtividadeRepository resultadoAtividadeRepository,
             MatriculaService matriculaService,
             ProgressoAtividadeRepository progressoRepository,
-            LogSistemaService logSistemaService
+            LogSistemaService logSistemaService,
+            TemplateResolver templateResolver
     ) {
         this.atividadeRepository = atividadeRepository;
         this.usuarioRepository = usuarioRepository;
@@ -45,6 +49,7 @@ public class ResultadoAtividadeService {
         this.matriculaService = matriculaService;
         this.progressoRepository = progressoRepository;
         this.logSistemaService = logSistemaService;
+        this.templateResolver = templateResolver;
     }
 
     @Transactional
@@ -110,7 +115,7 @@ public class ResultadoAtividadeService {
             );
         }
 
-        Map<Long, Long> escolhaPorPergunta =
+        Map<Long, RespostaAtividade> respostaPorPergunta =
                 new HashMap<>();
 
         progresso.getRespostas()
@@ -119,12 +124,9 @@ public class ResultadoAtividadeService {
                     Long perguntaId =
                             resposta.getPergunta().getId();
 
-                    Long alternativaId =
-                            resposta.getAlternativa().getId();
-
-                    if (escolhaPorPergunta.put(
+                    if (respostaPorPergunta.put(
                             perguntaId,
-                            alternativaId
+                            resposta
                     ) != null) {
 
                         throw ApiException.requisicaoInvalida(
@@ -137,8 +139,9 @@ public class ResultadoAtividadeService {
                 });
 
         int acertos = corrigir(
+                templateResolver.resolver(atividade),
                 perguntas,
-                escolhaPorPergunta
+                respostaPorPergunta
         );
 
         int totalQuestoes = perguntas.size();
@@ -208,31 +211,28 @@ public class ResultadoAtividadeService {
             }
         }
 
-        private int corrigir (List < Pergunta > perguntas, Map<Long, Long> escolhaPorPergunta){
+        private int corrigir (
+                TemplateAtividade template,
+                List<Pergunta> perguntas,
+                Map<Long, RespostaAtividade> respostaPorPergunta
+        ){
 
             int acertos = 0;
 
             for (Pergunta pergunta : perguntas) {
-                Long alternativaEscolhida = escolhaPorPergunta.remove(pergunta.getId());
-                if (alternativaEscolhida == null) {
+                RespostaAtividade resposta = respostaPorPergunta.remove(pergunta.getId());
+                if (resposta == null) {
                     throw respostasIncompletas();
                 }
 
-                Alternativa alternativa = pergunta.getAlternativas().stream()
-                        .filter(a -> a.getId().equals(alternativaEscolhida))
-                        .findFirst()
-                        .orElseThrow(() -> ApiException.requisicaoInvalida(
-                                "ALTERNATIVA_INVALIDA",
-                                "A alternativa" + alternativaEscolhida + "não pertence à pergunta" + pergunta.getId()));
-
-                if (Boolean.TRUE.equals(alternativa.getCorreta())) {
+                if (template.estaCorreta(pergunta, resposta)) {
                     acertos++;
                 }
             }
-            if (!escolhaPorPergunta.isEmpty()) {
+            if (!respostaPorPergunta.isEmpty()) {
                 throw ApiException.requisicaoInvalida(
                         "PERGUNTA_INVALIDA",
-                        "As perguntas" + escolhaPorPergunta.keySet() + "não pertecem a esta atividade");
+                        "As perguntas" + respostaPorPergunta.keySet() + "não pertecem a esta atividade");
             }
             return acertos;
         }

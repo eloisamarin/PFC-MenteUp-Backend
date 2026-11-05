@@ -15,8 +15,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import com.umc.menteup.template.AssociacaoTemplate;
+import com.umc.menteup.template.QuizTemplate;
+import com.umc.menteup.template.TemplateResolver;
+import com.umc.menteup.template.VerdadeiroFalsoTemplate;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
@@ -43,6 +48,9 @@ class AtividadeServiceTest {
     @Mock private ResultadoAtividadeRepository resultadoAtividadeRepository;
     @Mock private ProgressoAtividadeRepository progressoAtividadeRepository;
     @Mock private MatriculaService matriculaService;
+
+    @Spy private TemplateResolver templateResolver = new TemplateResolver(
+            List.of(new QuizTemplate(), new VerdadeiroFalsoTemplate(), new AssociacaoTemplate()));
 
     @InjectMocks
     private AtividadeService service;

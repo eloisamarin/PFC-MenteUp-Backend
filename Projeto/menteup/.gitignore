@@ -4,6 +4,17 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+firebase/
+*firebase-adminsdk*.json
+.env
+.env.*
+application-local.properties
+application-dev.properties
+
+### Logs ###
+*.log
+logs/
+
 ### STS ###
 .apt_generated
 .classpath
@@ -18,6 +29,7 @@ target/
 *.iws
 *.iml
 *.ipr
+out/
 
 ### NetBeans ###
 /nbproject/private/
@@ -31,3 +43,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Sistema operacional ###
+.DS_Store
+Thumbs.db
+desktop.ini

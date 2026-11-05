@@ -9,6 +9,7 @@ import java.util.List;
 
 public interface AtividadeRepository extends JpaRepository<Atividade, Long> {
     public List <Atividade> findAllByTituloContainingIgnoreCase(@Param("titulo") String titulo);
+    long countByTurma_IdAndStatusNot(Long turmaId, StatusAtividade status);
 
     @Query("""
             select a from Atividade a 
@@ -24,4 +25,5 @@ public interface AtividadeRepository extends JpaRepository<Atividade, Long> {
             @Param("alunoId") Long alunoId,
             @Param("statusExcluido")StatusAtividade statusExluido
     );
+
 }

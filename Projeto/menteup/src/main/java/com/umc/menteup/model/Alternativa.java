@@ -24,6 +24,8 @@ public class Alternativa {
     @Column(nullable = false)
     private Boolean correta;
 
+    private Integer ordem;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pergunta_id", nullable = false)
     @JsonIgnore

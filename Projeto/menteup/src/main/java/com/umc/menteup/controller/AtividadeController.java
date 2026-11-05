@@ -134,6 +134,8 @@ public class AtividadeController {
         StatusAtividade statusAnterior = existente.getStatus();
 
         atividade.setPerguntas(existente.getPerguntas());
+        // O tipo é definido no cadastro do questionário (etapa 2) e não muda pela edição dos dados gerais.
+        atividade.setTipo(existente.getTipo());
 
         Atividade salva = atividadeRepository.save(atividade);
 
