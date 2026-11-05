@@ -36,7 +36,4 @@ public interface ResultadoAtividadeRepository extends JpaRepository<ResultadoAti
                           ORDER BY SUM(r.pontuacao) DESC
             """)
     List<RankingResponse> buscarRanking();
-
-    ///Impede que as questões sejam trocadas depois do envio de algum aluno
-    boolean existsByAtividade_Id(Long atividadeId);
 }

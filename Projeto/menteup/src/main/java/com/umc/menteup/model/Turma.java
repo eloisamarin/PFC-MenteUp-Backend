@@ -1,16 +1,21 @@
 package com.umc.menteup.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.persistence.FetchType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 import java.util.ArrayList;
 
 @Entity
 @Table(name = "tb_turma")
+@Getter
+@Setter
 public class Turma {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,37 +43,10 @@ public class Turma {
     @JsonIgnoreProperties("turmas")
     private List<Usuario> alunos = new ArrayList<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "professor_id")
+    @JsonIgnore
+    private Usuario professor;
 
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
-
-    public List<Atividade> getAtividade() {
-        return atividade;
-    }
-
-    public void setAtividade(List<Atividade> atividade) {
-        this.atividade = atividade;
-    }
-
-    public List<Usuario> getAlunos() {
-        return alunos;
-    }
-
-    public void setAlunos(List<Usuario> alunos) {
-        this.alunos = alunos;
-    }
 }
