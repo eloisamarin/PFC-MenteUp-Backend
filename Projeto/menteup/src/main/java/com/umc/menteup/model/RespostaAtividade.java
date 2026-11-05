@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,6 +38,7 @@ public class RespostaAtividade {
     @JoinColumn ( name = "alternativa_id" )
     private Alternativa alternativa;
 
+
     ///Ordenação e lacunas: ids das alternativas na ordem em que o aluno respondeu
     @ElementCollection
     @CollectionTable(
@@ -46,4 +48,9 @@ public class RespostaAtividade {
     @OrderColumn(name = "posicao")
     @Column(name = "alternativa_id", nullable = false)
     private List<Long> alternativasIds = new ArrayList<>();
+    ///Preenchido na conclusão: se o aluno acertou esta pergunta. Nulo enquanto a atividade está em andamento
+    private Boolean correta;
+
+
+
 }

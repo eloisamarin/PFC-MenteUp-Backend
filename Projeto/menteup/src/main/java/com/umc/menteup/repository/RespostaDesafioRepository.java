@@ -23,4 +23,14 @@ public interface RespostaDesafioRepository extends JpaRepository<RespostaDesafio
             where p.desafio.id = :desafioId
             """)
     List<RespostaDesafio> buscarTodasDoDesafio(@Param("desafioId") Long desafioId);
+
+    @Query("""
+        select r from RespostaDesafio r
+        join fetch r.pergunta p
+        join fetch p.desafio d
+        where r.usuario.id = :alunoId
+        and d.turma.id = :turmaId
+        order by d.id, p.ordem
+        """)
+    List<RespostaDesafio> buscarDoAlunoNaTurma(@Param("alunoId") Long alunoId, @Param("turmaId") Long turmaId);
 }
