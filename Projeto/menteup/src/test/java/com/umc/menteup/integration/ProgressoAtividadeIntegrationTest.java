@@ -163,7 +163,7 @@ class ProgressoAtividadeIntegrationTest extends IntegracaoBase {
         assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(resposta.getBody()).containsEntry("codigo", "VALIDACAO_FALHOU");
         assertThat((Map<String, String>) resposta.getBody().get("campos"))
-                .containsEntry("alternativaId", "alternativaId é obrigatório");
+                .containsEntry("respostaInformada", "Informe alternativaId ou alternativasIds");
     }
 
     @Test
@@ -301,5 +301,21 @@ class ProgressoAtividadeIntegrationTest extends IntegracaoBase {
         assertThat(lista.getBody()).hasSize(1);
         assertThat(lista.getBody().get(0)).containsEntry("status", "EM_ANDAMENTO")
                 .containsEntry("percentualConclusao", 50);
+    }
+
+    @Test
+    void minhasTurmas_comoAluno_deveRetornar403ComCodigo() {
+        // Arrange
+        Sessao aluno = novaSessao("ALUNO");
+
+        // Act: em caso de erro, a resposta é um objeto, e não uma lista
+        ResponseEntity<Map<String, Object>> resposta = client.get().uri("/turmas/minhas")
+                .header(HttpHeaders.AUTHORIZATION, aluno.token())
+                .retrieve()
+                .toEntity(JSON);
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(resposta.getBody()).containsEntry("codigo", "SOMENTE_PROFESSOR_OU_ADMINISTRADOR");
     }
 }
