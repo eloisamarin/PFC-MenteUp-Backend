@@ -783,7 +783,7 @@ class DesafioControllerIntegrationTest extends IntegracaoBase {
         assertThat(estadoDoAluno).containsEntry("perguntaEncerrada", true)
                 .containsEntry("segundosRestantes", 0);
         assertThat(((Number) estadoDoAluno.get("alternativaCorretaId")).longValue()).isEqualTo(correta);
-        assertThat(((Number) estadoDoAluno.get("meusPontos")).intValue()).isBetween(500, 1000);
+        assertThat(((Number) estadoDoAluno.get("meusPontos")).intValue()).isBetween(25, 75);
         assertThat(estado(c.colega(), c.desafioId()).getBody()).containsEntry("meusPontos", 0);
 
         // Assert: avançar depois da última pergunta encerra o desafio

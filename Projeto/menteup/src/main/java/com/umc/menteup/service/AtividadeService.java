@@ -96,16 +96,26 @@ public class AtividadeService {
 
         Atividade novaAtividade = atividadeRepository.save(atividade);
 
-        System.out.println(
-                "ATIVIDADE CRIADA: "
-                        + novaAtividade.getTitulo()
-        );
+        ///Rascunho não aparece para o aluno, então só avisa quando a atividade já nasce publicada
+        if (novaAtividade.getStatus() != StatusAtividade.PENDENTE) {
+            enviarNotificacoes(novaAtividade, turma);
+        }
 
-        System.out.println(
-                "TURMA ENCONTRADA: "
-                        + turma.getId()
-        );
+        return novaAtividade;
+    }
 
+    ///Avisa os alunos da turma quando o professor publica uma atividade
+    @Transactional(readOnly = true)
+    public void notificarPublicacao(Atividade atividade) {
+        if (atividade.getTurma() == null || atividade.getTurma().getId() == null) {
+            return;
+        }
+        turmaRepository.findById(atividade.getTurma().getId())
+                .ifPresent(turma -> enviarNotificacoes(atividade, turma));
+    }
+
+    ///Manda a notificação para cada aluno da turma que tem o celular cadastrado
+    private void enviarNotificacoes(Atividade novaAtividade, Turma turma) {
         List<Usuario> alunos = turma.getAlunos() == null
                 ? Collections.emptyList()
                 : turma.getAlunos();
@@ -129,10 +139,18 @@ public class AtividadeService {
                         "Enviando notificação para o aluno..."
                 );
 
-                notificacaoService.notificarNovaAtividade(
-                        novaAtividade,
-                        aluno.getFcmToken()
-                );
+                ///Se a notificação falhar, a atividade continua salva
+                try {
+                    notificacaoService.notificarNovaAtividade(
+                            novaAtividade,
+                            aluno.getFcmToken()
+                    );
+                } catch (Exception e) {
+                    System.err.println(
+                            "Falha ao notificar o aluno "
+                                    + aluno.getUsuario() + ": " + e.getMessage()
+                    );
+                }
 
             } else {
 
@@ -141,8 +159,6 @@ public class AtividadeService {
                 );
             }
         }
-
-        return novaAtividade;
     }
 
     public Optional<Atividade> atualizarAtividade(

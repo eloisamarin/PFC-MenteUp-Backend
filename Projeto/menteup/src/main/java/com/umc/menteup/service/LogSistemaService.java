@@ -9,8 +9,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -21,18 +22,22 @@ public class LogSistemaService {
     private final LogSistemaRepository logSistemaRepository;
     private final UsuarioRepository usuarioRepository;
     private final ObjectMapper objectMapper;
+    private final TransactionTemplate transacaoDoLog;
 
     public LogSistemaService(
             LogSistemaRepository logSistemaRepository,
             UsuarioRepository usuarioRepository,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            PlatformTransactionManager gerenciadorDeTransacao
     ) {
         this.logSistemaRepository = logSistemaRepository;
         this.usuarioRepository = usuarioRepository;
         this.objectMapper = objectMapper;
+        ///O log é salvo separado da ação principal, assim um erro em um não desfaz o outro
+        this.transacaoDoLog = new TransactionTemplate(gerenciadorDeTransacao);
+        this.transacaoDoLog.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void registrar(
             Usuario usuario,
             AcaoLog acao,
@@ -52,7 +57,7 @@ public class LogSistemaService {
             entrada.setDescricao(truncar(descricao, 500));
             entrada.setIp(truncar(obterIpRequisicaoAtual(), 45));
             entrada.setDados(serializar(dados));
-            logSistemaRepository.save(entrada);
+            transacaoDoLog.executeWithoutResult(status -> logSistemaRepository.save(entrada));
         } catch (Exception e) {
             log.warn("Falha ao registrar log de sistema (acao= {}): {}", acao, e.getMessage());
         }

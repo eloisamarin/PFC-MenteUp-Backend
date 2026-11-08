@@ -7,6 +7,7 @@ import com.umc.menteup.repository.DesafioRepository;
 import com.umc.menteup.repository.RespostaDesafioRepository;
 import com.umc.menteup.repository.TurmaRepository;
 import com.umc.menteup.repository.UsuarioRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,8 +24,9 @@ import java.util.Map;
 @Service
 public class DesafioService {
 
-    private static final int PONTOS_BASE = 500;
-    private static final int BONUS_MAXIMO_VELOCIDADE = 500;
+    ///Cada acerto vale de 25 a 75 pontos: 25 fixos + até 50 pela rapidez
+    private static final int PONTOS_BASE = 25;
+    private static final int BONUS_MAXIMO_VELOCIDADE = 50;
 
     private final DesafioRepository desafioRepository;
     private final RespostaDesafioRepository respostaRepository;
@@ -32,6 +34,8 @@ public class DesafioService {
     private final UsuarioRepository usuarioRepository;
     private final MatriculaService matriculaService;
     private final Clock clock;
+    private final ApplicationEventPublisher eventos;
+    private final LogSistemaService logSistemaService;
 
     public DesafioService(
             DesafioRepository desafioRepository,
@@ -39,8 +43,12 @@ public class DesafioService {
             TurmaRepository turmaRepository,
             UsuarioRepository usuarioRepository,
             MatriculaService matriculaService,
-            Clock clock
+            Clock clock,
+            ApplicationEventPublisher eventos,
+            LogSistemaService logSistemaService
     ) {
+        this.eventos = eventos;
+        this.logSistemaService = logSistemaService;
         this.desafioRepository = desafioRepository;
         this.respostaRepository = respostaRepository;
         this.turmaRepository = turmaRepository;
@@ -66,7 +74,10 @@ public class DesafioService {
             desafio.getPerguntas().add(montarPergunta(perguntaRequest, desafio, ordem++));
         }
 
-        return toResponse(desafioRepository.save(desafio));
+        Desafio salvo = desafioRepository.save(desafio);
+        registrarLog(autor, AcaoLog.CRIAR_DESAFIO, salvo, "Desafio criado");
+
+        return toResponse(salvo);
     }
 
     @Transactional(readOnly = true)
@@ -93,7 +104,7 @@ public class DesafioService {
 
     @Transactional
     public DesafioResponse atualizar(Long desafioId, CriarDesafioRequest request, String username) {
-        exigirProfessorOuAdministrador(username);
+        Usuario autor = exigirProfessorOuAdministrador(username);
 
         Desafio desafio = carregarDesafio(desafioId);
 
@@ -111,12 +122,15 @@ public class DesafioService {
             desafio.getPerguntas().add(montarPergunta(perguntaRequest, desafio, ordem++));
         }
 
-        return toResponse(desafioRepository.save(desafio));
+        Desafio salvo = desafioRepository.save(desafio);
+        registrarLog(autor, AcaoLog.EDITAR_DESAFIO, salvo, "Desafio editado");
+
+        return toResponse(salvo);
     }
 
     @Transactional
     public void excluir(Long desafioId, String username) {
-        exigirProfessorOuAdministrador(username);
+        Usuario autor = exigirProfessorOuAdministrador(username);
 
         Desafio desafio = carregarDesafio(desafioId);
 
@@ -124,6 +138,8 @@ public class DesafioService {
             throw ApiException.conflito(
                     "DESAFIO_EM_ANDAMENTO", "Não é possível excluir um desafio em andamento.");
         }
+
+        registrarLog(autor, AcaoLog.EXCLUIR_DESAFIO, desafio, "Desafio excluído");
 
         desafioRepository.delete(desafio);
     }
@@ -140,6 +156,8 @@ public class DesafioService {
 
         desafio.setStatus(StatusDesafio.EM_ANDAMENTO);
         abrirPergunta(desafio, 0);
+
+        registrarLog(professor, AcaoLog.INICIAR_DESAFIO, desafio, "Desafio iniciado");
 
         return montarEstado(desafio, professor);
     }
@@ -167,6 +185,17 @@ public class DesafioService {
             desafio.setStatus(StatusDesafio.ENCERRADO);
             desafio.setIndicePerguntaAtual(null);
             desafio.setPerguntaExpiraEm(null);
+
+            registrarLog(professor, AcaoLog.ENCERRAR_DESAFIO, desafio, "Desafio encerrado");
+
+            ///Verifica as conquistas de todos os participantes no fim do desafio, não a cada resposta
+            List<Long> participantes = respostaRepository.buscarTodasDoDesafio(desafioId).stream()
+                    .map(r -> r.getUsuario().getId())
+                    .distinct()
+                    .toList();
+            if (!participantes.isEmpty()) {
+                eventos.publishEvent(AvaliarConquistasEvento.de(participantes));
+            }
         }
 
         return montarEstado(desafio, professor);
@@ -240,7 +269,25 @@ public class DesafioService {
             throw perguntaJaRespondida();
         }
 
+        registrarLog(aluno, AcaoLog.RESPONDER_DESAFIO, desafio, "Aluno respondeu uma pergunta do desafio");
+
         return new RespostaProgressoResponse(pergunta.getId(), alternativa.getId());
+    }
+
+    ///Atalho para registrar as ações do desafio
+    private void registrarLog(Usuario autor, AcaoLog acao, Desafio desafio, String texto) {
+        Map<String, Object> dados = new LinkedHashMap<>();
+        dados.put("titulo", desafio.getTitulo());
+        dados.put("turmaId", desafio.getTurma() == null ? null : desafio.getTurma().getId());
+
+        logSistemaService.registrarSucesso(
+                autor,
+                acao,
+                EntidadeLog.DESAFIO,
+                desafio.getId(),
+                texto + ": \"" + desafio.getTitulo() + "\".",
+                dados
+        );
     }
 
     @Transactional(readOnly = true)

@@ -34,6 +34,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ErroResponse> tratarApi(ApiException ex) {
+        if (ex.getStatus() == HttpStatus.FORBIDDEN) {
+            registrarAcessoNegado(ex.getCodigo());
+        }
         return montar(ex.getStatus(), ex.getCodigo(), ex.getMessage(), null);
     }
 
@@ -62,6 +65,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErroResponse> tratarAcessoNegado(AccessDeniedException ex) {
+        registrarAcessoNegado("ACESSO_NEGADO");
         return montar(HttpStatus.FORBIDDEN, "ACESSO_NEGADO",
                 "Você não tem permissão para realizar esta operação.", null);
     }
@@ -97,6 +101,19 @@ public class GlobalExceptionHandler {
 
         return montar(HttpStatus.INTERNAL_SERVER_ERROR, "ERRO_INTERNO",
                 "Ocorreu um erro inesperado. Tente novamente mais tarde.", null);
+    }
+
+    ///Guarda quem tentou fazer algo sem permissão
+    private void registrarAcessoNegado(String codigo) {
+        logSistemaService.registrarPorUsername(
+                usernameAutenticadoOuNull(),
+                AcaoLog.ACESSO_NEGADO,
+                null,
+                null,
+                ResultadoLog.FALHA,
+                "Acesso negado: " + codigo,
+                null
+        );
     }
 
     private String usernameAutenticadoOuNull() {

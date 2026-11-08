@@ -6,5 +6,6 @@ public enum EntidadeLog {
     QUESTAO,
     TURMA,
     USUARIO,
-    CONQUISTA
+    CONQUISTA,
+    DESAFIO
 }

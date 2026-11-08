@@ -76,7 +76,8 @@ public class AtividadeController {
 
             atividade.setId(null);
 
-            Atividade salva = atividadeRepository.save(atividade);
+            ///Salva pelo service para os alunos receberem a notificação
+            Atividade salva = atividadeService.criarAtividade(atividade);
 
             logSistemaService.registrarPorUsername(
                     authentication.getName(),
@@ -144,6 +145,9 @@ public class AtividadeController {
                         && salva.getStatus() == StatusAtividade.EM_ANDAMENTO;
 
         if (foiPublicada) {
+
+            ///Avisa os alunos que a atividade está disponível
+            atividadeService.notificarPublicacao(salva);
 
             logSistemaService.registrarPorUsername(
                     authentication.getName(),
