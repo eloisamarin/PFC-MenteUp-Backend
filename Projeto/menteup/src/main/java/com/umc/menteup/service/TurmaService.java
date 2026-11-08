@@ -120,7 +120,7 @@ public class TurmaService {
 
     @Transactional
     public Turma atualizarTurma(Turma dados, String username) {
-        exigirProfessorOuAdministrador(username);
+        Usuario autor = exigirProfessorOuAdministrador(username);
 
         if (dados.getId() == null) {
             throw ApiException.requisicaoInvalida(
@@ -133,20 +133,41 @@ public class TurmaService {
 
         // Atualiza só o nome. Salvar o objeto recebido do cliente por inteiro
         // apagaria os alunos vinculados (a lista chega nula no JSON).
+        String nomeAnterior = existente.getNome();
         existente.setNome(dados.getNome());
 
-        return turmaRepository.save(existente);
+        Turma salva = turmaRepository.save(existente);
+
+        logSistemaService.registrarSucesso(
+                autor,
+                AcaoLog.EDITAR_TURMA,
+                EntidadeLog.TURMA,
+                salva.getId(),
+                "Turma \"" + nomeAnterior + "\" renomeada para \"" + salva.getNome() + "\".",
+                Map.of("nomeAnterior", String.valueOf(nomeAnterior), "nomeNovo", String.valueOf(salva.getNome()))
+        );
+
+        return salva;
     }
 
     @Transactional
     public void excluirTurma(Long turmaId, String username) {
-        exigirProfessorOuAdministrador(username);
+        Usuario autor = exigirProfessorOuAdministrador(username);
 
         Turma turma = turmaRepository.findById(turmaId)
                 .orElseThrow(() -> ApiException.naoEncontrado(
                         "TURMA_NAO_ENCONTRADA", "Turma não encontrada."));
 
         turmaRepository.delete(turma);
+
+        logSistemaService.registrarSucesso(
+                autor,
+                AcaoLog.EXCLUIR_TURMA,
+                EntidadeLog.TURMA,
+                turmaId,
+                "Turma \"" + turma.getNome() + "\" excluída.",
+                Map.of("nome", String.valueOf(turma.getNome()))
+        );
     }
     private Usuario exigirProfessorOuAdministrador(String username) {
         Usuario usuario = usuarioRepository.findByUsuario(username)

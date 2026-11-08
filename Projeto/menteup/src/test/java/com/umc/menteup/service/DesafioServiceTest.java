@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 
@@ -101,7 +102,9 @@ class DesafioServiceTest {
                 mock(TurmaRepository.class),
                 usuarioRepository,
                 matriculaService,
-                relogio
+                relogio,
+                mock(ApplicationEventPublisher.class),
+                mock(LogSistemaService.class)
         );
 
         aluno = usuario(ALUNO_ID, EMAIL_ALUNO, "ALUNO");
@@ -163,8 +166,8 @@ class DesafioServiceTest {
     }
 
     @ParameterizedTest(name = "resposta certa aos {0} ms de 20 s = {1} pontos")
-    @CsvSource({"0,1000", "10000,750", "19999,500", "20000,500"})
-    @DisplayName("pontuação cai de 1000 a 500 conforme o tempo passa")
+    @CsvSource({"0,75", "10000,50", "19999,25", "20000,25"})
+    @DisplayName("pontuação cai de 75 a 25 conforme o tempo passa")
     void deveCalcularPontosPelaVelocidadeDaResposta(long milissegundos, int pontosEsperados) {
         // Arrange
         service.iniciar(DESAFIO_ID, EMAIL_PROFESSOR);

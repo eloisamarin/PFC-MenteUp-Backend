@@ -13,6 +13,7 @@ import com.umc.menteup.repository.UsuarioRepository;
 import com.umc.menteup.template.TemplateAtividade;
 import com.umc.menteup.template.TemplateResolver;
 import jakarta.transaction.Transactional;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ public class ResultadoAtividadeService {
     private final ProgressoAtividadeRepository progressoRepository;
     private final LogSistemaService logSistemaService;
     private final TemplateResolver templateResolver;
+    private final ApplicationEventPublisher eventos;
 
     public ResultadoAtividadeService(
             AtividadeRepository atividadeRepository,
@@ -41,8 +43,10 @@ public class ResultadoAtividadeService {
             MatriculaService matriculaService,
             ProgressoAtividadeRepository progressoRepository,
             LogSistemaService logSistemaService,
-            TemplateResolver templateResolver
+            TemplateResolver templateResolver,
+            ApplicationEventPublisher eventos
     ) {
+        this.eventos = eventos;
         this.atividadeRepository = atividadeRepository;
         this.usuarioRepository = usuarioRepository;
         this.resultadoAtividadeRepository = resultadoAtividadeRepository;
@@ -185,6 +189,9 @@ public class ResultadoAtividadeService {
                         "pontuacao", pontuacao
                 )
         );
+
+        ///Pede a verificação das conquistas (feita depois de salvar)
+        eventos.publishEvent(AvaliarConquistasEvento.de(usuario.getId()));
 
         return QuestionarioMapper.toResultado(
                 resultado,

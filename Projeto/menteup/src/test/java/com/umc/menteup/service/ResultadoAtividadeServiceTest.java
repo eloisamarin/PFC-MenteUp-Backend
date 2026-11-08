@@ -13,6 +13,7 @@ import com.umc.menteup.template.TemplateResolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 
@@ -61,7 +62,8 @@ class ResultadoAtividadeServiceTest {
                 new MatriculaService(turmaRepository, usuarioRepository, logSistemaService),
                 progressoRepository,
                 logSistemaService,
-                new TemplateResolver(List.of(new QuizTemplate()))
+                new TemplateResolver(List.of(new QuizTemplate())),
+                mock(ApplicationEventPublisher.class)
         );
 
         aluno = usuario(ALUNO_ID, "ALUNO");

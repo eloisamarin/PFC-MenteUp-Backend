@@ -24,6 +24,7 @@ public class DesempenhoService {
     private final ResultadoAtividadeRepository resultadoAtividadeRepository;
     private final ProgressoAtividadeRepository progressoAtividadeRepository;
     private final RespostaDesafioRepository respostaDesafioRepository;
+    private final LogSistemaService logSistemaService;
 
     public DesempenhoService(
             TurmaRepository turmaRepository,
@@ -31,9 +32,10 @@ public class DesempenhoService {
             AtividadeRepository atividadeRepository,
             ResultadoAtividadeRepository resultadoAtividadeRepository,
             RespostaDesafioRepository respostaDesafioRepository,
-            ProgressoAtividadeRepository progressoAtividadeRepository
-
+            ProgressoAtividadeRepository progressoAtividadeRepository,
+            LogSistemaService logSistemaService
     ) {
+        this.logSistemaService = logSistemaService;
         this.turmaRepository = turmaRepository;
         this.usuarioRepository = usuarioRepository;
         this.atividadeRepository = atividadeRepository;
@@ -182,6 +184,15 @@ public class DesempenhoService {
         resultado.setComentarioProfessor(texto.trim());
         resultado.setComentadoEm(LocalDateTime.now());
         resultado.setComentadoPor(usuario);
+
+        logSistemaService.registrarSucesso(
+                usuario,
+                AcaoLog.COMENTAR_RESULTADO,
+                EntidadeLog.ATIVIDADE,
+                resultado.getAtividade().getId(),
+                "Comentário feito na atividade \"" + resultado.getAtividade().getTitulo() + "\".",
+                Map.of("resultadoId", resultado.getId(), "turmaId", turmaId)
+        );
 
         return new ComentarioResponse(
                 resultado.getId(),

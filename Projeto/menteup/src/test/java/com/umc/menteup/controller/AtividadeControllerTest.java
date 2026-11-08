@@ -172,7 +172,8 @@ class AtividadeControllerTest {
         void criaERegistraLog() throws Exception {
             when(turmaRepository.existsById(1L)).thenReturn(true);
             AtomicReference<Long> idRecebidoNoSave = new AtomicReference<>();
-            when(atividadeRepository.save(any(Atividade.class))).thenAnswer(inv -> {
+            ///Agora a atividade é salva pelo service, que também avisa os alunos
+            when(atividadeService.criarAtividade(any(Atividade.class))).thenAnswer(inv -> {
                 Atividade a = inv.getArgument(0);
                 idRecebidoNoSave.set(a.getId()); // o que chegou no save, antes do "banco" gerar o id
                 a.setId(99L);
@@ -216,7 +217,7 @@ class AtividadeControllerTest {
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.codigo").value("BAD_REQUEST"));
 
-            verify(atividadeRepository, never()).save(any());
+            verify(atividadeService, never()).criarAtividade(any());
             verifyNoInteractions(logSistemaService);
         }
 

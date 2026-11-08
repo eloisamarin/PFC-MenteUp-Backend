@@ -1,7 +1,7 @@
 package com.umc.menteup.repository;
 
-import com.umc.menteup.dto.RankingResponse;
 import com.umc.menteup.dto.ResumoDesempenhoAluno;
+import com.umc.menteup.dto.TotalPorAluno;
 import com.umc.menteup.model.Atividade;
 import com.umc.menteup.model.ResultadoAtividade;
 import com.umc.menteup.model.Usuario;
@@ -25,19 +25,13 @@ public interface ResultadoAtividadeRepository extends JpaRepository<ResultadoAti
 
     List<ResultadoAtividade> findAllByUsuario_IdAndAtividade_IdIn(Long usuarioId, Collection<Long> atividadeIds);
 
-    @Query ("""
-                    SELECT new com.umc.menteup.dto.RankingResponse(
-                     r.usuario.id,
-                              r.usuario.nomeUsuario,
-                              SUM(r.pontuacao),
-                              COUNT(r.id)
-                          )
-                          FROM ResultadoAtividade r
-                          WHERE UPPER(r.usuario.tipoUsuario) = 'ALUNO'
-                          GROUP BY r.usuario.id, r.usuario.nomeUsuario
-                          ORDER BY SUM(r.pontuacao) DESC
-            """)
-    List<RankingResponse> buscarRanking();
+    ///Pontos e quantidade de atividades de cada aluno, usados no ranking (RankingService)
+    @Query("""
+        SELECT new com.umc.menteup.dto.TotalPorAluno(r.usuario.id, SUM(r.pontuacao), COUNT(r.id))
+        FROM ResultadoAtividade r
+        GROUP BY r.usuario.id
+        """)
+    List<TotalPorAluno> somarPorAluno();
 
     ///Impede que as questões sejam trocadas depois do envio de algum aluno
     boolean existsByAtividade_Id(Long atividadeId);
@@ -53,5 +47,19 @@ public interface ResultadoAtividadeRepository extends JpaRepository<ResultadoAti
     List<ResumoDesempenhoAluno> buscarProgressoDaTurma(@Param("turmaId") Long turmaId);
     List<ResultadoAtividade> findAllByUsuario_IdAndAtividade_Turma_Id(Long usuarioId, Long turmaId);
 
+    ///Conquistas
+
+    long countByUsuario_Id(Long usuarioId);
+
+    ///Atividades com todas as questões certas
+    @Query("""
+        SELECT COUNT(r) FROM ResultadoAtividade r
+        WHERE r.usuario.id = :usuarioId
+          AND r.acertos = SIZE(r.atividade.perguntas)
+        """)
+    long contarAtividadesPerfeitas(@Param("usuarioId") Long usuarioId);
+
+    @Query("SELECT COALESCE(SUM(r.pontuacao), 0L) FROM ResultadoAtividade r WHERE r.usuario.id = :usuarioId")
+    long somarPontuacaoDoUsuario(@Param("usuarioId") Long usuarioId);
 
 }
