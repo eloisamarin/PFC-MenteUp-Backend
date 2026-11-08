@@ -307,7 +307,10 @@ public class TurmaControllerTest{
 
     // Grava a turma direto no banco (preparação do cenário "Given")
     private Long salvarTurma(String nome) {
-        return turmaRepository.save(novaTurma(nome)).getId();
+        Turma turma = novaTurma(nome);
+        // A turma é do professor do teste: só ele (ou um administrador) altera os alunos dela
+        turma.setProfessor(usuarioRepository.findByUsuario(EMAIL_PROFESSOR).orElseThrow());
+        return turmaRepository.save(turma).getId();
     }
 }
 

@@ -2,6 +2,7 @@ package com.umc.menteup.service;
 
 import com.umc.menteup.exception.ApiException;
 import com.umc.menteup.model.*;
+import com.umc.menteup.repository.SolicitacaoTurmaRepository;
 import com.umc.menteup.repository.TurmaRepository;
 import com.umc.menteup.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
@@ -14,17 +15,20 @@ import java.util.Map;
 public class TurmaService {
 
     private final TurmaRepository turmaRepository;
+    private final SolicitacaoTurmaRepository solicitacaoRepository;
     private final UsuarioRepository usuarioRepository;
     private final LogSistemaService logSistemaService;
 
     public TurmaService(
             TurmaRepository turmaRepository,
             UsuarioRepository usuarioRepository,
-            LogSistemaService logSistemaService
+            LogSistemaService logSistemaService,
+            SolicitacaoTurmaRepository solicitacaoRepository
     ) {
         this.turmaRepository = turmaRepository;
         this.usuarioRepository = usuarioRepository;
         this.logSistemaService = logSistemaService;
+        this.solicitacaoRepository = solicitacaoRepository;
     }
 
     @Transactional
@@ -56,6 +60,8 @@ public class TurmaService {
         Turma turma = turmaRepository.findById(turmaId)
                 .orElseThrow(() -> ApiException.naoEncontrado(
                         "TURMA_NAO_ENCONTRADA", "Turma não encontrada."));
+
+        exigirAcessoATurma(turma, autor);
 
         Usuario aluno = usuarioRepository.findById(alunoId)
                 .orElseThrow(() -> ApiException.naoEncontrado(
@@ -98,6 +104,8 @@ public class TurmaService {
         Turma turma = turmaRepository.findById(turmaId)
                 .orElseThrow(() -> ApiException.naoEncontrado(
                         "TURMA_NAO_ENCONTRADA", "Turma não encontrada."));
+
+        exigirAcessoATurma(turma, autor);
 
         Usuario aluno = turma.getAlunos().stream()
                 .filter(matriculado -> matriculado.getId().equals(alunoId))
@@ -158,6 +166,8 @@ public class TurmaService {
                 .orElseThrow(() -> ApiException.naoEncontrado(
                         "TURMA_NAO_ENCONTRADA", "Turma não encontrada."));
 
+        // Os pedidos de entrada/saída da turma são apagados junto
+        solicitacaoRepository.apagarDaTurma(turmaId);
         turmaRepository.delete(turma);
 
         logSistemaService.registrarSucesso(
@@ -169,6 +179,17 @@ public class TurmaService {
                 Map.of("nome", String.valueOf(turma.getNome()))
         );
     }
+    // Administrador: qualquer turma. Professor: só as turmas dele
+    private void exigirAcessoATurma(Turma turma, Usuario usuario) {
+        boolean professorDaTurma = turma.getProfessor() != null
+                && turma.getProfessor().getId().equals(usuario.getId());
+
+        if (!TipoUsuario.ehAdministrador(usuario) && !professorDaTurma) {
+            throw ApiException.proibido(
+                    "SEM_ACESSO_A_TURMA", "Só o professor da turma ou um administrador pode alterar os alunos dela.");
+        }
+    }
+
     private Usuario exigirProfessorOuAdministrador(String username) {
         Usuario usuario = usuarioRepository.findByUsuario(username)
                 .orElseThrow(() -> ApiException.naoAutenticado(
