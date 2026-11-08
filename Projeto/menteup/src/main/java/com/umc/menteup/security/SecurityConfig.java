@@ -37,6 +37,9 @@ public class SecurityConfig {
     @Autowired
     private JwtAuthFilter jwtAuthFilter;
 
+    @Autowired
+    private DashboardTokenFilter dashboardTokenFilter;
+
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(10);
@@ -59,9 +62,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS).permitAll()
                         .requestMatchers("/alunos/me/**").hasRole("ALUNO")
                         .requestMatchers("/logs/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.GET, "/dashboard/**").hasAnyRole("ADMINISTRADOR", "DASHBOARD")
+                        .requestMatchers("/dashboard/**").denyAll()
                         ///só os professores e administradores cadastram ou editam questões
                         .requestMatchers("/atividades/*/questionario").hasAnyRole("PROFESSOR", "ADMINISTRADOR")
                         .anyRequest().authenticated()
+
                 )
 
                 .exceptionHandling(exceptions -> exceptions
@@ -70,6 +76,7 @@ public class SecurityConfig {
                                         "Não autorizado - Token JWT ausente ou inválido"))
                 )
 
+                .addFilterBefore(dashboardTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

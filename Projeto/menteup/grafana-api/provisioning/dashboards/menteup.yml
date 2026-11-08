@@ -1,0 +1,11 @@
+# Carrega as dashboards da pasta /var/lib/grafana/dashboards (a pasta "dashboards" do projeto)
+apiVersion: 1
+
+providers:
+  - name: MenteUp
+    folder: MenteUp
+    type: file
+    disableDeletion: true
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
