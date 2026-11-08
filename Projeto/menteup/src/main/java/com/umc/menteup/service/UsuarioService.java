@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -43,6 +45,13 @@ public class UsuarioService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private RedefinicaoSenhaService redefinicaoSenhaService;
+
+    // Senhas erradas seguidas até bloquear a conta
+    static final int MAX_TENTATIVAS_LOGIN = 3;
+
+
     private final SecureRandom random = new SecureRandom();
 
     public List<Usuario> getAll() {
@@ -61,6 +70,7 @@ public class UsuarioService {
 
         usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
         usuario.setId(null);
+
 
         return Optional.of(usuarioRepository.save(usuario));
     }
@@ -101,6 +111,9 @@ public class UsuarioService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuário já existe!", null);
         }
 
+        // O corpo da requisição não traz o avatar: mantém o que já estava salvo
+        usuario.setAvatar(alvo.get().getAvatar());
+
         usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
         return Optional.of(usuarioRepository.save(usuario));
     }
@@ -111,13 +124,23 @@ public class UsuarioService {
         }
 
         UsuarioLogin login = usuarioLogin.get();
+        Optional<Usuario> usuario = usuarioRepository.findByUsuario(login.getUsuario());
+
+        // Conta bloqueada: nem confere a senha
+        if (usuario.isPresent() && usuario.get().estaBloqueado()) {
+            throw contaBloqueada();
+        }
 
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(login.getUsuario(), login.getSenha()));
-        } catch (Exception e) {
+        } catch (AuthenticationException e) {
+            usuario.ifPresent(this::registrarSenhaErrada);
             return Optional.empty();
         }
+
+        // Acertou a senha: zera o contador
+        usuario.ifPresent(this::zerarTentativas);
 
         String codigo = String.format("%06d", random.nextInt(1_000_000));
 
@@ -161,13 +184,44 @@ public class UsuarioService {
         }).orElse(false);
     }
 
+    // Soma uma tentativa errada,na terceira bloqueia a conta
+    private void registrarSenhaErrada(Usuario usuario) {
+        int tentativas = usuario.getTentativasLogin() + 1;
+        usuario.setTentativasLogin(tentativas);
+
+        if (tentativas < MAX_TENTATIVAS_LOGIN) {
+            usuarioRepository.save(usuario);
+            return;
+        }
+
+        usuario.setBloqueadoEm(LocalDateTime.now());
+        usuarioRepository.save(usuario);
+
+        throw contaBloqueada();
+    }
+
+    private void zerarTentativas(Usuario usuario) {
+        if (usuario.getTentativasLogin() > 0) {
+            usuario.setTentativasLogin(0);
+            usuarioRepository.save(usuario);
+        }
+    }
+
+    private ApiException contaBloqueada() {
+        return ApiException.proibido("CONTA_BLOQUEADA",
+                "Sua senha foi bloqueada após 3 tentativas incorretas. "
+                        + "Clique em \"Esqueci minha senha\" para receber no seu e-mail cadastrado "
+                        + "um link para criar uma nova senha.");
+    }
+
+
     public UsuarioLogin construirRespostaLogin(UsuarioLogin usuarioLogin, Usuario usuario) {
 
         usuarioLogin.setId(usuario.getId());
         usuarioLogin.setNome(usuario.getNomeUsuario());
         usuarioLogin.setUsuario(usuario.getUsuario());
         usuarioLogin.setTipoUsuario(usuario.getTipoUsuario());
-
+        usuarioLogin.setAvatar(usuario.getAvatar() == null ? null : usuario.getAvatar().name());
         usuarioLogin.setToken(gerarToken(usuario.getUsuario()));
 
         return usuarioLogin;
@@ -176,4 +230,4 @@ public class UsuarioService {
     private String gerarToken(String usuario) {
         return "Bearer " + jwtService.generateToken(usuario);
     }
-}
+}

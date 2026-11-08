@@ -1,6 +1,7 @@
 package com.umc.menteup.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -249,9 +250,9 @@ class DesafioControllerIntegrationTest extends IntegracaoBase {
         assertThat(perguntas).hasSize(2);
         assertThat(perguntas.get(0)).containsEntry("enunciado", "Pergunta 1")
                 .containsEntry("tempoSegundos", 30);
-        assertThat((List<Map<String, Object>>) perguntas.get(0).get("alternativas")).containsExactly(
-                Map.of("texto", "Certa 1", "correta", true),
-                Map.of("texto", "Errada 1", "correta", false));
+        assertThat((List<Map<String, Object>>) perguntas.get(0).get("alternativas"))
+                .extracting(alternativa -> alternativa.get("texto"), alternativa -> alternativa.get("correta"))
+                .containsExactly(tuple("Certa 1", true), tuple("Errada 1", false));
     }
 
     @Test

@@ -29,7 +29,9 @@ public class SecurityConfig {
             "/docs",
             "/swagger-ui/**",
             "/v3/api-docs/**",
-            "/swagger-resources/**"
+            "/swagger-resources/**",
+            "/usuarios/senha/esqueci",
+            "/usuarios/senha/redefinir",
     };
 
     @Autowired
