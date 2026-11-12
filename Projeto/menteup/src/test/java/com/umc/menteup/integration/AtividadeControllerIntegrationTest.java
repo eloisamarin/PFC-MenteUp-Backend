@@ -239,8 +239,7 @@ class AtividadeControllerIntegrationTest extends IntegracaoBase {
         List<Map<String, Object>> perguntas = (List<Map<String, Object>>) resposta.getBody().get("perguntas");
         assertThat(perguntas).hasSize(1);
         List<Map<String, Object>> alternativas = (List<Map<String, Object>>) perguntas.get(0).get("alternativas");
-        assertThat(alternativas).hasSize(2)
-                .allSatisfy(alternativa -> assertThat(alternativa).doesNotContainKey("correta"));
+        assertThat(alternativas).hasSize(2).allSatisfy(alternativa -> assertThat(alternativa).doesNotContainKey("correta"));
     }
 
     @Test
@@ -323,8 +322,7 @@ class AtividadeControllerIntegrationTest extends IntegracaoBase {
     void atualizar_semId_deveRetornar400ENaoErroInterno() {
         // Arrange
         Sessao professor = novaSessao("PROFESSOR");
-        Map<String, Object> dados = new HashMap<>(
-                buildAtividade(nomeUnico("Sem Id"), criarTurma(professor), "PENDENTE"));
+        Map<String, Object> dados = new HashMap<>(buildAtividade(nomeUnico("Sem Id"), criarTurma(professor), "PENDENTE"));
 
         // Act
         ResponseEntity<Map<String, Object>> resposta = atualizar(professor, dados);

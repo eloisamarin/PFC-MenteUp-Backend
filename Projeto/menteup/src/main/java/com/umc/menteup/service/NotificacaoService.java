@@ -7,6 +7,7 @@ import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
 import com.umc.menteup.model.Atividade;
+import org.springframework.stereotype.Service;
 
 @Service
 public class NotificacaoService {

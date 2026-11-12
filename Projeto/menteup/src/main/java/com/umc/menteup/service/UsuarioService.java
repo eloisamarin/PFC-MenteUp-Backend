@@ -98,12 +98,8 @@ public class UsuarioService {
 
         return usuarioRepository.findAll().stream()
                 .map(usuario -> {
-                    if (administrador) {
-                        return UsuarioListagemResponse.completo(usuario);
-                    }
-                    if (professor && TipoUsuario.ehAluno(usuario)) {
-                        return UsuarioListagemResponse.comEmail(usuario);
-                    }
+                    if (administrador) return UsuarioListagemResponse.completo(usuario);
+                    if (professor && TipoUsuario.ehAluno(usuario)) return UsuarioListagemResponse.comEmail(usuario);
                     return UsuarioListagemResponse.resumido(usuario);
                 })
                 .toList();
@@ -199,8 +195,7 @@ public class UsuarioService {
                 AcaoLog.CADASTRAR_USUARIO,
                 EntidadeLog.USUARIO,
                 salvo.getId(),
-                "Usuário \"" + salvo.getNomeUsuario() + "\" (" + tipo + ") criado pelo administrador;"
-                        + " convite enviado por e-mail.",
+                "Usuário \"" + salvo.getNomeUsuario() + "\" (" + tipo + ") criado pelo administrador; convite enviado por e-mail.",
                 Map.of("tipo", tipo)
         );
 
@@ -285,8 +280,7 @@ public class UsuarioService {
                 EntidadeLog.USUARIO,
                 salvo.getId(),
                 mudouPerfil
-                        ? "Perfil do usuário \"" + salvo.getNomeUsuario() + "\" alterado de " + tipoAnterior
-                                + " para " + salvo.getTipoUsuario() + "."
+                        ? "Perfil do usuário \"" + salvo.getNomeUsuario() + "\" alterado de " + tipoAnterior + " para " + salvo.getTipoUsuario() + "."
                         : "Usuário \"" + salvo.getNomeUsuario() + "\" atualizado.",
                 Map.of(
                         "tipoAnterior", String.valueOf(tipoAnterior),

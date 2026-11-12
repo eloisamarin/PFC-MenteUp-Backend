@@ -47,8 +47,7 @@ class DoisFatoresIntegrationTest extends IntegracaoBase {
 
         // Act: 4 erros e o 5º bloqueia
         for (int i = 0; i < 4; i++) {
-            assertThat(validar(email, codigoErrado(email, i)).getBody())
-                    .containsEntry("codigo", "CODIGO_2FA_INCORRETO");
+            assertThat(validar(email, codigoErrado(email, i)).getBody()).containsEntry("codigo", "CODIGO_2FA_INCORRETO");
         }
         ResponseEntity<Map<String, Object>> quinto = validar(email, codigoErrado(email, 4));
         ResponseEntity<Map<String, Object>> depois = validar(email, certo);

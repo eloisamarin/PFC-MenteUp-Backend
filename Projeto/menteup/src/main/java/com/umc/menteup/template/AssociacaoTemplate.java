@@ -64,8 +64,7 @@ public class AssociacaoTemplate implements TemplateAtividade {
                         .map(a -> new AlternativaResponse(a.getId(), a.getTexto()))
                         .toList()
         );
-        ///Ordem da coluna B fixa calculada pelo id da atividade,
-        ///fazendo com que a rdem não mude quando recarregar a página
+        ///Ordem da coluna B fixa calculada pelo id da atividade, fazendo com que a rdem não mude quando recarregar a página
         Collections.shuffle(colunaB, new Random(atividade.getId() == null ? 0L : atividade.getId()));
 
         List<AlternativaResponse> colunaFinal = List.copyOf(colunaB);

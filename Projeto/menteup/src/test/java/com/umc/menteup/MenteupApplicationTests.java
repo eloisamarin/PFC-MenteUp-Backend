@@ -3,7 +3,6 @@ package com.umc.menteup;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,7 +13,6 @@ import com.umc.menteup.controller.UsuarioController;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Tag("integration")
 class MenteupApplicationTests {
 
     @Autowired

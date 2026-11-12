@@ -1,7 +1,10 @@
 package com.umc.menteup.controller;
 
+import com.umc.menteup.dto.ConclusaoAtividadeRequest;
 import com.umc.menteup.dto.ResultadoAtividadeResponse;
+import com.umc.menteup.model.ResultadoAtividade;
 import com.umc.menteup.service.ResultadoAtividadeService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.http.ResponseEntity;

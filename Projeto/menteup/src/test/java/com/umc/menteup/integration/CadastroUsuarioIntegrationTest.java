@@ -88,8 +88,7 @@ class CadastroUsuarioIntegrationTest extends IntegracaoBase {
     @Test
     void cadastroPublico_semInformarOAceite_deveRetornar400() {
         // Quem chama a API direto, sem o campo, também é recusado
-        Map<String, Object> dados = new java.util.HashMap<>(
-                buildUsuario("Sem Campo", emailUnico("sem.campo"), "ALUNO"));
+        Map<String, Object> dados = new java.util.HashMap<>(buildUsuario("Sem Campo", emailUnico("sem.campo"), "ALUNO"));
         dados.remove("aceitouTermos");
 
         ResponseEntity<Map<String, Object>> resposta = client.post().uri("/usuarios/cadastrar")
@@ -156,10 +155,7 @@ class CadastroUsuarioIntegrationTest extends IntegracaoBase {
 
         org.mockito.ArgumentCaptor<String> link = org.mockito.ArgumentCaptor.forClass(String.class);
         org.mockito.Mockito.verify(emailService)
-                .enviarConvitePrimeiroAcesso(
-                        org.mockito.ArgumentMatchers.eq(email),
-                        org.mockito.ArgumentMatchers.anyString(),
-                        link.capture());
+                .enviarConvitePrimeiroAcesso(org.mockito.ArgumentMatchers.eq(email), org.mockito.ArgumentMatchers.anyString(), link.capture());
         String convite = link.getValue().substring(link.getValue().indexOf("token=") + 6);
         ResponseEntity<Void> primeiroAcesso = client.post().uri("/usuarios/senha/primeiro-acesso")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -215,8 +211,7 @@ class CadastroUsuarioIntegrationTest extends IntegracaoBase {
         criarPeloAdministrador(administrador, email, "ALUNO");
 
         ResponseEntity<Map<String, Object>> repetido = criarPeloAdministrador(administrador, email, "ALUNO");
-        ResponseEntity<Map<String, Object>> tipoInvalido =
-                criarPeloAdministrador(administrador, emailUnico("w"), "SUPERUSUARIO");
+        ResponseEntity<Map<String, Object>> tipoInvalido = criarPeloAdministrador(administrador, emailUnico("w"), "SUPERUSUARIO");
 
         assertThat(repetido.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(repetido.getBody()).containsEntry("codigo", "EMAIL_JA_CADASTRADO");

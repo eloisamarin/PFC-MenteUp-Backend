@@ -18,6 +18,7 @@ import com.umc.menteup.repository.ProgressoAtividadeRepository;
 import com.umc.menteup.repository.ResultadoAtividadeRepository;
 import com.umc.menteup.repository.TurmaRepository;
 import com.umc.menteup.repository.UsuarioRepository;
+import com.umc.menteup.service.NotificacaoService;
 import com.umc.menteup.template.TemplateResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
