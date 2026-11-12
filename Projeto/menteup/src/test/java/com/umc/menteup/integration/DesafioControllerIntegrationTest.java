@@ -1,6 +1,7 @@
 package com.umc.menteup.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -249,9 +250,9 @@ class DesafioControllerIntegrationTest extends IntegracaoBase {
         assertThat(perguntas).hasSize(2);
         assertThat(perguntas.get(0)).containsEntry("enunciado", "Pergunta 1")
                 .containsEntry("tempoSegundos", 30);
-        assertThat((List<Map<String, Object>>) perguntas.get(0).get("alternativas")).containsExactly(
-                Map.of("texto", "Certa 1", "correta", true),
-                Map.of("texto", "Errada 1", "correta", false));
+        assertThat((List<Map<String, Object>>) perguntas.get(0).get("alternativas"))
+                .extracting(alternativa -> alternativa.get("texto"), alternativa -> alternativa.get("correta"))
+                .containsExactly(tuple("Certa 1", true), tuple("Errada 1", false));
     }
 
     @Test
@@ -782,7 +783,7 @@ class DesafioControllerIntegrationTest extends IntegracaoBase {
         assertThat(estadoDoAluno).containsEntry("perguntaEncerrada", true)
                 .containsEntry("segundosRestantes", 0);
         assertThat(((Number) estadoDoAluno.get("alternativaCorretaId")).longValue()).isEqualTo(correta);
-        assertThat(((Number) estadoDoAluno.get("meusPontos")).intValue()).isBetween(500, 1000);
+        assertThat(((Number) estadoDoAluno.get("meusPontos")).intValue()).isBetween(25, 75);
         assertThat(estado(c.colega(), c.desafioId()).getBody()).containsEntry("meusPontos", 0);
 
         // Assert: avançar depois da última pergunta encerra o desafio
@@ -823,6 +824,65 @@ class DesafioControllerIntegrationTest extends IntegracaoBase {
     }
 
     // ------------------------------------------------------------------- Helpers
+
+    // ------------------------------------------------------------ Professor só nas turmas dele
+
+    @Test
+    void professor_naoDeveCriarDesafioNaTurmaDeOutroProfessor() {
+        Sessao dono = novaSessao("PROFESSOR");
+        Sessao outro = novaSessao("PROFESSOR");
+        Long turmaDoDono = criarTurma(dono);
+
+        ResponseEntity<Map<String, Object>> resposta = criar(outro, buildDesafio(turmaDoDono, 1));
+
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(resposta.getBody()).containsEntry("codigo", "SEM_ACESSO_AO_DESAFIO");
+    }
+
+    @Test
+    void professor_naoDeveEditarExcluirNemConduzirDesafioDeOutroProfessor() {
+        // Arrange
+        Cenario c = cenario(1);
+        Sessao outro = novaSessao("PROFESSOR");
+
+        // Act + Assert
+        assertThat(buscarParaEdicao(outro, c.desafioId()).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(atualizar(outro, c.desafioId(), buildDesafio(c.turmaId(), 1)).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(iniciar(outro, c.desafioId()).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(excluir(outro, c.desafioId()).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+
+        // O dono conduz normalmente; o outro também não avança
+        assertThat(iniciar(c.professor(), c.desafioId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+        esgotarTempo(c.desafioId());
+        assertThat(avancar(outro, c.desafioId()).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(desafioRepository.existsById(c.desafioId())).isTrue();
+    }
+
+    @Test
+    void professor_naoDeveMoverDesafioParaATurmaDeOutroProfessor() {
+        Cenario c = cenario(1);
+        Sessao outro = novaSessao("PROFESSOR");
+        Long turmaDoOutro = criarTurma(outro);
+
+        ResponseEntity<Map<String, Object>> resposta = atualizar(c.professor(), c.desafioId(), buildDesafio(turmaDoOutro, 1));
+
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(desafioRepository.findById(c.desafioId()).orElseThrow().getTurma().getId()).isEqualTo(c.turmaId());
+    }
+
+    @Test
+    void administrador_deveEditarConduzirEExcluirDesafioDeQualquerProfessor() {
+        Cenario c = cenario(1);
+        Sessao administrador = novaSessao("ADMINISTRADOR");
+
+        assertThat(atualizar(administrador, c.desafioId(), buildDesafio(c.turmaId(), 1)).getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+        assertThat(iniciar(administrador, c.desafioId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+        esgotarTempo(c.desafioId());
+        assertThat(avancar(administrador, c.desafioId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(excluir(administrador, c.desafioId()).getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+    }
 
     private static Map<String, Object> buildDesafio(Long turmaId, int quantidadePerguntas) {
         List<Map<String, Object>> perguntas = new java.util.ArrayList<>();

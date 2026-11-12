@@ -4,7 +4,6 @@ import com.umc.menteup.dto.AtividadeAlunoResponse;
 import com.umc.menteup.dto.TurmaResponse;
 import com.umc.menteup.service.AtividadeService;
 import com.umc.menteup.service.MatriculaService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -34,15 +33,5 @@ public class AlunoController {
         return ResponseEntity.ok(matriculaService.listarTurmasDoAluno(authentication.getName()));
     }
 
-    @PostMapping("/turmas/{turmaId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void entrarNaTurma(@PathVariable Long turmaId, Authentication authentication) {
-        matriculaService.matricular(authentication.getName(), turmaId);
-    }
 
-    @DeleteMapping("/turmas/{turmaId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void sairDaTurma(@PathVariable Long turmaId, Authentication authentication) {
-        matriculaService.desmatricular(authentication.getName(), turmaId);
-    }
 }

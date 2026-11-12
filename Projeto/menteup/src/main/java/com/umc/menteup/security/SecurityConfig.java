@@ -24,16 +24,23 @@ public class SecurityConfig {
             "/usuarios/logar",
             "/usuarios/cadastrar",
             "/usuarios/validar-2fa",
+            "/usuarios/reenviar-2fa",
             "/error/**",
             "/",
             "/docs",
             "/swagger-ui/**",
             "/v3/api-docs/**",
-            "/swagger-resources/**"
+            "/swagger-resources/**",
+            "/usuarios/senha/esqueci",
+            "/usuarios/senha/redefinir",
+            "/usuarios/senha/primeiro-acesso",
     };
 
     @Autowired
     private JwtAuthFilter jwtAuthFilter;
+
+    @Autowired
+    private DashboardTokenFilter dashboardTokenFilter;
 
     @Bean
     PasswordEncoder passwordEncoder() {
@@ -57,9 +64,19 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS).permitAll()
                         .requestMatchers("/alunos/me/**").hasRole("ALUNO")
                         .requestMatchers("/logs/**").hasRole("ADMINISTRADOR")
+                        // Criar usuário de qualquer tipo (inclusive administrador): só administrador
+                        .requestMatchers(HttpMethod.POST, "/usuarios").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.GET, "/dashboard/**").hasAnyRole("ADMINISTRADOR", "DASHBOARD")
+                        .requestMatchers("/dashboard/**").denyAll()
                         ///só os professores e administradores cadastram ou editam questões
                         .requestMatchers("/atividades/*/questionario").hasAnyRole("PROFESSOR", "ADMINISTRADOR")
+                        // Criar, editar e excluir atividade: só professor e administrador.
+                        // O aluno continua podendo ver (GET) e salvar o progresso (PUT /atividades/{id}/progresso).
+                        .requestMatchers(HttpMethod.POST, "/atividades").hasAnyRole("PROFESSOR", "ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/atividades").hasAnyRole("PROFESSOR", "ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/atividades/*").hasAnyRole("PROFESSOR", "ADMINISTRADOR")
                         .anyRequest().authenticated()
+
                 )
 
                 .exceptionHandling(exceptions -> exceptions
@@ -68,6 +85,7 @@ public class SecurityConfig {
                                         "Não autorizado - Token JWT ausente ou inválido"))
                 )
 
+                .addFilterBefore(dashboardTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

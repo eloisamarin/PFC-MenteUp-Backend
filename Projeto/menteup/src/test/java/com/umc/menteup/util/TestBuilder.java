@@ -20,6 +20,7 @@ public class TestBuilder {
         novo.setUsuario(usuario);
         novo.setSenha(senha);
         novo.setTipoUsuario(tipo);
+        novo.setAceitouTermos(true); // o cadastro público exige o aceite do Termo e da Política
         return novo;
     }
 

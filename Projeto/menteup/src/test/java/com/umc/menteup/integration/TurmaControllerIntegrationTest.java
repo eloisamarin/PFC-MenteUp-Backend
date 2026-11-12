@@ -239,7 +239,7 @@ class TurmaControllerIntegrationTest extends IntegracaoBase {
 
         List<Map<String, Object>> alunos =
                 (List<Map<String, Object>>) buscar(professor, turmaId).getBody().get("alunos");
-        assertThat(alunos).extracting(matriculado -> matriculado.get("usuario")).containsExactly(aluno.email());
+        assertThat(alunos).extracting(matriculado -> id(matriculado)).containsExactly(aluno.id());
     }
 
     @Test
@@ -339,7 +339,7 @@ class TurmaControllerIntegrationTest extends IntegracaoBase {
 
         List<Map<String, Object>> alunos =
                 (List<Map<String, Object>>) buscar(professor, turmaId).getBody().get("alunos");
-        assertThat(alunos).extracting(matriculado -> matriculado.get("usuario")).containsExactly(colega.email());
+        assertThat(alunos).extracting(matriculado -> id(matriculado)).containsExactly(colega.id());
     }
 
     @Test
@@ -499,8 +499,9 @@ class TurmaControllerIntegrationTest extends IntegracaoBase {
         assertThat(atividadeRepository.findById(atividadeId)).isEmpty();
         assertThat(turmaRepository.findAllByAlunos_Id(aluno.id())).isEmpty();
 
+        // Só o próprio usuário ou o administrador consultam /usuarios/{id}
         ResponseEntity<Void> alunoAposExclusao = client.get().uri("/usuarios/{id}", aluno.id())
-                .header(HttpHeaders.AUTHORIZATION, professor.token())
+                .header(HttpHeaders.AUTHORIZATION, novaSessao("ADMINISTRADOR").token())
                 .retrieve()
                 .toBodilessEntity();
         assertThat(alunoAposExclusao.getStatusCode()).isEqualTo(HttpStatus.OK);

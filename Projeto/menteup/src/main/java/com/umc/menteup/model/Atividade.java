@@ -3,6 +3,7 @@ package com.umc.menteup.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -36,12 +37,14 @@ public class Atividade {
     private String titulo;
 
     @NotBlank(message = "A atributo Descrição é obrigatório!")
-    @Size(min = 10, max= 1000, message = "O atributo Descrição deve ter no mínimo 10 e no mánimo 1000 caracteres")
+    @Size(min = 10, max= 1000, message = "O atributo Descrição deve ter no mínimo 10 e no máximo 1000 caracteres")
     @Column(nullable = false, length = 1000)
     private String descricao;
 
     @NotNull(message = "O atributo pontuação é obrigatório!")
-    @Min(value = 1, message = "O atibuto pontuação deve ser no mínimo 1 ponto")
+    @Min(value = 1, message = "O atributo pontuação deve ser no mínimo 1 ponto")
+    // Sem teto, uma atividade de 1 milhão de XP distorceria o ranking
+    @Max(value = 1000, message = "O atributo pontuação deve ser no máximo 1000 pontos")
     private Integer pontuacao;
 
     @Enumerated(EnumType.STRING)
@@ -68,8 +71,10 @@ public class Atividade {
     @JsonIgnoreProperties("atividade")
     private Turma turma;
 
+    // Autor da atividade: definido pelo token no POST /atividades, nunca pelo corpo da requisição.
+    // Não sai no JSON (o questionário devolve só id e nome pelo UsuarioResponse).
     @ManyToOne
-    @JsonIgnoreProperties("atividade")
+    @JsonIgnore
     private Usuario usuario;
 
     @OneToMany(

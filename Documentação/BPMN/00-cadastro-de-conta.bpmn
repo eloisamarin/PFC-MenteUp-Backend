@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Definicoes_00-cadastro-de-conta" targetNamespace="https://menteup.umc.br/bpmn"
+                  exporter="MenteUp" exporterVersion="1.0">
+  <bpmn:collaboration id="Colaboracao_00-cadastro-de-conta">
+    <bpmn:participant id="Participante_00-cadastro-de-conta" name="MenteUp — Cadastro de conta" processRef="Processo_00-cadastro-de-conta" />
+  </bpmn:collaboration>
+  <bpmn:process id="Processo_00-cadastro-de-conta" isExecutable="false">
+    <bpmn:laneSet id="Raias_00-cadastro-de-conta">
+      <bpmn:lane id="R_Visitante" name="Visitante (novo aluno ou professor)">
+        <bpmn:flowNodeRef>Inicio</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Perfil</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Dados</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fim</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="R_Sistema" name="Sistema MenteUp">
+        <bpmn:flowNodeRef>G_Dados</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>ErroDados</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>VerificarEmail</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_Email</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AvisoEmail</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Salvar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Log</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>SalvarPerfil</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="R_Admin" name="Administrador">
+        <bpmn:flowNodeRef>Inicio_Adm</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Alterar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fim_Adm</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Inicio" name="Acessar a página de cadastro">
+      <bpmn:outgoing>Fluxo_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Perfil" name="Escolher o perfil: Aluno ou Professor">
+      <bpmn:incoming>Fluxo_1</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Dados" name="Informar nome, e-mail, senha e confirmação">
+      <bpmn:incoming>Fluxo_2</bpmn:incoming>
+      <bpmn:incoming>Fluxo_6</bpmn:incoming>
+      <bpmn:incoming>Fluxo_10</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Dados" name="Dados válidos?">
+      <bpmn:incoming>Fluxo_3</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_4</bpmn:outgoing>
+      <bpmn:outgoing>Fluxo_5</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="ErroDados" name="Mostrar o erro (campo vazio, senha &lt; 8 ou senhas diferentes)">
+      <bpmn:incoming>Fluxo_5</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_6</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="VerificarEmail" name="Verificar se o e-mail já está cadastrado">
+      <bpmn:incoming>Fluxo_4</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_7</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="G_Email" name="E-mail já existe?">
+      <bpmn:incoming>Fluxo_7</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_8</bpmn:outgoing>
+      <bpmn:outgoing>Fluxo_9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="AvisoEmail" name="Avisar &quot;Este e-mail já está cadastrado&quot;">
+      <bpmn:incoming>Fluxo_9</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_10</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Salvar" name="Criptografar a senha (BCrypt) e salvar o usuário">
+      <bpmn:incoming>Fluxo_8</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_11</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Log" name="Registrar o cadastro no log do sistema">
+      <bpmn:incoming>Fluxo_11</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_12</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Fim" name="Conta criada: seguir para o login (processo 1)">
+      <bpmn:incoming>Fluxo_12</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:startEvent id="Inicio_Adm" name="Gerenciar usuários">
+      <bpmn:outgoing>Fluxo_13</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Alterar" name="Alterar o perfil de um usuário (ex.: tornar administrador)">
+      <bpmn:incoming>Fluxo_13</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_14</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="SalvarPerfil" name="Salvar e registrar a troca de permissão no log">
+      <bpmn:incoming>Fluxo_14</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_15</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Adm" name="Perfil atualizado">
+      <bpmn:incoming>Fluxo_15</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Fluxo_1" sourceRef="Inicio" targetRef="Perfil" />
+    <bpmn:sequenceFlow id="Fluxo_2" sourceRef="Perfil" targetRef="Dados" />
+    <bpmn:sequenceFlow id="Fluxo_3" sourceRef="Dados" targetRef="G_Dados" />
+    <bpmn:sequenceFlow id="Fluxo_4" name="Sim" sourceRef="G_Dados" targetRef="VerificarEmail" />
+    <bpmn:sequenceFlow id="Fluxo_5" name="Não" sourceRef="G_Dados" targetRef="ErroDados" />
+    <bpmn:sequenceFlow id="Fluxo_6" sourceRef="ErroDados" targetRef="Dados" />
+    <bpmn:sequenceFlow id="Fluxo_7" sourceRef="VerificarEmail" targetRef="G_Email" />
+    <bpmn:sequenceFlow id="Fluxo_8" name="Não" sourceRef="G_Email" targetRef="Salvar" />
+    <bpmn:sequenceFlow id="Fluxo_9" name="Sim" sourceRef="G_Email" targetRef="AvisoEmail" />
+    <bpmn:sequenceFlow id="Fluxo_10" sourceRef="AvisoEmail" targetRef="Dados" />
+    <bpmn:sequenceFlow id="Fluxo_11" sourceRef="Salvar" targetRef="Log" />
+    <bpmn:sequenceFlow id="Fluxo_12" sourceRef="Log" targetRef="Fim" />
+    <bpmn:sequenceFlow id="Fluxo_13" sourceRef="Inicio_Adm" targetRef="Alterar" />
+    <bpmn:sequenceFlow id="Fluxo_14" sourceRef="Alterar" targetRef="SalvarPerfil" />
+    <bpmn:sequenceFlow id="Fluxo_15" sourceRef="SalvarPerfil" targetRef="Fim_Adm" />
+    <bpmn:textAnnotation id="Nota_1"><bpmn:text>A tela de cadastro oferece só Aluno ou Professor; só o administrador muda o tipo de usuário.</bpmn:text></bpmn:textAnnotation>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagrama_00-cadastro-de-conta">
+    <bpmndi:BPMNPlane id="Plano_00-cadastro-de-conta" bpmnElement="Colaboracao_00-cadastro-de-conta">
+      <bpmndi:BPMNShape id="Participante_00-cadastro-de-conta_di" bpmnElement="Participante_00-cadastro-de-conta" isHorizontal="true">
+        <dc:Bounds x="120" y="80" width="1670" height="780" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Visitante_di" bpmnElement="R_Visitante" isHorizontal="true">
+        <dc:Bounds x="150" y="80" width="1640" height="260" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Sistema_di" bpmnElement="R_Sistema" isHorizontal="true">
+        <dc:Bounds x="150" y="340" width="1640" height="320" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Admin_di" bpmnElement="R_Admin" isHorizontal="true">
+        <dc:Bounds x="150" y="660" width="1640" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_di" bpmnElement="Inicio">
+        <dc:Bounds x="232" y="192" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="195" y="234" width="110" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Perfil_di" bpmnElement="Perfil">
+        <dc:Bounds x="355" y="174" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Dados_di" bpmnElement="Dados">
+        <dc:Bounds x="530" y="174" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Dados_di" bpmnElement="G_Dados" isMarkerVisible="true">
+        <dc:Bounds x="750" y="475" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="657" y="450" width="105" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ErroDados_di" bpmnElement="ErroDados">
+        <dc:Bounds x="705" y="564" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="VerificarEmail_di" bpmnElement="VerificarEmail">
+        <dc:Bounds x="880" y="464" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Email_di" bpmnElement="G_Email" isMarkerVisible="true">
+        <dc:Bounds x="1100" y="475" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1007" y="450" width="105" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AvisoEmail_di" bpmnElement="AvisoEmail">
+        <dc:Bounds x="1055" y="564" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Salvar_di" bpmnElement="Salvar">
+        <dc:Bounds x="1230" y="464" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Log_di" bpmnElement="Log">
+        <dc:Bounds x="1405" y="464" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_di" bpmnElement="Fim">
+        <dc:Bounds x="1632" y="192" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1676" y="196" width="100" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_Adm_di" bpmnElement="Inicio_Adm">
+        <dc:Bounds x="932" y="742" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="895" y="784" width="110" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Alterar_di" bpmnElement="Alterar">
+        <dc:Bounds x="1055" y="724" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SalvarPerfil_di" bpmnElement="SalvarPerfil">
+        <dc:Bounds x="1230" y="564" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Adm_di" bpmnElement="Fim_Adm">
+        <dc:Bounds x="1457" y="742" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1501" y="746" width="100" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Fluxo_1_di" bpmnElement="Fluxo_1">
+        <di:waypoint x="268" y="210" />
+        <di:waypoint x="355" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_2_di" bpmnElement="Fluxo_2">
+        <di:waypoint x="495" y="210" />
+        <di:waypoint x="530" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_3_di" bpmnElement="Fluxo_3">
+        <di:waypoint x="670" y="210" />
+        <di:waypoint x="710" y="210" />
+        <di:waypoint x="710" y="500" />
+        <di:waypoint x="750" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_4_di" bpmnElement="Fluxo_4">
+        <di:waypoint x="800" y="500" />
+        <di:waypoint x="880" y="500" />
+        <bpmndi:BPMNLabel><dc:Bounds x="825" y="480" width="34" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_5_di" bpmnElement="Fluxo_5">
+        <di:waypoint x="775" y="525" />
+        <di:waypoint x="775" y="564" />
+        <bpmndi:BPMNLabel><dc:Bounds x="781" y="536" width="34" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_6_di" bpmnElement="Fluxo_6">
+        <di:waypoint x="705" y="600" />
+        <di:waypoint x="600" y="600" />
+        <di:waypoint x="600" y="246" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_7_di" bpmnElement="Fluxo_7">
+        <di:waypoint x="1020" y="500" />
+        <di:waypoint x="1100" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_8_di" bpmnElement="Fluxo_8">
+        <di:waypoint x="1150" y="500" />
+        <di:waypoint x="1230" y="500" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1175" y="480" width="34" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_9_di" bpmnElement="Fluxo_9">
+        <di:waypoint x="1125" y="525" />
+        <di:waypoint x="1125" y="564" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1131" y="536" width="34" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_10_di" bpmnElement="Fluxo_10">
+        <di:waypoint x="1125" y="636" />
+        <di:waypoint x="1125" y="648" />
+        <di:waypoint x="600" y="648" />
+        <di:waypoint x="600" y="246" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_11_di" bpmnElement="Fluxo_11">
+        <di:waypoint x="1370" y="500" />
+        <di:waypoint x="1405" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_12_di" bpmnElement="Fluxo_12">
+        <di:waypoint x="1545" y="500" />
+        <di:waypoint x="1588" y="500" />
+        <di:waypoint x="1588" y="210" />
+        <di:waypoint x="1632" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_13_di" bpmnElement="Fluxo_13">
+        <di:waypoint x="968" y="760" />
+        <di:waypoint x="1055" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_14_di" bpmnElement="Fluxo_14">
+        <di:waypoint x="1195" y="760" />
+        <di:waypoint x="1212" y="760" />
+        <di:waypoint x="1212" y="600" />
+        <di:waypoint x="1230" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_15_di" bpmnElement="Fluxo_15">
+        <di:waypoint x="1370" y="600" />
+        <di:waypoint x="1414" y="600" />
+        <di:waypoint x="1414" y="760" />
+        <di:waypoint x="1457" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Nota_1_di" bpmnElement="Nota_1">
+        <dc:Bounds x="355" y="730" width="210" height="60" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

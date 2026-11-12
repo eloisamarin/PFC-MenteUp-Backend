@@ -79,7 +79,8 @@ public class AtividadeService {
         if (atividade.getTurma() == null ||
                 atividade.getTurma().getId() == null) {
 
-            throw new IllegalArgumentException(
+            throw ApiException.requisicaoInvalida(
+                    "TURMA_OBRIGATORIA",
                     "A turma da atividade é obrigatória."
             );
         }
@@ -87,7 +88,8 @@ public class AtividadeService {
         Turma turma = turmaRepository.findById(
                 atividade.getTurma().getId()
         ).orElseThrow(() ->
-                new IllegalArgumentException(
+                ApiException.naoEncontrado(
+                        "TURMA_NAO_ENCONTRADA",
                         "Turma não encontrada."
                 )
         );
@@ -96,16 +98,26 @@ public class AtividadeService {
 
         Atividade novaAtividade = atividadeRepository.save(atividade);
 
-        System.out.println(
-                "ATIVIDADE CRIADA: "
-                        + novaAtividade.getTitulo()
-        );
+        ///Rascunho não aparece para o aluno, então só avisa quando a atividade já nasce publicada
+        if (novaAtividade.getStatus() != StatusAtividade.PENDENTE) {
+            enviarNotificacoes(novaAtividade, turma);
+        }
 
-        System.out.println(
-                "TURMA ENCONTRADA: "
-                        + turma.getId()
-        );
+        return novaAtividade;
+    }
 
+    ///Avisa os alunos da turma quando o professor publica uma atividade
+    @Transactional(readOnly = true)
+    public void notificarPublicacao(Atividade atividade) {
+        if (atividade.getTurma() == null || atividade.getTurma().getId() == null) {
+            return;
+        }
+        turmaRepository.findById(atividade.getTurma().getId())
+                .ifPresent(turma -> enviarNotificacoes(atividade, turma));
+    }
+
+    ///Manda a notificação para cada aluno da turma que tem o celular cadastrado
+    private void enviarNotificacoes(Atividade novaAtividade, Turma turma) {
         List<Usuario> alunos = turma.getAlunos() == null
                 ? Collections.emptyList()
                 : turma.getAlunos();
@@ -129,10 +141,18 @@ public class AtividadeService {
                         "Enviando notificação para o aluno..."
                 );
 
-                notificacaoService.notificarNovaAtividade(
-                        novaAtividade,
-                        aluno.getFcmToken()
-                );
+                ///Se a notificação falhar, a atividade continua salva
+                try {
+                    notificacaoService.notificarNovaAtividade(
+                            novaAtividade,
+                            aluno.getFcmToken()
+                    );
+                } catch (Exception e) {
+                    System.err.println(
+                            "Falha ao notificar o aluno "
+                                    + aluno.getUsuario() + ": " + e.getMessage()
+                    );
+                }
 
             } else {
 
@@ -141,8 +161,6 @@ public class AtividadeService {
                 );
             }
         }
-
-        return novaAtividade;
     }
 
     public Optional<Atividade> atualizarAtividade(
@@ -169,6 +187,35 @@ public class AtividadeService {
         return Optional.of(
                 atividadeRepository.save(atividade)
         );
+    }
+
+    /*
+     * Quem pode criar, editar ou excluir uma atividade (e as questões dela):
+     * - administrador: qualquer atividade;
+     * - professor: só as atividades das turmas dele;
+     * - aluno: nenhuma (o SecurityConfig já barra antes de chegar aqui).
+     * Mesma regra das turmas (TurmaService).
+     */
+    public Usuario exigirPodeAlterar(Turma turma, String username) {
+        Usuario usuario = usuarioRepository.findByUsuario(username)
+                .orElseThrow(() -> ApiException.naoAutenticado(
+                        "USUARIO_NAO_ENCONTRADO", "Usuário não encontrado."));
+
+        if (TipoUsuario.ehAdministrador(usuario)) {
+            return usuario;
+        }
+
+        boolean professorDaTurma = TipoUsuario.ehProfessor(usuario)
+                && turma != null
+                && turma.getProfessor() != null
+                && turma.getProfessor().getId().equals(usuario.getId());
+
+        if (!professorDaTurma) {
+            throw ApiException.proibido("SEM_ACESSO_A_ATIVIDADE",
+                    "Só o professor da turma ou um administrador pode alterar as atividades dela.");
+        }
+
+        return usuario;
     }
 
     public boolean deletarAtividade(Long id) {

@@ -1,0 +1,37 @@
+# Grafana do MenteUp: lê os indicadores pela API /dashboard do back-end.
+# Uso: copie .env.exemplo para .env, preencha e rode "docker compose up -d".
+services:
+  grafana:
+    image: grafana/grafana-oss:11.3.0
+    container_name: menteup-grafana
+    ports:
+      # 127.0.0.1 = só abre neste computador (ninguém da rede acessa)
+      - "127.0.0.1:${GRAFANA_PORTA:-3001}:3000"
+    environment:
+      # Plugin Infinity: fonte de dados que lê APIs REST (JSON)
+      GF_INSTALL_PLUGINS: yesoreyeram-infinity-datasource 3.7.1
+
+      # Acesso SOMENTE do administrador
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_SENHA}
+      GF_AUTH_ANONYMOUS_ENABLED: "false"     # sem acesso sem login
+      GF_USERS_ALLOW_SIGN_UP: "false"        # ninguém cria conta pela tela de login
+      GF_USERS_ALLOW_ORG_CREATE: "false"     # ninguém cria outra organização
+      GF_PUBLIC_DASHBOARDS_ENABLED: "false"  # a dashboard não pode virar link público
+      GF_SNAPSHOTS_EXTERNAL_ENABLED: "false" # nem ser publicada como snapshot externo
+      GF_SECURITY_COOKIE_SAMESITE: strict
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/menteup.json
+
+      # Lidas pelo arquivo da fonte de dados (provisioning/datasources)
+      MENTEUP_API_URL: ${MENTEUP_API_URL:-http://host.docker.internal:8080}
+      MENTEUP_DASHBOARD_TOKEN: ${MENTEUP_DASHBOARD_TOKEN}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./provisioning:/etc/grafana/provisioning:ro
+      - ./dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-dados:/var/lib/grafana
+    restart: unless-stopped
+
+volumes:
+  grafana-dados:

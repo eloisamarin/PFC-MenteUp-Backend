@@ -1,0 +1,172 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="arquitetura-menteup" name="Arquitetura">
+    <mxGraphModel dx="930" dy="511" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c12" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=center;spacingTop=6;fillColor=#FFFFFF;strokeColor=#3A3F7A;strokeWidth=2;fontStyle=1;fontSize=14;fontSize=16;" value="USUÁRIOS" vertex="1">
+          <mxGeometry height="640" width="250" x="20" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c13" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontStyle=1;fontSize=13;strokeWidth=2;fillColor=#EEF0FF;strokeColor=#4B4FA8;" value="ALUNO" vertex="1">
+          <mxGeometry height="55" width="30" x="130" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="c14" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=11;" value="• Responde atividades e desafios ao vivo&lt;br&gt;• Ganha pontos, XP e conquistas&lt;br&gt;• Acompanha o ranking&lt;br&gt;• Pede para entrar/sair de turmas&lt;br&gt;• Perfil, avatar e exclusão de dados" vertex="1">
+          <mxGeometry height="110" width="230" x="32" y="182" as="geometry" />
+        </mxCell>
+        <mxCell id="c15" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontStyle=1;fontSize=13;strokeWidth=2;fillColor=#EEF0FF;strokeColor=#4B4FA8;" value="PROFESSOR" vertex="1">
+          <mxGeometry height="55" width="30" x="130" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="c16" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=11;" value="• Cria atividades (5 templates) e desafios&lt;br&gt;• Gerencia turmas e aprova pedidos&lt;br&gt;• Acompanha o desempenho e comenta&lt;br&gt;• Conduz o desafio ao vivo" vertex="1">
+          <mxGeometry height="110" width="230" x="32" y="382" as="geometry" />
+        </mxCell>
+        <mxCell id="c17" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontStyle=1;fontSize=13;strokeWidth=2;fillColor=#EEF0FF;strokeColor=#4B4FA8;" value="ADMINISTRADOR" vertex="1">
+          <mxGeometry height="55" width="30" x="130" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="c18" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=11;" value="• Gerencia usuários e perfis&lt;br&gt;• Consulta os logs do sistema&lt;br&gt;• Acompanha os indicadores no Grafana&lt;br&gt;• Tem acesso a todas as turmas" vertex="1">
+          <mxGeometry height="110" width="230" x="32" y="582" as="geometry" />
+        </mxCell>
+        <mxCell id="c19" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=center;spacingTop=6;fillColor=#FFFFFF;strokeColor=#3A3F7A;strokeWidth=2;fontStyle=1;fontSize=14;fontSize=12;align=left;spacingLeft=34;" value="HOSPEDAGEM (planejada): Vercel" vertex="1">
+          <mxGeometry height="450" width="240" x="310" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="c20" parent="1" style="shape=image;image=https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/vercel/vercel-original.svg;verticalLabelPosition=middle;labelPosition=right;align=left;verticalAlign=middle;spacingLeft=6;html=1;imageAspect=1;aspect=fixed;fontSize=12;fontStyle=1;" value="" vertex="1">
+          <mxGeometry height="18" width="18" x="320" y="157" as="geometry" />
+        </mxCell>
+        <mxCell id="c21" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=center;spacingTop=6;fillColor=#F7F8FF;strokeColor=#7076C9;fontStyle=1;fontSize=13;" value="CLIENTE / FRONT-END" vertex="1">
+          <mxGeometry height="312" width="216" x="322" y="182" as="geometry" />
+        </mxCell>
+        <mxCell id="c22" parent="1" style="shape=image;image=https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/react/react-original.svg;verticalLabelPosition=middle;labelPosition=right;align=left;verticalAlign=middle;spacingLeft=6;html=1;imageAspect=1;aspect=fixed;fontSize=12;fontStyle=1;" value="React 19" vertex="1">
+          <mxGeometry height="30" width="30" x="334" y="212" as="geometry" />
+        </mxCell>
+        <mxCell id="c23" parent="1" style="shape=image;image=https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/typescript/typescript-original.svg;verticalLabelPosition=middle;labelPosition=right;align=left;verticalAlign=middle;spacingLeft=6;html=1;imageAspect=1;aspect=fixed;fontSize=12;fontStyle=1;" value="TypeScript" vertex="1">
+          <mxGeometry height="30" width="30" x="440" y="212" as="geometry" />
+        </mxCell>
+        <mxCell id="c24" parent="1" style="shape=image;image=https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/vitejs/vitejs-original.svg;verticalLabelPosition=middle;labelPosition=right;align=left;verticalAlign=middle;spacingLeft=6;html=1;imageAspect=1;aspect=fixed;fontSize=12;fontStyle=1;" value="Vite" vertex="1">
+          <mxGeometry height="30" width="30" x="334" y="252" as="geometry" />
+        </mxCell>
+        <mxCell id="c25" parent="1" style="shape=image;image=https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/tailwindcss/tailwindcss-original.svg;verticalLabelPosition=middle;labelPosition=right;align=left;verticalAlign=middle;spacingLeft=6;html=1;imageAspect=1;aspect=fixed;fontSize=12;fontStyle=1;" value="Tailwind" vertex="1">
+          <mxGeometry height="30" width="30" x="440" y="252" as="geometry" />
+        </mxCell>
+        <mxCell id="c26" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=11;" value="• Telas por perfil (aluno, professor, admin)&lt;br&gt;• Login com 2FA e recuperação de senha&lt;br&gt;• Atividades e desafios ao vivo&lt;br&gt;• Turmas e pedidos de entrada/saída&lt;br&gt;• Conquistas e ranking&lt;br&gt;• Desempenho e comentários&lt;br&gt;• Perfil e avatar&lt;br&gt;• Recebe notificações push" vertex="1">
+          <mxGeometry height="200" width="200" x="332" y="292" as="geometry" />
+        </mxCell>
+        <mxCell id="c27" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=center;spacingTop=6;fillColor=#FFFFFF;strokeColor=#9AA0B4;fontSize=11;" value="&lt;b&gt;Comunicação&lt;/b&gt;&lt;br&gt;HTTPS · REST/JSON&lt;br&gt;Token JWT no cabeçalho" vertex="1">
+          <mxGeometry height="80" width="216" x="322" y="506" as="geometry" />
+        </mxCell>
+        <mxCell id="c28" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=center;spacingTop=6;fillColor=#FFFFFF;strokeColor=#3A3F7A;strokeWidth=2;fontStyle=1;fontSize=14;fontSize=13;" value="INTEGRAÇÕES EXTERNAS" vertex="1">
+          <mxGeometry height="96" width="600" x="600" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c29" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=center;spacingTop=6;fillColor=#E8F7F2;strokeColor=#2E9E7A;fontSize=12;align=left;spacingLeft=8;spacingRight=6;align=right;spacingRight=8;verticalAlign=middle;" value="&lt;b&gt;Firebase Cloud Messaging&lt;/b&gt;&lt;br&gt;Notificações push (ex.: nova atividade)" vertex="1">
+          <mxGeometry height="56" width="270" x="616" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c30" parent="1" style="shape=image;image=https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/firebase/firebase-original.svg;verticalLabelPosition=middle;labelPosition=right;align=left;verticalAlign=middle;spacingLeft=6;html=1;imageAspect=1;aspect=fixed;fontSize=12;fontStyle=1;" value="" vertex="1">
+          <mxGeometry height="34" width="34" x="624" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="c31" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=center;spacingTop=6;fillColor=#E8F7F2;strokeColor=#2E9E7A;fontSize=12;align=left;spacingLeft=8;spacingRight=6;verticalAlign=middle;" value="&lt;b&gt;✉ E-mail (SMTP · Gmail)&lt;/b&gt;&lt;br&gt;Código 2FA e link de nova senha" vertex="1">
+          <mxGeometry height="56" width="270" x="914" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c32" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=center;spacingTop=6;fillColor=#FFFFFF;strokeColor=#3A3F7A;strokeWidth=2;fontStyle=1;fontSize=14;fontSize=12;" value="HOSPEDAGEM (planejada): Render" vertex="1">
+          <mxGeometry height="480" width="600" x="600" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="c33" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=center;spacingTop=6;fillColor=#F7F8FF;strokeColor=#7076C9;fontStyle=1;fontSize=13;" value="APLICAÇÃO — BACK-END (API REST)" vertex="1">
+          <mxGeometry height="442" width="576" x="612" y="186" as="geometry" />
+        </mxCell>
+        <mxCell id="c34" parent="1" style="shape=image;image=https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/spring/spring-original.svg;verticalLabelPosition=middle;labelPosition=right;align=left;verticalAlign=middle;spacingLeft=6;html=1;imageAspect=1;aspect=fixed;fontSize=12;fontStyle=1;" value="Spring Boot 4" vertex="1">
+          <mxGeometry height="30" width="30" x="628" y="216" as="geometry" />
+        </mxCell>
+        <mxCell id="c35" parent="1" style="shape=image;image=https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/java/java-original.svg;verticalLabelPosition=middle;labelPosition=right;align=left;verticalAlign=middle;spacingLeft=6;html=1;imageAspect=1;aspect=fixed;fontSize=12;fontStyle=1;" value="Java 21" vertex="1">
+          <mxGeometry height="30" width="30" x="768" y="216" as="geometry" />
+        </mxCell>
+        <mxCell id="c36" parent="1" style="shape=image;image=https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/hibernate/hibernate-original.svg;verticalLabelPosition=middle;labelPosition=right;align=left;verticalAlign=middle;spacingLeft=6;html=1;imageAspect=1;aspect=fixed;fontSize=12;fontStyle=1;" value="JPA/Hibernate" vertex="1">
+          <mxGeometry height="30" width="30" x="878" y="216" as="geometry" />
+        </mxCell>
+        <mxCell id="c37" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=11;fontSize=11;" value="&lt;b&gt;Spring Security&lt;/b&gt;&lt;br&gt;JWT + 2FA" vertex="1">
+          <mxGeometry height="30" width="150" x="1030" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="c38" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=center;spacingTop=6;fillColor=#EEF0FF;strokeColor=#7076C9;fontSize=12;align=left;spacingLeft=8;spacingRight=6;fontSize=10;" value="&lt;b&gt;Segurança e acesso&lt;/b&gt;&lt;br&gt;&lt;br&gt;• JWT + código 2FA por e-mail&lt;br&gt;• Senha com BCrypt&lt;br&gt;• Bloqueio após 3 tentativas&lt;br&gt;• Recuperação por link (30 min)" vertex="1">
+          <mxGeometry height="172" width="132" x="624" y="264" as="geometry" />
+        </mxCell>
+        <mxCell id="c39" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=center;spacingTop=6;fillColor=#EEF0FF;strokeColor=#7076C9;fontSize=12;align=left;spacingLeft=8;spacingRight=6;fontSize=10;" value="&lt;b&gt;Usuários e perfil&lt;/b&gt;&lt;br&gt;&lt;br&gt;• Aluno, professor, administrador&lt;br&gt;• Avatar (10 animais)&lt;br&gt;• Troca de senha&lt;br&gt;• Exclusão anonimizada&amp;nbsp;" vertex="1">
+          <mxGeometry height="172" width="132" x="764" y="264" as="geometry" />
+        </mxCell>
+        <mxCell id="c40" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=center;spacingTop=6;fillColor=#EEF0FF;strokeColor=#7076C9;fontSize=12;align=left;spacingLeft=8;spacingRight=6;fontSize=10;" value="&lt;b&gt;Turmas&lt;/b&gt;&lt;br&gt;&lt;br&gt;• Gestão de turmas&lt;br&gt;• Pedido de entrada/saída&lt;br&gt;• Aprovação pelo professor&lt;br&gt;• Professor só vê as suas" vertex="1">
+          <mxGeometry height="172" width="132" x="904" y="264" as="geometry" />
+        </mxCell>
+        <mxCell id="c41" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=center;spacingTop=6;fillColor=#EEF0FF;strokeColor=#7076C9;fontSize=12;align=left;spacingLeft=8;spacingRight=6;fontSize=10;" value="&lt;b&gt;Atividades&lt;/b&gt;&lt;br&gt;&lt;br&gt;• Quiz, V/F, Associação,&lt;br&gt;• Ordenação e Lacunas&lt;br&gt;• Progresso salvo por questão&lt;br&gt;• Correção automática" vertex="1">
+          <mxGeometry height="172" width="132" x="1044" y="264" as="geometry" />
+        </mxCell>
+        <mxCell id="c42" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=center;spacingTop=6;fillColor=#EEF0FF;strokeColor=#7076C9;fontSize=12;align=left;spacingLeft=8;spacingRight=6;fontSize=10;" value="&lt;b&gt;Desafios&lt;/b&gt;&lt;br&gt;&lt;br&gt;• Perguntas com cronômetro&lt;br&gt;• Pontos por acerto e rapidez&lt;br&gt;• Ranking do desafio" vertex="1">
+          <mxGeometry height="172" width="132" x="624" y="446" as="geometry" />
+        </mxCell>
+        <mxCell id="c43" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=center;spacingTop=6;fillColor=#EEF0FF;strokeColor=#7076C9;fontSize=12;align=left;spacingLeft=8;spacingRight=6;fontSize=10;" value="&lt;b&gt;Gamificação&lt;/b&gt;&lt;br&gt;&lt;br&gt;• Conquistas e raridades&lt;br&gt;• XP e níveis&lt;br&gt;• Sequência de dias (Intensivão)&lt;br&gt;• Ranking geral" vertex="1">
+          <mxGeometry height="172" width="132" x="764" y="446" as="geometry" />
+        </mxCell>
+        <mxCell id="c44" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=center;spacingTop=6;fillColor=#EEF0FF;strokeColor=#7076C9;fontSize=12;align=left;spacingLeft=8;spacingRight=6;fontSize=10;" value="&lt;b&gt;Desempenho&lt;/b&gt;&lt;br&gt;&lt;br&gt;• Visão da turma e do aluno&lt;br&gt;• Acertos por questão&lt;br&gt;• Comentário do professor" vertex="1">
+          <mxGeometry height="172" width="132" x="904" y="446" as="geometry" />
+        </mxCell>
+        <mxCell id="c45" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=center;spacingTop=6;fillColor=#EEF0FF;strokeColor=#7076C9;fontSize=12;align=left;spacingLeft=8;spacingRight=6;fontSize=10;" value="&lt;b&gt;Auditoria e indicadores&lt;/b&gt;&lt;br&gt;&lt;br&gt;• Log de ações e falhas&lt;br&gt;• API /dashboard (agregada,&lt;br&gt;• sem dados pessoais)" vertex="1">
+          <mxGeometry height="172" width="132" x="1044" y="446" as="geometry" />
+        </mxCell>
+        <mxCell id="c46" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=center;spacingTop=6;fillColor=#FFFFFF;strokeColor=#3A3F7A;strokeWidth=2;fontStyle=1;fontSize=14;fontSize=14;" value="DADOS" vertex="1">
+          <mxGeometry height="330" width="230" x="1250" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="c47" parent="1" style="shape=image;image=https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/postgresql/postgresql-original.svg;verticalLabelPosition=middle;labelPosition=right;align=left;verticalAlign=middle;spacingLeft=6;html=1;imageAspect=1;aspect=fixed;fontSize=12;fontStyle=1;" value="PostgreSQL" vertex="1">
+          <mxGeometry height="36" width="36" x="1266" y="236" as="geometry" />
+        </mxCell>
+        <mxCell id="c48" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=11;" value="&lt;b&gt;Banco relacional&lt;/b&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;• Usuários e perfis&lt;br&gt;• Turmas e pedidos&lt;br&gt;• Atividades e questões&lt;br&gt;• Respostas e resultados&lt;br&gt;• Desafios e respostas&lt;br&gt;• Conquistas e XP&lt;br&gt;• Logs do sistema&lt;br&gt;• Tokens de 2FA e de senha&lt;/div&gt;" vertex="1">
+          <mxGeometry height="151" width="210" x="1260" y="289.5" as="geometry" />
+        </mxCell>
+        <mxCell id="c50" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=center;spacingTop=6;fillColor=#E8F7F2;strokeColor=#2E9E7A;fontSize=12;align=left;spacingLeft=8;spacingRight=6;align=right;spacingRight=10;verticalAlign=middle;fontSize=11;" value="&lt;b&gt;MONITORAMENTO&lt;/b&gt;&lt;br&gt;Grafana (Docker) · plugin Infinity&lt;br&gt;Big Numbers e gráficos · só o admin" vertex="1">
+          <mxGeometry height="96" width="300" x="760" y="676" as="geometry" />
+        </mxCell>
+        <mxCell id="c51" parent="1" style="shape=image;image=https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/grafana/grafana-original.svg;verticalLabelPosition=middle;labelPosition=right;align=left;verticalAlign=middle;spacingLeft=6;html=1;imageAspect=1;aspect=fixed;fontSize=12;fontStyle=1;" value="" vertex="1">
+          <mxGeometry height="40" width="40" x="774" y="702" as="geometry" />
+        </mxCell>
+        <mxCell id="c52" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=center;spacingTop=6;fillColor=#FFFFFF;strokeColor=#3A3F7A;strokeWidth=2;fontStyle=1;fontSize=14;fontSize=13;" value="OUTRAS FERRAMENTAS" vertex="1">
+          <mxGeometry height="110" width="600" x="600" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="c53" parent="1" style="shape=image;image=https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/github/github-original.svg;verticalLabelPosition=middle;labelPosition=right;align=left;verticalAlign=middle;spacingLeft=6;html=1;imageAspect=1;aspect=fixed;fontSize=12;fontStyle=1;" value="GitHub" vertex="1">
+          <mxGeometry height="34" width="34" x="624" y="838" as="geometry" />
+        </mxCell>
+        <mxCell id="c54" parent="1" style="shape=image;image=https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/docker/docker-original.svg;verticalLabelPosition=middle;labelPosition=right;align=left;verticalAlign=middle;spacingLeft=6;html=1;imageAspect=1;aspect=fixed;fontSize=12;fontStyle=1;" value="Docker" vertex="1">
+          <mxGeometry height="34" width="34" x="744" y="838" as="geometry" />
+        </mxCell>
+        <mxCell id="c55" parent="1" style="shape=image;image=https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/maven/maven-original.svg;verticalLabelPosition=middle;labelPosition=right;align=left;verticalAlign=middle;spacingLeft=6;html=1;imageAspect=1;aspect=fixed;fontSize=12;fontStyle=1;" value="Maven" vertex="1">
+          <mxGeometry height="34" width="34" x="864" y="838" as="geometry" />
+        </mxCell>
+        <mxCell id="c56" parent="1" style="shape=image;image=https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/junit/junit-original.svg;verticalLabelPosition=middle;labelPosition=right;align=left;verticalAlign=middle;spacingLeft=6;html=1;imageAspect=1;aspect=fixed;fontSize=12;fontStyle=1;" value="JUnit + Mockito&lt;br&gt;&lt;span style=&#39;font-weight:normal;font-size:10px&#39;&gt;300+ testes&lt;/span&gt;" vertex="1">
+          <mxGeometry height="34" width="34" x="984" y="838" as="geometry" />
+        </mxCell>
+        <mxCell id="c57" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=center;spacingTop=6;fillColor=#FFFFFF;strokeColor=#9AA0B4;align=left;spacingLeft=10;fontSize=11;" value="&lt;b&gt;Legenda&lt;/b&gt;&lt;br&gt;&lt;br&gt;━━ seta azul: requisição / chamada de API&lt;br&gt;┅┅ seta dourada: e-mail, push ou acesso à dashboard&lt;br&gt;(planejada): hospedagem ainda não publicada" vertex="1">
+          <mxGeometry height="120" width="250" x="20" y="720" as="geometry" />
+        </mxCell>
+        <mxCell id="e58" edge="1" parent="1" source="c12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=11;labelBackgroundColor=#FFFFFF;strokeWidth=2;endArrow=block;endFill=1;strokeColor=#3A3F7A;" target="c19" value="navegador">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e59" edge="1" parent="1" source="c19" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=11;labelBackgroundColor=#FFFFFF;strokeWidth=2;endArrow=block;endFill=1;strokeColor=#3A3F7A;startArrow=block;startFill=1;" target="c33" value="HTTPS · REST/JSON · JWT">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e60" edge="1" parent="1" source="c33" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=11;labelBackgroundColor=#FFFFFF;strokeWidth=2;endArrow=block;endFill=1;strokeColor=#3A3F7A;startArrow=block;startFill=1;" target="c46" value="JPA / JDBC">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e61" edge="1" parent="1" source="c33" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=11;labelBackgroundColor=#FFFFFF;strokeWidth=2;endArrow=block;endFill=1;strokeColor=#3A3F7A;exitX=0.25;exitY=0;entryX=0.5;entryY=1;" target="c29" value="envia push (Admin SDK)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e62" edge="1" parent="1" source="c29" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=11;labelBackgroundColor=#FFFFFF;strokeWidth=2;endArrow=block;endFill=1;strokeColor=#3A3F7A;dashed=1;strokeColor=#9A6B00;exitX=0;exitY=0.5;entryX=0.5;entryY=0;" target="c19" value="notificação (FCM)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e63" edge="1" parent="1" source="c33" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=11;labelBackgroundColor=#FFFFFF;strokeWidth=2;endArrow=block;endFill=1;strokeColor=#3A3F7A;exitX=0.75;exitY=0;entryX=0.5;entryY=1;" target="c31" value="código 2FA · link de senha">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e64" edge="1" parent="1" source="c31" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=11;labelBackgroundColor=#FFFFFF;strokeWidth=2;endArrow=block;endFill=1;strokeColor=#3A3F7A;dashed=1;strokeColor=#9A6B00;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" target="c12" value="e-mail ao usuário">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e65" edge="1" parent="1" source="c50" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=11;labelBackgroundColor=#FFFFFF;strokeWidth=2;endArrow=block;endFill=1;strokeColor=#3A3F7A;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" target="c33" value="GET /dashboard (X-Dashboard-Token)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e66" edge="1" parent="1" source="c12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=11;labelBackgroundColor=#FFFFFF;strokeWidth=2;endArrow=block;endFill=1;strokeColor=#3A3F7A;dashed=1;strokeColor=#9A6B00;exitX=1;exitY=0.9;entryX=0;entryY=0.5;" target="c50" value="admin acessa (localhost:3001)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

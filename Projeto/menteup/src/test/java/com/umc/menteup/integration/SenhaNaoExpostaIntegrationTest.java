@@ -64,7 +64,8 @@ class SenhaNaoExpostaIntegrationTest extends IntegracaoBase {
     }
 
     @Test
-    void atualizar_deveAceitarSenhaNaEntradaESemDevolverNaResposta() {
+    void atualizar_naoDeveTrocarASenhaNemDevolverNaResposta() {
+        // A senha não é mais alterada pelo /atualizar (só em /usuarios/me/senha, com a senha atual)
         // Arrange
         Sessao aluno = novaSessao("ALUNO");
         String novaSenha = "nova-" + SENHA;
@@ -84,7 +85,8 @@ class SenhaNaoExpostaIntegrationTest extends IntegracaoBase {
         assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertSemSenha(resposta);
         String hash = usuarioRepository.findById(aluno.id()).orElseThrow().getSenha();
-        assertThat(passwordEncoder.matches(novaSenha, hash)).isTrue();
+        assertThat(passwordEncoder.matches(novaSenha, hash)).isFalse();
+        assertThat(passwordEncoder.matches(SENHA, hash)).isTrue();
     }
 
     @Test
@@ -108,8 +110,9 @@ class SenhaNaoExpostaIntegrationTest extends IntegracaoBase {
         // Act
         ResponseEntity<String> porId = buscar(aluno, "/turmas/{id}", turmaId);
 
-        // Assert: a turma precisa trazer o aluno, senão o teste não exercita o campo alunos
-        assertThat(porId.getBody()).contains(aluno.email());
+        // Assert: a turma precisa trazer o aluno (pelo id: o e-mail não sai mais, LGPD),
+        // senão o teste não exercita o campo alunos
+        assertThat(porId.getBody()).contains("\"id\":" + aluno.id()).doesNotContain(aluno.email());
         assertSemSenha(porId);
         assertSemSenha(buscar(aluno, "/turmas/all"));
     }

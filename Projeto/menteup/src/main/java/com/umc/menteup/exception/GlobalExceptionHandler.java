@@ -17,6 +17,7 @@ import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -34,6 +35,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ErroResponse> tratarApi(ApiException ex) {
+        if (ex.getStatus() == HttpStatus.FORBIDDEN) {
+            registrarAcessoNegado(ex.getCodigo());
+        }
         return montar(ex.getStatus(), ex.getCodigo(), ex.getMessage(), null);
     }
 
@@ -53,6 +57,18 @@ public class GlobalExceptionHandler {
                 "Corpo da requisição ausente, malformado ou com tipos inválidos.", null);
     }
 
+    // Ex.: /turmas/abc (id que não é número) ou /logs?acao=XPTO (valor fora da lista).
+    // É erro de quem chamou (400), e não do sistema: não vira 500 nem é gravado como ERRO_SISTEMA.
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErroResponse> tratarTipoInvalido(MethodArgumentTypeMismatchException ex) {
+        String parametro = ex.getName();
+        Object valor = ex.getValue();
+
+        return montar(HttpStatus.BAD_REQUEST, "PARAMETRO_INVALIDO",
+                "Valor inválido para \"" + parametro + "\".",
+                Map.of(parametro, "Valor \"" + valor + "\" não é aceito aqui."));
+    }
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErroResponse> tratarIntegridade(DataIntegrityViolationException ex) {
         log.warn("Violação de integridade de dados: {}", ex.getMostSpecificCause().getMessage());
@@ -62,6 +78,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErroResponse> tratarAcessoNegado(AccessDeniedException ex) {
+        registrarAcessoNegado("ACESSO_NEGADO");
         return montar(HttpStatus.FORBIDDEN, "ACESSO_NEGADO",
                 "Você não tem permissão para realizar esta operação.", null);
     }
@@ -97,6 +114,19 @@ public class GlobalExceptionHandler {
 
         return montar(HttpStatus.INTERNAL_SERVER_ERROR, "ERRO_INTERNO",
                 "Ocorreu um erro inesperado. Tente novamente mais tarde.", null);
+    }
+
+    ///Guarda quem tentou fazer algo sem permissão
+    private void registrarAcessoNegado(String codigo) {
+        logSistemaService.registrarPorUsername(
+                usernameAutenticadoOuNull(),
+                AcaoLog.ACESSO_NEGADO,
+                null,
+                null,
+                ResultadoLog.FALHA,
+                "Acesso negado: " + codigo,
+                null
+        );
     }
 
     private String usernameAutenticadoOuNull() {

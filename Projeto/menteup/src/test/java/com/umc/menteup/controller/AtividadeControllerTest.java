@@ -170,9 +170,10 @@ class AtividadeControllerTest {
         @Test
         @DisplayName("201: gera id novo, salva e registra o log CRIAR_ATIVIDADE")
         void criaERegistraLog() throws Exception {
-            when(turmaRepository.existsById(1L)).thenReturn(true);
+            when(turmaRepository.findById(1L)).thenReturn(Optional.of(turmaA()));
             AtomicReference<Long> idRecebidoNoSave = new AtomicReference<>();
-            when(atividadeRepository.save(any(Atividade.class))).thenAnswer(inv -> {
+            ///Agora a atividade é salva pelo service, que também avisa os alunos
+            when(atividadeService.criarAtividade(any(Atividade.class))).thenAnswer(inv -> {
                 Atividade a = inv.getArgument(0);
                 idRecebidoNoSave.set(a.getId()); // o que chegou no save, antes do "banco" gerar o id
                 a.setId(99L);
@@ -207,7 +208,7 @@ class AtividadeControllerTest {
         @Test
         @DisplayName("400 quando a turma informada não existe: não salva e não registra log")
         void turmaInexistente() throws Exception {
-            when(turmaRepository.existsById(1L)).thenReturn(false);
+            when(turmaRepository.findById(1L)).thenReturn(Optional.empty());
 
             mockMvc.perform(post("/atividades")
                             .principal(autenticado)
@@ -216,7 +217,7 @@ class AtividadeControllerTest {
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.codigo").value("BAD_REQUEST"));
 
-            verify(atividadeRepository, never()).save(any());
+            verify(atividadeService, never()).criarAtividade(any());
             verifyNoInteractions(logSistemaService);
         }
 
@@ -334,7 +335,7 @@ class AtividadeControllerTest {
             existente.getPerguntas().add(p2);
 
             when(atividadeRepository.findById(10L)).thenReturn(Optional.of(existente));
-            when(turmaRepository.existsById(1L)).thenReturn(true);
+            when(turmaRepository.findById(1L)).thenReturn(Optional.of(turmaA()));
             when(atividadeRepository.save(any(Atividade.class))).thenAnswer(inv -> inv.getArgument(0));
 
             mockMvc.perform(put("/atividades")
@@ -369,7 +370,7 @@ class AtividadeControllerTest {
         void turmaInexistente() throws Exception {
             when(atividadeRepository.findById(10L))
                     .thenReturn(Optional.of(atividadeSalva(10L, "Fracoes basicas", StatusAtividade.EM_ANDAMENTO)));
-            when(turmaRepository.existsById(1L)).thenReturn(false);
+            when(turmaRepository.findById(1L)).thenReturn(Optional.empty());
 
             mockMvc.perform(put("/atividades")
                             .principal(autenticado)
@@ -384,7 +385,7 @@ class AtividadeControllerTest {
         private void prepararEdicao(StatusAtividade statusAtual) {
             when(atividadeRepository.findById(10L))
                     .thenReturn(Optional.of(atividadeSalva(10L, "Fracoes basicas", statusAtual)));
-            when(turmaRepository.existsById(1L)).thenReturn(true);
+            when(turmaRepository.findById(1L)).thenReturn(Optional.of(turmaA()));
             when(atividadeRepository.save(any(Atividade.class))).thenAnswer(inv -> inv.getArgument(0));
         }
     }
@@ -491,6 +492,13 @@ class AtividadeControllerTest {
         turma.setNome("Turma A");
         a.setTurma(turma);
         return a;
+    }
+
+    private static Turma turmaA() {
+        Turma turma = new Turma();
+        turma.setId(1L);
+        turma.setNome("Turma A");
+        return turma;
     }
 
     private static String atividadeJson(Long id, String titulo, int pontuacao, String status, long turmaId) {

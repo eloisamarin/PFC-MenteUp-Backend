@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -16,16 +17,38 @@ import java.util.Date;
 @Component
 public class JwtService {
 
-    private String secret = "46bfbfbfcf136a14d0357c1547f4cb36f9e304c2d04004581713386b658c6e1d";
     private Duration expiration = Duration.ofMinutes(60);
 
-    private SecretKey signingKey;
+    private final SecretKey signingKey;
+
+    // A chave vem da variável de ambiente JWT_SECRET (application.properties: menteup.jwt.secret).
+    // Nunca escreva a chave no código: quem tiver a chave consegue gerar token de qualquer usuário.
+    public JwtService(@Value("${menteup.jwt.secret}") String secret) {
+        this.signingKey = criarChave(secret);
+    }
+
+    private static SecretKey criarChave(String secret) {
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException(
+                    "Defina a variável de ambiente JWT_SECRET (chave em Base64 com pelo menos 32 bytes).");
+        }
+
+        byte[] keyBytes;
+        try {
+            keyBytes = Decoders.BASE64.decode(secret.trim());
+        } catch (RuntimeException e) {
+            throw new IllegalStateException("JWT_SECRET precisa estar em Base64.", e);
+        }
+
+        if (keyBytes.length < 32) {
+            throw new IllegalStateException(
+                    "JWT_SECRET é curta demais: use pelo menos 32 bytes (256 bits) em Base64.");
+        }
+
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
 
     private SecretKey getSigningKey() {
-        if (signingKey == null) {
-            byte[] keyBytes = Decoders.BASE64.decode(secret);
-            signingKey = Keys.hmacShaKeyFor(keyBytes);
-        }
         return signingKey;
     }
 

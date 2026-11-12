@@ -96,7 +96,7 @@ class UsuarioControllerIntegrationTest extends IntegracaoBase {
         assertThat(resposta.getBody()).containsEntry("codigo", "VALIDACAO_FALHOU");
         assertThat((Map<String, String>) resposta.getBody().get("campos"))
                 .containsKeys("usuario", "senha")
-                .containsEntry("senha", "A Senha deve ter no mínimo 8 caracteres");
+                .containsEntry("senha", "A senha deve ter de 8 a 72 caracteres.");
     }
 
     @Test
@@ -132,8 +132,8 @@ class UsuarioControllerIntegrationTest extends IntegracaoBase {
 
     @Test
     void buscarPorId_comIdInexistente_deveRetornar404() {
-        // Arrange
-        Sessao sessao = novaSessao("ALUNO");
+        // Arrange: só o administrador consulta outros ids (o aluno recebe 403 antes)
+        Sessao sessao = novaSessao("ADMINISTRADOR");
 
         // Act
         ResponseEntity<Void> resposta = client.get().uri(BASE_PATH + "/{id}", Long.MAX_VALUE)

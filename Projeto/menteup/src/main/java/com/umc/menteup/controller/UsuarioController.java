@@ -20,8 +20,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import com.umc.menteup.dto.FcmTokenRequest;
+import com.umc.menteup.dto.AtualizarUsuarioRequest;
+import com.umc.menteup.dto.NovoUsuarioRequest;
+import com.umc.menteup.dto.ReenviarCodigo2FARequest;
+import com.umc.menteup.dto.UsuarioListagemResponse;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 
@@ -33,16 +38,16 @@ public class UsuarioController {
     @Autowired
     private UsuarioService usuarioService;
 
+    // Administrador: com e-mail. Professor e aluno: só id, nome e tipo (LGPD)
     @GetMapping("/all")
-    public ResponseEntity<List<Usuario>> getAll() {
-        return ResponseEntity.ok(usuarioService.getAll());
+    public ResponseEntity<List<UsuarioListagemResponse>> getAll(Authentication authentication) {
+        return ResponseEntity.ok(usuarioService.listar(authentication.getName()));
     }
 
+    // Só o próprio usuário ou o administrador
     @GetMapping("/{id}")
-    public ResponseEntity<Usuario> getById(@PathVariable Long id) {
-        return usuarioService.getById(id)
-                .map(resposta -> ResponseEntity.ok(resposta))
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    public ResponseEntity<UsuarioListagemResponse> getById(@PathVariable Long id, Authentication authentication) {
+        return ResponseEntity.ok(usuarioService.buscarPorId(id, authentication.getName()));
     }
 
     @PostMapping("/cadastrar")
@@ -52,12 +57,23 @@ public class UsuarioController {
                 .orElse(ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
     }
 
-    @PutMapping("/atualizar")
-    public ResponseEntity<Usuario> put(
-            @Valid @RequestBody Usuario usuario,
+    // Só o administrador: cria aluno, professor ou outro administrador.
+    // A pessoa recebe um e-mail para criar a senha e aceitar o termo.
+    @PostMapping
+    public ResponseEntity<Usuario> criarPorAdministrador(
+            @Valid @RequestBody NovoUsuarioRequest pedido,
             Authentication authentication) {
 
-        return usuarioService.atualizarUsuario(usuario, authentication.getName())
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(usuarioService.criarUsuarioPorAdministrador(pedido, authentication.getName()));
+    }
+
+    @PutMapping("/atualizar")
+    public ResponseEntity<Usuario> put(
+            @Valid @RequestBody AtualizarUsuarioRequest dados,
+            Authentication authentication) {
+
+        return usuarioService.atualizarUsuario(dados, authentication.getName())
                 .map(resposta -> ResponseEntity.status(HttpStatus.OK).body(resposta))
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
@@ -72,10 +88,17 @@ public class UsuarioController {
 
     // Passo 2: valida o código 2FA e devolve o token JWT
     @PostMapping("/validar-2fa")
-    public ResponseEntity<UsuarioLogin> validarCodigo2FA(@RequestBody Codigo2FARequest request) {
+    public ResponseEntity<UsuarioLogin> validarCodigo2FA(@Valid @RequestBody Codigo2FARequest request) {
         return usuarioService.validarCodigo2FA(request.getUsuario(), request.getCodigo())
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+    }
+
+    // "Reenviar código": manda um novo código 2FA para quem acabou de entrar com a senha
+    @PostMapping("/reenviar-2fa")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void reenviarCodigo2FA(@Valid @RequestBody ReenviarCodigo2FARequest request) {
+        usuarioService.reenviarCodigo2FA(request.usuario());
     }
 
     @PostMapping("/fcm-token")

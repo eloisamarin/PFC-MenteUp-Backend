@@ -1,0 +1,20 @@
+# Fonte de dados criada automaticamente quando o Grafana sobe:
+# a API /dashboard do back-end do MenteUp, lida pelo plugin Infinity.
+# O token vai no cabeçalho X-Dashboard-Token (o mesmo valor configurado no back-end).
+apiVersion: 1
+
+datasources:
+  - name: MenteUp API
+    uid: menteup-api
+    type: yesoreyeram-infinity-datasource
+    url: ${MENTEUP_API_URL}
+    isDefault: true
+    editable: false
+    jsonData:
+      httpHeaderName1: X-Dashboard-Token
+      # O Infinity só chama este endereço (o token nunca vai para outro site)
+      allowedHosts:
+        - ${MENTEUP_API_URL}
+      timeoutInSeconds: 30
+    secureJsonData:
+      httpHeaderValue1: ${MENTEUP_DASHBOARD_TOKEN}

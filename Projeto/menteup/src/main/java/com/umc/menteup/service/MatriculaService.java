@@ -53,45 +53,7 @@ public class MatriculaService {
                 .toList();
     }
 
-    @Transactional
-    public void matricular(String username, Long turmaId) {
-        Usuario aluno = carregarAluno(username);
-        Turma turma = carregarTurma(turmaId);
 
-        boolean jaEstava = turma.getAlunos().contains(aluno);
-
-        turma.getAlunos().add(aluno);
-
-        if (!jaEstava) {
-            logSistemaService.registrarSucesso(
-                    aluno,
-                    AcaoLog.ADICIONAR_ALUNO_TURMA,
-                    EntidadeLog.TURMA,
-                    turma.getId(),
-                    "Aluno \"" + aluno.getNomeUsuario() + "\" entrou na turma \"" + turma.getNome() + "\".",
-                    Map.of("alunoId", aluno.getId(), "turmaId", turma.getId())
-            );
-        }
-    }
-
-    @Transactional
-    public void desmatricular(String username, Long turmaId) {
-        Usuario aluno = carregarAluno(username);
-        Turma turma = carregarTurma(turmaId);
-
-        boolean removeu = turma.getAlunos().removeIf(matriculado -> matriculado.getId().equals(aluno.getId()));
-
-        if (removeu) {
-            logSistemaService.registrarSucesso(
-                    aluno,
-                    AcaoLog.REMOVER_ALUNO_TURMA,
-                    EntidadeLog.TURMA,
-                    turma.getId(),
-                    "Aluno \"" + aluno.getNomeUsuario() + "\" saiu da turma \"" + turma.getNome() + "\".",
-                    Map.of("alunoId", aluno.getId(), "turmaId", turma.getId())
-            );
-        }
-    }
 
     private Usuario carregarAluno(String username) {
         Usuario usuario = usuarioRepository.findByUsuario(username)

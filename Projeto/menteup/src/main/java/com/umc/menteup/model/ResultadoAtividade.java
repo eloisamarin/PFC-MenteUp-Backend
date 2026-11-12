@@ -40,4 +40,15 @@ public class ResultadoAtividade {
 
     @Column(nullable = false)
     private LocalDateTime concluida_em = LocalDateTime.now();
+
+    ///Comentário do professor sobre a atividade feita pelo aluno
+    @Column(name = "comentario_professor", length = 1000)
+    private String comentarioProfessor;
+
+    @Column(name = "comentado_em")
+    private LocalDateTime comentadoEm;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "comentado_por_id")
+    private Usuario comentadoPor;
 }
