@@ -22,7 +22,6 @@ public interface ResultadoAtividadeRepository extends JpaRepository<ResultadoAti
     Optional<ResultadoAtividade> findByUsuario_IdAndAtividade_Id(Long usuarioId, long AtividadeId);
 
     boolean existsByUsuario_IdAndAtividade_Id(Long usuarioId, long AtividadeId);
-    boolean existsByAtividade_Id(Long atividadeId);
 
     List<ResultadoAtividade> findAllByUsuario_IdAndAtividade_IdIn(Long usuarioId, Collection<Long> atividadeIds);
 
