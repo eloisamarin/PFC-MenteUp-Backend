@@ -249,7 +249,8 @@ abstract class IntegracaoBase {
                 .toList();
     }
 
-    protected ResponseEntity<Map<String, Object>> responder(Sessao aluno, Long atividadeId, Long perguntaId, Long alternativaId) {
+    protected ResponseEntity<Map<String, Object>> responder(
+            Sessao aluno, Long atividadeId, Long perguntaId, Long alternativaId) {
         return client.put().uri("/atividades/{id}/progresso", atividadeId)
                 .header(HttpHeaders.AUTHORIZATION, aluno.token())
                 .contentType(MediaType.APPLICATION_JSON)

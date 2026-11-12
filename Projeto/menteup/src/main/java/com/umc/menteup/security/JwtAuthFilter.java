@@ -97,6 +97,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.getWriter().write(
-                "{\"codigo\":\"TOKEN_INVALIDO\",\"mensagem\":\"Sessão inválida ou expirada. Faça o login novamente.\"}");
+                "{\"codigo\":\"TOKEN_INVALIDO\","
+                        + "\"mensagem\":\"Sessão inválida ou expirada. Faça o login novamente.\"}");
     }
 }

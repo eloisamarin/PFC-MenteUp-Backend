@@ -865,7 +865,8 @@ class DesafioControllerIntegrationTest extends IntegracaoBase {
         Sessao outro = novaSessao("PROFESSOR");
         Long turmaDoOutro = criarTurma(outro);
 
-        ResponseEntity<Map<String, Object>> resposta = atualizar(c.professor(), c.desafioId(), buildDesafio(turmaDoOutro, 1));
+        ResponseEntity<Map<String, Object>> resposta =
+                atualizar(c.professor(), c.desafioId(), buildDesafio(turmaDoOutro, 1));
 
         assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(desafioRepository.findById(c.desafioId()).orElseThrow().getTurma().getId()).isEqualTo(c.turmaId());
@@ -975,7 +976,8 @@ class DesafioControllerIntegrationTest extends IntegracaoBase {
     }
 
     @Override
-    protected ResponseEntity<Map<String, Object>> responder(Sessao aluno, Long desafioId, Long perguntaId, Long alternativaId) {
+    protected ResponseEntity<Map<String, Object>> responder(
+            Sessao aluno, Long desafioId, Long perguntaId, Long alternativaId) {
         return client.post().uri(BASE_PATH + "/{id}/respostas", desafioId)
                 .header(HttpHeaders.AUTHORIZATION, aluno.token())
                 .contentType(MediaType.APPLICATION_JSON)

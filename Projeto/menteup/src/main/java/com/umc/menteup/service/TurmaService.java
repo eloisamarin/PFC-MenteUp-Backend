@@ -168,7 +168,8 @@ public class TurmaService {
                 AcaoLog.EDITAR_TURMA,
                 EntidadeLog.TURMA,
                 salva.getId(),
-                "Turma \"" + nomeAnterior + "\" atualizada para \"" + salva.getNome() + "\"" + descreverProfessor(salva) + ".",
+                "Turma \"" + nomeAnterior + "\" atualizada para \"" + salva.getNome() + "\""
+                        + descreverProfessor(salva) + ".",
                 Map.of("nomeAnterior", String.valueOf(nomeAnterior), "nomeNovo", String.valueOf(salva.getNome()))
         );
 
