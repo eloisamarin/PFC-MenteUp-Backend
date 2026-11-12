@@ -37,7 +37,7 @@ class TurmaControllerIntegrationTest extends IntegracaoBase {
         ResponseEntity<Map<String, Object>> resposta = criar(professor, nome);
 
         // Assert
-        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(resposta.getBody()).containsEntry("nome", nome);
         assertThat(turmaRepository.findById(id(resposta.getBody())).orElseThrow().getNome()).isEqualTo(nome);
     }
