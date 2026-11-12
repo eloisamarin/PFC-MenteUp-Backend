@@ -19,7 +19,8 @@ public class VerdadeiroFalsoTemplate extends QuizTemplate {
         if (pergunta.alternativas().size() != 2) {
             throw ApiException.requisicaoInvalida(
                     "VERDADEIRO_FALSO_INVALIDO",
-                    "A afirmação \"" + pergunta.enunciado() + "\" deve ter exatamente 2 alternativas (Verdadeiro e Falso)."
+                    "A afirmação \"" + pergunta.enunciado()
+                            + "\" deve ter exatamente 2 alternativas (Verdadeiro e Falso)."
             );
         }
 

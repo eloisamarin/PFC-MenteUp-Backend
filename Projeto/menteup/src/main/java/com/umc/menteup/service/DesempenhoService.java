@@ -272,14 +272,15 @@ public class DesempenhoService {
                 questoes);
     }
 
-    private QuestaoAlunoResponse montarQuestaoDaAtividade(Pergunta pergunta, RespostaAtividade resposta, TipoAtividade tipo) {
+    private QuestaoAlunoResponse montarQuestaoDaAtividade(
+            Pergunta pergunta, RespostaAtividade resposta, TipoAtividade tipo) {
         // A resposta correta só é montada nos tipos de múltipla escolha
         boolean multiplaEscolha = tipo == TipoAtividade.QUIZ || tipo == TipoAtividade.VERDADEIRO_FALSO;
 
         String respostaCorreta = !multiplaEscolha ? null : pergunta.getAlternativas().stream()
-                                                           .filter(alternativa -> Boolean.TRUE.equals(alternativa.getCorreta()))
-                                                           .map(Alternativa::getTexto)
-                                                           .collect(Collectors.joining(", "));
+                .filter(alternativa -> Boolean.TRUE.equals(alternativa.getCorreta()))
+                .map(Alternativa::getTexto)
+                .collect(Collectors.joining(", "));
 
         return new QuestaoAlunoResponse(
                 pergunta.getEnunciado(),
@@ -307,7 +308,8 @@ public class DesempenhoService {
         Map<Desafio, List<RespostaDesafio>> porDesafio = respostaDesafioRepository
                 .buscarDoAlunoNaTurma(alunoId, turmaId)
                 .stream()
-                .collect(Collectors.groupingBy(r -> r.getPergunta().getDesafio(), LinkedHashMap::new, Collectors.toList()));
+                .collect(Collectors.groupingBy(
+                        r -> r.getPergunta().getDesafio(), LinkedHashMap::new, Collectors.toList()));
 
         return porDesafio.entrySet().stream()
                 .map(item -> {

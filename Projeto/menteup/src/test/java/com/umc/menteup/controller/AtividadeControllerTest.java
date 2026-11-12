@@ -121,7 +121,8 @@ class AtividadeControllerTest {
         void retornaQuestionario() throws Exception {
             QuestionarioResponse resposta = new QuestionarioResponse(
                     new AtividadeResponse(10L, "Fracoes basicas", "Atividade sobre fracoes",
-                            new TurmaResponse(5L, "Turma A"), 10, StatusAtividade.EM_ANDAMENTO, null, null, TipoAtividade.QUIZ),
+                            new TurmaResponse(5L, "Turma A"), 10, StatusAtividade.EM_ANDAMENTO,
+                            null, null, TipoAtividade.QUIZ),
                     List.of(),
                     null,
                     null
@@ -154,7 +155,8 @@ class AtividadeControllerTest {
         @DisplayName("403 com codigo ALUNO_FORA_DA_TURMA quando o aluno não pertence à turma")
         void alunoForaDaTurma() throws Exception {
             when(atividadeService.buscarQuestionario(10L, USERNAME))
-                    .thenThrow(ApiException.proibido("ALUNO_FORA_DA_TURMA", "Voce nao pertence a turma desta atividade."));
+                    .thenThrow(ApiException.proibido(
+                            "ALUNO_FORA_DA_TURMA", "Voce nao pertence a turma desta atividade."));
 
             mockMvc.perform(get("/atividades/10").principal(autenticado))
                     .andExpect(status().isForbidden())

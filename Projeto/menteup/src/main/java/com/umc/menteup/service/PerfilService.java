@@ -26,7 +26,8 @@ public class PerfilService {
     private final PasswordEncoder passwordEncoder;
     private final Codigo2FARepository codigo2FARepository;
 
-    public PerfilService(UsuarioRepository usuarioRepository, TurmaRepository turmaRepository, PasswordEncoder passwordEncoder, Codigo2FARepository codigo2FARepository) {
+    public PerfilService(UsuarioRepository usuarioRepository, TurmaRepository turmaRepository,
+                         PasswordEncoder passwordEncoder, Codigo2FARepository codigo2FARepository) {
         this.usuarioRepository = usuarioRepository;
         this.turmaRepository = turmaRepository;
         this.passwordEncoder = passwordEncoder;
