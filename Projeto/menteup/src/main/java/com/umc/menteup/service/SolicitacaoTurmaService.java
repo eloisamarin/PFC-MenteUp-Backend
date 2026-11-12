@@ -140,13 +140,11 @@ public class SolicitacaoTurmaService {
                 turma.getAlunos().add(aluno);
             }
             registrarLog(autor, AcaoLog.ADICIONAR_ALUNO_TURMA, turma, aluno,
-                    "Pedido aprovado: aluno \"" + aluno.getNomeUsuario()
-                            + "\" entrou na turma \"" + turma.getNome() + "\".");
+                    "Pedido aprovado: aluno \"" + aluno.getNomeUsuario() + "\" entrou na turma \"" + turma.getNome() + "\".");
         } else {
             turma.getAlunos().removeIf(matriculado -> matriculado.getId().equals(aluno.getId()));
             registrarLog(autor, AcaoLog.REMOVER_ALUNO_TURMA, turma, aluno,
-                    "Pedido aprovado: aluno \"" + aluno.getNomeUsuario()
-                            + "\" saiu da turma \"" + turma.getNome() + "\".");
+                    "Pedido aprovado: aluno \"" + aluno.getNomeUsuario() + "\" saiu da turma \"" + turma.getNome() + "\".");
         }
 
         responder(solicitacao, autor, Status.APROVADA);

@@ -24,8 +24,7 @@ class ProgressoAtividadeIntegrationTest extends IntegracaoBase {
     private ProgressoAtividadeRepository progressoRepository;
 
     /** Cenário padrão: atividade publicada, com perguntas, e um aluno matriculado. */
-    private record Cenario(
-            Sessao professor, Sessao aluno, Long turmaId, Long atividadeId, List<PerguntaCriada> perguntas) {
+    private record Cenario(Sessao professor, Sessao aluno, Long turmaId, Long atividadeId, List<PerguntaCriada> perguntas) {
     }
 
     private Cenario cenarioComAlunoMatriculado(int quantidadePerguntas) {

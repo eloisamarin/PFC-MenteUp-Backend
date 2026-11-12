@@ -26,7 +26,6 @@ import com.umc.menteup.model.Usuario;
 import com.umc.menteup.repository.Codigo2FARepository;
 import com.umc.menteup.repository.UsuarioRepository;
 import com.umc.menteup.service.EmailService;
-import org.junit.jupiter.api.Tag;
 
 /**
  * Base dos testes de integração: sobe a aplicação inteira em uma porta aleatória e
@@ -41,7 +40,6 @@ import org.junit.jupiter.api.Tag;
         properties = "spring.datasource.url=jdbc:h2:mem:menteup_integracao;MODE=PostgreSQL;DB_CLOSE_DELAY=-1"
 )
 @ActiveProfiles("test")
-@Tag("integration")
 abstract class IntegracaoBase {
 
     // Gerada a cada execução: é só de teste e não deixa nenhuma senha fixa no repositório
@@ -249,8 +247,7 @@ abstract class IntegracaoBase {
                 .toList();
     }
 
-    protected ResponseEntity<Map<String, Object>> responder(
-            Sessao aluno, Long atividadeId, Long perguntaId, Long alternativaId) {
+    protected ResponseEntity<Map<String, Object>> responder(Sessao aluno, Long atividadeId, Long perguntaId, Long alternativaId) {
         return client.put().uri("/atividades/{id}/progresso", atividadeId)
                 .header(HttpHeaders.AUTHORIZATION, aluno.token())
                 .contentType(MediaType.APPLICATION_JSON)

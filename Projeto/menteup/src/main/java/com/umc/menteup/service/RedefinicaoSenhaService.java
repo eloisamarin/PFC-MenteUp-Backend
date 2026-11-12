@@ -22,8 +22,7 @@ import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HexFormat;
 /*
- * "Esqueci minha senha": gera um link de uso único que vale 30 minutos
- * e quando for troca de senha e desbloqueia a conta.
+ * "Esqueci minha senha": gera um link de uso único que vale 30 minutos e quando for troca de senha e desbloqueia a conta.
  É o único jeito de desbloquear depois de 3 senhas erradas.
  */
 @Service

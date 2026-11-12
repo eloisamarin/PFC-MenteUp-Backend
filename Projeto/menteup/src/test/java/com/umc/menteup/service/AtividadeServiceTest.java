@@ -433,8 +433,7 @@ class AtividadeServiceTest {
         }
 
         @Test
-        @DisplayName("sem atividades visíveis: lista vazia e nenhuma consulta extra"
-                + " (tipo 'aluno' em minúsculas também vale)")
+        @DisplayName("sem atividades visíveis: lista vazia e nenhuma consulta extra (tipo 'aluno' em minúsculas também vale)")
         void semAtividadesVisiveis() {
             when(usuarioRepository.findByUsuario(USERNAME)).thenReturn(Optional.of(aluno(ALUNO_ID, "aluno")));
             when(atividadeRepository.findVisiveisParaAluno(ALUNO_ID, StatusAtividade.PENDENTE))
@@ -524,8 +523,7 @@ class AtividadeServiceTest {
         @ParameterizedTest(name = "{0} de {1} perguntas respondidas = {2}%")
         @CsvSource({"0,3,0", "1,3,33", "2,3,67", "3,3,100"})
         @DisplayName("percentual é arredondado na fronteira de cada pergunta respondida")
-        void deveArredondarPercentualConformePerguntasRespondidas(
-                int respondidas, int totalPerguntas, int percentualEsperado) {
+        void deveArredondarPercentualConformePerguntasRespondidas(int respondidas, int totalPerguntas, int percentualEsperado) {
             // Arrange
             Usuario aluno = aluno(ALUNO_ID, "ALUNO");
             Atividade atividade = atividade(10L, StatusAtividade.EM_ANDAMENTO, totalPerguntas);

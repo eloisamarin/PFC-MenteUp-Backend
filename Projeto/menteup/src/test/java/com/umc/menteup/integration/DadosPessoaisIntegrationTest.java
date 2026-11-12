@@ -141,8 +141,7 @@ class DadosPessoaisIntegrationTest extends IntegracaoBase {
         Sessao professor = novaSessao("PROFESSOR");
         Sessao outro = novaSessao("PROFESSOR");
         Long turmaId = criarTurma(professor);
-        Map<String, Object> corpo = new java.util.HashMap<>(
-                buildAtividade(nomeUnico("Atividade"), turmaId, "PENDENTE"));
+        Map<String, Object> corpo = new java.util.HashMap<>(buildAtividade(nomeUnico("Atividade"), turmaId, "PENDENTE"));
         corpo.put("usuario", Map.of("id", outro.id()));
 
         // Act

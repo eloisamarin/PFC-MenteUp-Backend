@@ -211,8 +211,7 @@ public class DashboardService {
 
     // Troca o código do banco (ex.: VERDADEIRO_FALSO) pelo nome que aparece no gráfico
     private List<Item> agrupar(String sql, Map<String, String> nomes) {
-        return jdbc.query(sql, (rs, linha) ->
-                        new Item(nomes.getOrDefault(rs.getString(1), rs.getString(1)), rs.getLong(2)))
+        return jdbc.query(sql, (rs, linha) -> new Item(nomes.getOrDefault(rs.getString(1), rs.getString(1)), rs.getLong(2)))
                 .stream()
                 .sorted(Comparator.comparingLong(Item::quantidade).reversed().thenComparing(Item::nome))
                 .toList();
@@ -225,9 +224,7 @@ public class DashboardService {
     // "de" e "ate" chegam em milissegundos (como o Grafana manda: ${__from} e ${__to})
     private Periodo periodo(Long de, Long ate) {
         LocalDate fim = ate == null ? LocalDate.now(FUSO) : Instant.ofEpochMilli(ate).atZone(FUSO).toLocalDate();
-        LocalDate inicio = de == null
-                ? fim.minusDays(DIAS_PADRAO - 1L)
-                : Instant.ofEpochMilli(de).atZone(FUSO).toLocalDate();
+        LocalDate inicio = de == null ? fim.minusDays(DIAS_PADRAO - 1L) : Instant.ofEpochMilli(de).atZone(FUSO).toLocalDate();
 
         if (inicio.isAfter(fim)) {
             throw ApiException.requisicaoInvalida("PERIODO_INVALIDO", "A data inicial é depois da data final.");
