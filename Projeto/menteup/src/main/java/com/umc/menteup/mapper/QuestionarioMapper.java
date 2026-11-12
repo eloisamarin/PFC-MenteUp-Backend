@@ -6,7 +6,8 @@ import com.umc.menteup.model.ResultadoAtividade;
 
 import java.util.List;
 
-///Converte as DTO's compartilhadas pelos controllers e services para que todas as telas vejam exatamente o mesmo formato
+///Converte as DTO's compartilhadas pelos controllers e services
+///para que todas as telas vejam exatamente o mesmo formato
 public final class QuestionarioMapper {
 
     private QuestionarioMapper() {
@@ -36,7 +37,8 @@ public final class QuestionarioMapper {
                         pergunta.getId(),
                         pergunta.getEnunciado(),
                         pergunta.getAlternativas().stream()
-                                .map(alternativa -> new AlternativaResponse(alternativa.getId(), alternativa.getTexto()))
+                                .map(alternativa -> new AlternativaResponse(
+                                        alternativa.getId(), alternativa.getTexto()))
                                 .toList()
                 ))
                 .toList();

@@ -332,7 +332,8 @@ class DesafioServiceTest {
         Turma turma = new Turma();
         turma.setId(3L);
         turma.setNome("Turma A");
-        turma.setProfessor(usuario(2L, EMAIL_PROFESSOR, "PROFESSOR")); // o professor do teste é o responsável pela turma
+        // o professor do teste é o responsável pela turma
+        turma.setProfessor(usuario(2L, EMAIL_PROFESSOR, "PROFESSOR"));
         turma.getAlunos().add(aluno);
         turma.getAlunos().add(usuario(6L, "outro@teste.com", "ALUNO"));
 

@@ -46,7 +46,8 @@ public class RankingService {
                 .map(aluno -> new RankingResponse(
                         aluno.getId(),
                         aluno.getNomeUsuario(),
-                        pontos(atividades, aluno.getId()) + pontos(desafios, aluno.getId()) + pontos(conquistas, aluno.getId()),
+                        pontos(atividades, aluno.getId()) + pontos(desafios, aluno.getId())
+                                + pontos(conquistas, aluno.getId()),
                         quantidade(atividades, aluno.getId())
                 ))
                 ///Só entra quem já fez alguma coisa

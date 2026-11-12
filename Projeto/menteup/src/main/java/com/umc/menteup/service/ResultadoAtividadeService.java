@@ -1,7 +1,5 @@
 package com.umc.menteup.service;
 
-import com.umc.menteup.dto.ConclusaoAtividadeRequest;
-import com.umc.menteup.dto.RespostaQuestaoRequest;
 import com.umc.menteup.dto.ResultadoAtividadeResponse;
 import com.umc.menteup.exception.ApiException;
 import com.umc.menteup.mapper.QuestionarioMapper;
@@ -15,15 +13,11 @@ import com.umc.menteup.template.TemplateResolver;
 import jakarta.transaction.Transactional;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static com.umc.menteup.model.TipoUsuario.ehAluno;
 
 @Service
 public class ResultadoAtividadeService {

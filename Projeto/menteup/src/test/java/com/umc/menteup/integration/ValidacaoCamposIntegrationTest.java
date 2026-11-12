@@ -92,7 +92,8 @@ class ValidacaoCamposIntegrationTest extends IntegracaoBase {
     @Test
     void atividade_comPontuacaoAcimaDe1000_deveRetornar400() {
         Sessao professor = novaSessao("PROFESSOR");
-        Map<String, Object> dados = new HashMap<>(buildAtividade(nomeUnico("Atividade"), criarTurma(professor), "PENDENTE"));
+        Map<String, Object> dados = new HashMap<>(
+                buildAtividade(nomeUnico("Atividade"), criarTurma(professor), "PENDENTE"));
         dados.put("pontuacao", 1_000_000);
 
         ResponseEntity<Map<String, Object>> resposta = post("/atividades", professor.token(), dados);
@@ -111,7 +112,8 @@ class ValidacaoCamposIntegrationTest extends IntegracaoBase {
                         Map.of("texto", "B", "correta", false)));
 
         ResponseEntity<Map<String, Object>> resposta = post(
-                "/atividades/" + atividadeId + "/questionario", professor.token(), Map.of("perguntas", List.of(pergunta)));
+                "/atividades/" + atividadeId + "/questionario", professor.token(),
+                Map.of("perguntas", List.of(pergunta)));
 
         assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(resposta.getBody()).containsEntry("codigo", "VALIDACAO_FALHOU");
@@ -121,7 +123,9 @@ class ValidacaoCamposIntegrationTest extends IntegracaoBase {
 
     private ResponseEntity<Map<String, Object>> post(String uri, String token, Object corpo) {
         var requisicao = client.post().uri(uri).contentType(MediaType.APPLICATION_JSON);
-        if (token != null) requisicao = requisicao.header(HttpHeaders.AUTHORIZATION, token);
+        if (token != null) {
+            requisicao = requisicao.header(HttpHeaders.AUTHORIZATION, token);
+        }
         return requisicao.body(corpo).retrieve().toEntity(JSON);
     }
 

@@ -1,7 +1,6 @@
 package com.umc.menteup.service;
 
 import com.umc.menteup.dto.ProgressoAtividadeResponse;
-import com.umc.menteup.dto.RespostaProgressoResponse;
 import com.umc.menteup.dto.SalvarRespostaRequest;
 import com.umc.menteup.exception.ApiException;
 import com.umc.menteup.mapper.QuestionarioMapper;
