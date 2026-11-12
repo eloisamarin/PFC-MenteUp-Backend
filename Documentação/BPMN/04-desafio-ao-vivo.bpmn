@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Definicoes_04-desafio-ao-vivo" targetNamespace="https://menteup.umc.br/bpmn"
+                  exporter="MenteUp" exporterVersion="1.0">
+  <bpmn:collaboration id="Colaboracao_04-desafio-ao-vivo">
+    <bpmn:participant id="Participante_04-desafio-ao-vivo" name="MenteUp — Desafio ao vivo" processRef="Processo_04-desafio-ao-vivo" />
+  </bpmn:collaboration>
+  <bpmn:process id="Processo_04-desafio-ao-vivo" isExecutable="false">
+    <bpmn:laneSet id="Raias_04-desafio-ao-vivo">
+      <bpmn:lane id="R_Professor" name="Professor (ou Administrador)">
+        <bpmn:flowNodeRef>Inicio</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Criar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Iniciar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Avancar</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="R_Sistema" name="Sistema MenteUp">
+        <bpmn:flowNodeRef>Abrir</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Pontuar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_Mais</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Encerrar</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="R_Aluno" name="Aluno da turma">
+        <bpmn:flowNodeRef>Escolher</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>VerRanking</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fim</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Inicio" name="Preparar desafio">
+      <bpmn:outgoing>Fluxo_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Criar" name="Criar desafio: perguntas, alternativas e tempo">
+      <bpmn:incoming>Fluxo_1</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Iniciar" name="Iniciar o desafio com a turma">
+      <bpmn:incoming>Fluxo_2</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Abrir" name="Mostrar a pergunta e iniciar o cronômetro">
+      <bpmn:incoming>Fluxo_3</bpmn:incoming>
+      <bpmn:incoming>Fluxo_8</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="Escolher" name="Escolher a alternativa antes do tempo acabar">
+      <bpmn:incoming>Fluxo_4</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Pontuar" name="Registrar resposta e pontos (certo e rápido vale mais)">
+      <bpmn:incoming>Fluxo_5</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_6</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="Avancar" name="Avançar para a próxima pergunta">
+      <bpmn:incoming>Fluxo_6</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_7</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Mais" name="Há mais perguntas?">
+      <bpmn:incoming>Fluxo_7</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_8</bpmn:outgoing>
+      <bpmn:outgoing>Fluxo_9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Encerrar" name="Encerrar e calcular o ranking do desafio">
+      <bpmn:incoming>Fluxo_9</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_10</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="VerRanking" name="Ver o ranking final">
+      <bpmn:incoming>Fluxo_10</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_11</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="Fim" name="Desafio encerrado">
+      <bpmn:incoming>Fluxo_11</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Fluxo_1" sourceRef="Inicio" targetRef="Criar" />
+    <bpmn:sequenceFlow id="Fluxo_2" sourceRef="Criar" targetRef="Iniciar" />
+    <bpmn:sequenceFlow id="Fluxo_3" sourceRef="Iniciar" targetRef="Abrir" />
+    <bpmn:sequenceFlow id="Fluxo_4" sourceRef="Abrir" targetRef="Escolher" />
+    <bpmn:sequenceFlow id="Fluxo_5" sourceRef="Escolher" targetRef="Pontuar" />
+    <bpmn:sequenceFlow id="Fluxo_6" sourceRef="Pontuar" targetRef="Avancar" />
+    <bpmn:sequenceFlow id="Fluxo_7" sourceRef="Avancar" targetRef="G_Mais" />
+    <bpmn:sequenceFlow id="Fluxo_8" name="Sim" sourceRef="G_Mais" targetRef="Abrir" />
+    <bpmn:sequenceFlow id="Fluxo_9" name="Não" sourceRef="G_Mais" targetRef="Encerrar" />
+    <bpmn:sequenceFlow id="Fluxo_10" sourceRef="Encerrar" targetRef="VerRanking" />
+    <bpmn:sequenceFlow id="Fluxo_11" sourceRef="VerRanking" targetRef="Fim" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagrama_04-desafio-ao-vivo">
+    <bpmndi:BPMNPlane id="Plano_04-desafio-ao-vivo" bpmnElement="Colaboracao_04-desafio-ao-vivo">
+      <bpmndi:BPMNShape id="Participante_04-desafio-ao-vivo_di" bpmnElement="Participante_04-desafio-ao-vivo" isHorizontal="true">
+        <dc:Bounds x="120" y="80" width="2020" height="690" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Professor_di" bpmnElement="R_Professor" isHorizontal="true">
+        <dc:Bounds x="150" y="80" width="1990" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Sistema_di" bpmnElement="R_Sistema" isHorizontal="true">
+        <dc:Bounds x="150" y="310" width="1990" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Aluno_di" bpmnElement="R_Aluno" isHorizontal="true">
+        <dc:Bounds x="150" y="540" width="1990" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_di" bpmnElement="Inicio">
+        <dc:Bounds x="232" y="177" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="195" y="219" width="110" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Criar_di" bpmnElement="Criar">
+        <dc:Bounds x="355" y="159" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Iniciar_di" bpmnElement="Iniciar">
+        <dc:Bounds x="530" y="159" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Abrir_di" bpmnElement="Abrir">
+        <dc:Bounds x="705" y="389" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Escolher_di" bpmnElement="Escolher">
+        <dc:Bounds x="880" y="619" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Pontuar_di" bpmnElement="Pontuar">
+        <dc:Bounds x="1055" y="389" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Avancar_di" bpmnElement="Avancar">
+        <dc:Bounds x="1230" y="159" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Mais_di" bpmnElement="G_Mais" isMarkerVisible="true">
+        <dc:Bounds x="1450" y="400" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1357" y="375" width="105" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Encerrar_di" bpmnElement="Encerrar">
+        <dc:Bounds x="1580" y="389" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="VerRanking_di" bpmnElement="VerRanking">
+        <dc:Bounds x="1755" y="619" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_di" bpmnElement="Fim">
+        <dc:Bounds x="1982" y="637" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="2026" y="641" width="100" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Fluxo_1_di" bpmnElement="Fluxo_1">
+        <di:waypoint x="268" y="195" />
+        <di:waypoint x="355" y="195" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_2_di" bpmnElement="Fluxo_2">
+        <di:waypoint x="495" y="195" />
+        <di:waypoint x="530" y="195" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_3_di" bpmnElement="Fluxo_3">
+        <di:waypoint x="670" y="195" />
+        <di:waypoint x="688" y="195" />
+        <di:waypoint x="688" y="425" />
+        <di:waypoint x="705" y="425" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_4_di" bpmnElement="Fluxo_4">
+        <di:waypoint x="845" y="425" />
+        <di:waypoint x="862" y="425" />
+        <di:waypoint x="862" y="655" />
+        <di:waypoint x="880" y="655" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_5_di" bpmnElement="Fluxo_5">
+        <di:waypoint x="1020" y="655" />
+        <di:waypoint x="1038" y="655" />
+        <di:waypoint x="1038" y="425" />
+        <di:waypoint x="1055" y="425" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_6_di" bpmnElement="Fluxo_6">
+        <di:waypoint x="1195" y="425" />
+        <di:waypoint x="1212" y="425" />
+        <di:waypoint x="1212" y="195" />
+        <di:waypoint x="1230" y="195" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_7_di" bpmnElement="Fluxo_7">
+        <di:waypoint x="1370" y="195" />
+        <di:waypoint x="1410" y="195" />
+        <di:waypoint x="1410" y="425" />
+        <di:waypoint x="1450" y="425" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_8_di" bpmnElement="Fluxo_8">
+        <di:waypoint x="1475" y="450" />
+        <di:waypoint x="1475" y="525" />
+        <di:waypoint x="775" y="525" />
+        <di:waypoint x="775" y="461" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1481" y="480" width="34" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_9_di" bpmnElement="Fluxo_9">
+        <di:waypoint x="1500" y="425" />
+        <di:waypoint x="1580" y="425" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1525" y="405" width="34" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_10_di" bpmnElement="Fluxo_10">
+        <di:waypoint x="1720" y="425" />
+        <di:waypoint x="1738" y="425" />
+        <di:waypoint x="1738" y="655" />
+        <di:waypoint x="1755" y="655" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_11_di" bpmnElement="Fluxo_11">
+        <di:waypoint x="1895" y="655" />
+        <di:waypoint x="1982" y="655" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

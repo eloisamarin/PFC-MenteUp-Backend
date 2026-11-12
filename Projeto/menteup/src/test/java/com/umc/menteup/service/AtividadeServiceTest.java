@@ -65,12 +65,13 @@ class AtividadeServiceTest {
             Atividade nova = atividade(null, StatusAtividade.PENDENTE, 0);
             nova.setTurma(null);
 
-            IllegalArgumentException ex = assertThrows(
-                    IllegalArgumentException.class,
+            ApiException ex = assertThrows(
+                    ApiException.class,
                     () -> service.criarAtividade(nova)
             );
 
             assertEquals("A turma da atividade é obrigatória.", ex.getMessage());
+            assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
             verify(atividadeRepository, never()).save(any());
         }
 
@@ -80,7 +81,7 @@ class AtividadeServiceTest {
             Atividade nova = atividade(null, StatusAtividade.PENDENTE, 0);
             nova.setTurma(new Turma()); // id == null
 
-            assertThrows(IllegalArgumentException.class, () -> service.criarAtividade(nova));
+            assertThrows(ApiException.class, () -> service.criarAtividade(nova));
 
             verify(turmaRepository, never()).findById(any());
             verify(atividadeRepository, never()).save(any());
@@ -92,12 +93,13 @@ class AtividadeServiceTest {
             Atividade nova = atividade(null, StatusAtividade.PENDENTE, 0);
             when(turmaRepository.findById(TURMA_ID)).thenReturn(Optional.empty());
 
-            IllegalArgumentException ex = assertThrows(
-                    IllegalArgumentException.class,
+            ApiException ex = assertThrows(
+                    ApiException.class,
                     () -> service.criarAtividade(nova)
             );
 
             assertEquals("Turma não encontrada.", ex.getMessage());
+            assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
             verify(atividadeRepository, never()).save(any());
         }
 

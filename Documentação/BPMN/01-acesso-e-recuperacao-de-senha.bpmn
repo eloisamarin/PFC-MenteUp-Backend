@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Definicoes_01-acesso-e-recuperacao-de-senha" targetNamespace="https://menteup.umc.br/bpmn"
+                  exporter="MenteUp" exporterVersion="1.0">
+  <bpmn:collaboration id="Colaboracao_01-acesso-e-recuperacao-de-senha">
+    <bpmn:participant id="Participante_01-acesso-e-recuperacao-de-senha" name="MenteUp — Acesso, bloqueio e recuperação de senha" processRef="Processo_01-acesso-e-recuperacao-de-senha" />
+  </bpmn:collaboration>
+  <bpmn:process id="Processo_01-acesso-e-recuperacao-de-senha" isExecutable="false">
+    <bpmn:laneSet id="Raias_01-acesso-e-recuperacao-de-senha">
+      <bpmn:lane id="R_Usuario" name="Usuário (aluno, professor ou administrador)">
+        <bpmn:flowNodeRef>Inicio</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Credenciais</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AvisoInvalido</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Codigo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fim_Painel</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Esqueci</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>NovaSenha</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fim_Recuperada</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="R_Sistema" name="Sistema MenteUp">
+        <bpmn:flowNodeRef>G_Bloqueada</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_Senha</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>SomarErro</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_Terceira</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Bloquear</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Enviar2FA</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_Codigo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Token</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AvisoBloqueio</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EnviarLink</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Desbloquear</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Inicio" name="Acessar o MenteUp">
+      <bpmn:outgoing>Fluxo_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Credenciais" name="Informar e-mail e senha">
+      <bpmn:incoming>Fluxo_1</bpmn:incoming>
+      <bpmn:incoming>Fluxo_10</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Bloqueada" name="Conta bloqueada?">
+      <bpmn:incoming>Fluxo_2</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_3</bpmn:outgoing>
+      <bpmn:outgoing>Fluxo_4</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="G_Senha" name="Senha correta?">
+      <bpmn:incoming>Fluxo_3</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_5</bpmn:outgoing>
+      <bpmn:outgoing>Fluxo_6</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="SomarErro" name="Somar tentativa errada">
+      <bpmn:incoming>Fluxo_6</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_7</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="G_Terceira" name="3ª tentativa seguida?">
+      <bpmn:incoming>Fluxo_7</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_8</bpmn:outgoing>
+      <bpmn:outgoing>Fluxo_9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Bloquear" name="Bloquear a conta">
+      <bpmn:incoming>Fluxo_9</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_11</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="AvisoInvalido" name="Avisar &quot;e-mail ou senha inválidos&quot;">
+      <bpmn:incoming>Fluxo_8</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_10</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sendTask id="Enviar2FA" name="Zerar tentativas e enviar código 2FA por e-mail">
+      <bpmn:incoming>Fluxo_5</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_12</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:userTask id="Codigo" name="Informar o código de 6 dígitos">
+      <bpmn:incoming>Fluxo_12</bpmn:incoming>
+      <bpmn:incoming>Fluxo_15</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_13</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Codigo" name="Código válido (5 min)?">
+      <bpmn:incoming>Fluxo_13</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_14</bpmn:outgoing>
+      <bpmn:outgoing>Fluxo_15</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Token" name="Gerar token JWT e registrar LOGIN no log">
+      <bpmn:incoming>Fluxo_14</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_16</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Painel" name="Painel do perfil aberto">
+      <bpmn:incoming>Fluxo_16</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="AvisoBloqueio" name="Avisar conta bloqueada (403)">
+      <bpmn:incoming>Fluxo_4</bpmn:incoming>
+      <bpmn:incoming>Fluxo_11</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_17</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="Esqueci" name="Clicar em &quot;Esqueci minha senha&quot; e informar o e-mail">
+      <bpmn:incoming>Fluxo_17</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_18</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sendTask id="EnviarLink" name="Gerar link (30 min, uso único) e enviar por e-mail">
+      <bpmn:incoming>Fluxo_18</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_19</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:userTask id="NovaSenha" name="Abrir o link e criar nova senha">
+      <bpmn:incoming>Fluxo_19</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_20</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Desbloquear" name="Trocar a senha, zerar tentativas e desbloquear">
+      <bpmn:incoming>Fluxo_20</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_21</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Recuperada" name="Senha redefinida">
+      <bpmn:incoming>Fluxo_21</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Fluxo_1" sourceRef="Inicio" targetRef="Credenciais" />
+    <bpmn:sequenceFlow id="Fluxo_2" sourceRef="Credenciais" targetRef="G_Bloqueada" />
+    <bpmn:sequenceFlow id="Fluxo_3" name="Não" sourceRef="G_Bloqueada" targetRef="G_Senha" />
+    <bpmn:sequenceFlow id="Fluxo_4" name="Sim" sourceRef="G_Bloqueada" targetRef="AvisoBloqueio" />
+    <bpmn:sequenceFlow id="Fluxo_5" name="Sim" sourceRef="G_Senha" targetRef="Enviar2FA" />
+    <bpmn:sequenceFlow id="Fluxo_6" name="Não" sourceRef="G_Senha" targetRef="SomarErro" />
+    <bpmn:sequenceFlow id="Fluxo_7" sourceRef="SomarErro" targetRef="G_Terceira" />
+    <bpmn:sequenceFlow id="Fluxo_8" name="Não" sourceRef="G_Terceira" targetRef="AvisoInvalido" />
+    <bpmn:sequenceFlow id="Fluxo_9" name="Sim" sourceRef="G_Terceira" targetRef="Bloquear" />
+    <bpmn:sequenceFlow id="Fluxo_10" sourceRef="AvisoInvalido" targetRef="Credenciais" />
+    <bpmn:sequenceFlow id="Fluxo_11" sourceRef="Bloquear" targetRef="AvisoBloqueio" />
+    <bpmn:sequenceFlow id="Fluxo_12" sourceRef="Enviar2FA" targetRef="Codigo" />
+    <bpmn:sequenceFlow id="Fluxo_13" sourceRef="Codigo" targetRef="G_Codigo" />
+    <bpmn:sequenceFlow id="Fluxo_14" name="Sim" sourceRef="G_Codigo" targetRef="Token" />
+    <bpmn:sequenceFlow id="Fluxo_15" name="Não" sourceRef="G_Codigo" targetRef="Codigo" />
+    <bpmn:sequenceFlow id="Fluxo_16" sourceRef="Token" targetRef="Fim_Painel" />
+    <bpmn:sequenceFlow id="Fluxo_17" sourceRef="AvisoBloqueio" targetRef="Esqueci" />
+    <bpmn:sequenceFlow id="Fluxo_18" sourceRef="Esqueci" targetRef="EnviarLink" />
+    <bpmn:sequenceFlow id="Fluxo_19" sourceRef="EnviarLink" targetRef="NovaSenha" />
+    <bpmn:sequenceFlow id="Fluxo_20" sourceRef="NovaSenha" targetRef="Desbloquear" />
+    <bpmn:sequenceFlow id="Fluxo_21" sourceRef="Desbloquear" targetRef="Fim_Recuperada" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagrama_01-acesso-e-recuperacao-de-senha">
+    <bpmndi:BPMNPlane id="Plano_01-acesso-e-recuperacao-de-senha" bpmnElement="Colaboracao_01-acesso-e-recuperacao-de-senha">
+      <bpmndi:BPMNShape id="Participante_01-acesso-e-recuperacao-de-senha_di" bpmnElement="Participante_01-acesso-e-recuperacao-de-senha" isHorizontal="true">
+        <dc:Bounds x="120" y="80" width="2370" height="630" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Usuario_di" bpmnElement="R_Usuario" isHorizontal="true">
+        <dc:Bounds x="150" y="80" width="2340" height="300" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Sistema_di" bpmnElement="R_Sistema" isHorizontal="true">
+        <dc:Bounds x="150" y="380" width="2340" height="330" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_di" bpmnElement="Inicio">
+        <dc:Bounds x="232" y="212" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="195" y="254" width="110" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Credenciais_di" bpmnElement="Credenciais">
+        <dc:Bounds x="355" y="194" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Bloqueada_di" bpmnElement="G_Bloqueada" isMarkerVisible="true">
+        <dc:Bounds x="575" y="520" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="482" y="495" width="105" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Senha_di" bpmnElement="G_Senha" isMarkerVisible="true">
+        <dc:Bounds x="750" y="520" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="657" y="495" width="105" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SomarErro_di" bpmnElement="SomarErro">
+        <dc:Bounds x="880" y="609" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Terceira_di" bpmnElement="G_Terceira" isMarkerVisible="true">
+        <dc:Bounds x="1100" y="620" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1007" y="595" width="105" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Bloquear_di" bpmnElement="Bloquear">
+        <dc:Bounds x="1230" y="609" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AvisoInvalido_di" bpmnElement="AvisoInvalido">
+        <dc:Bounds x="1055" y="294" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Enviar2FA_di" bpmnElement="Enviar2FA">
+        <dc:Bounds x="880" y="409" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Codigo_di" bpmnElement="Codigo">
+        <dc:Bounds x="1055" y="94" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Codigo_di" bpmnElement="G_Codigo" isMarkerVisible="true">
+        <dc:Bounds x="1275" y="420" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1182" y="395" width="105" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Token_di" bpmnElement="Token">
+        <dc:Bounds x="1405" y="409" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Painel_di" bpmnElement="Fim_Painel">
+        <dc:Bounds x="1632" y="112" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1676" y="116" width="100" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AvisoBloqueio_di" bpmnElement="AvisoBloqueio">
+        <dc:Bounds x="1405" y="609" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Esqueci_di" bpmnElement="Esqueci">
+        <dc:Bounds x="1580" y="294" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EnviarLink_di" bpmnElement="EnviarLink">
+        <dc:Bounds x="1755" y="609" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="NovaSenha_di" bpmnElement="NovaSenha">
+        <dc:Bounds x="1930" y="294" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Desbloquear_di" bpmnElement="Desbloquear">
+        <dc:Bounds x="2105" y="609" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Recuperada_di" bpmnElement="Fim_Recuperada">
+        <dc:Bounds x="2332" y="312" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="2376" y="316" width="100" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Fluxo_1_di" bpmnElement="Fluxo_1">
+        <di:waypoint x="268" y="230" />
+        <di:waypoint x="355" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_2_di" bpmnElement="Fluxo_2">
+        <di:waypoint x="495" y="230" />
+        <di:waypoint x="535" y="230" />
+        <di:waypoint x="535" y="545" />
+        <di:waypoint x="575" y="545" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_3_di" bpmnElement="Fluxo_3">
+        <di:waypoint x="625" y="545" />
+        <di:waypoint x="750" y="545" />
+        <bpmndi:BPMNLabel><dc:Bounds x="672" y="525" width="34" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_4_di" bpmnElement="Fluxo_4">
+        <di:waypoint x="600" y="570" />
+        <di:waypoint x="600" y="698" />
+        <di:waypoint x="1475" y="698" />
+        <di:waypoint x="1475" y="681" />
+        <bpmndi:BPMNLabel><dc:Bounds x="606" y="626" width="34" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_5_di" bpmnElement="Fluxo_5">
+        <di:waypoint x="775" y="520" />
+        <di:waypoint x="775" y="445" />
+        <di:waypoint x="880" y="445" />
+        <bpmndi:BPMNLabel><dc:Bounds x="781" y="474" width="34" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_6_di" bpmnElement="Fluxo_6">
+        <di:waypoint x="775" y="570" />
+        <di:waypoint x="775" y="645" />
+        <di:waypoint x="880" y="645" />
+        <bpmndi:BPMNLabel><dc:Bounds x="781" y="600" width="34" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_7_di" bpmnElement="Fluxo_7">
+        <di:waypoint x="1020" y="645" />
+        <di:waypoint x="1100" y="645" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_8_di" bpmnElement="Fluxo_8">
+        <di:waypoint x="1125" y="620" />
+        <di:waypoint x="1125" y="366" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1131" y="485" width="34" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_9_di" bpmnElement="Fluxo_9">
+        <di:waypoint x="1150" y="645" />
+        <di:waypoint x="1230" y="645" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1175" y="625" width="34" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_10_di" bpmnElement="Fluxo_10">
+        <di:waypoint x="1055" y="330" />
+        <di:waypoint x="425" y="330" />
+        <di:waypoint x="425" y="266" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_11_di" bpmnElement="Fluxo_11">
+        <di:waypoint x="1370" y="645" />
+        <di:waypoint x="1405" y="645" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_12_di" bpmnElement="Fluxo_12">
+        <di:waypoint x="1020" y="445" />
+        <di:waypoint x="1038" y="445" />
+        <di:waypoint x="1038" y="130" />
+        <di:waypoint x="1055" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_13_di" bpmnElement="Fluxo_13">
+        <di:waypoint x="1195" y="130" />
+        <di:waypoint x="1235" y="130" />
+        <di:waypoint x="1235" y="445" />
+        <di:waypoint x="1275" y="445" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_14_di" bpmnElement="Fluxo_14">
+        <di:waypoint x="1325" y="445" />
+        <di:waypoint x="1405" y="445" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1350" y="425" width="34" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_15_di" bpmnElement="Fluxo_15">
+        <di:waypoint x="1300" y="420" />
+        <di:waypoint x="1300" y="88" />
+        <di:waypoint x="1125" y="88" />
+        <di:waypoint x="1125" y="94" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1306" y="246" width="34" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_16_di" bpmnElement="Fluxo_16">
+        <di:waypoint x="1545" y="445" />
+        <di:waypoint x="1588" y="445" />
+        <di:waypoint x="1588" y="130" />
+        <di:waypoint x="1632" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_17_di" bpmnElement="Fluxo_17">
+        <di:waypoint x="1545" y="645" />
+        <di:waypoint x="1562" y="645" />
+        <di:waypoint x="1562" y="330" />
+        <di:waypoint x="1580" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_18_di" bpmnElement="Fluxo_18">
+        <di:waypoint x="1720" y="330" />
+        <di:waypoint x="1738" y="330" />
+        <di:waypoint x="1738" y="645" />
+        <di:waypoint x="1755" y="645" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_19_di" bpmnElement="Fluxo_19">
+        <di:waypoint x="1895" y="645" />
+        <di:waypoint x="1912" y="645" />
+        <di:waypoint x="1912" y="330" />
+        <di:waypoint x="1930" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_20_di" bpmnElement="Fluxo_20">
+        <di:waypoint x="2070" y="330" />
+        <di:waypoint x="2088" y="330" />
+        <di:waypoint x="2088" y="645" />
+        <di:waypoint x="2105" y="645" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_21_di" bpmnElement="Fluxo_21">
+        <di:waypoint x="2245" y="645" />
+        <di:waypoint x="2288" y="645" />
+        <di:waypoint x="2288" y="330" />
+        <di:waypoint x="2332" y="330" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

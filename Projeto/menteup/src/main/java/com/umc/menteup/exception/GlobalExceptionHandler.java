@@ -17,6 +17,7 @@ import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -54,6 +55,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResponse> tratarCorpoIlegivel(HttpMessageNotReadableException ex) {
         return montar(HttpStatus.BAD_REQUEST, "REQUISICAO_INVALIDA",
                 "Corpo da requisição ausente, malformado ou com tipos inválidos.", null);
+    }
+
+    // Ex.: /turmas/abc (id que não é número) ou /logs?acao=XPTO (valor fora da lista).
+    // É erro de quem chamou (400), e não do sistema: não vira 500 nem é gravado como ERRO_SISTEMA.
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErroResponse> tratarTipoInvalido(MethodArgumentTypeMismatchException ex) {
+        String parametro = ex.getName();
+        Object valor = ex.getValue();
+
+        return montar(HttpStatus.BAD_REQUEST, "PARAMETRO_INVALIDO",
+                "Valor inválido para \"" + parametro + "\".",
+                Map.of(parametro, "Valor \"" + valor + "\" não é aceito aqui."));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

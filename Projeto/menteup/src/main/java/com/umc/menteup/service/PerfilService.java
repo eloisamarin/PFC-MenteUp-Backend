@@ -1,5 +1,6 @@
 package com.umc.menteup.service;
 
+import com.umc.menteup.security.RegraSenha;
 import com.umc.menteup.dto.PerfilResponse;
 import com.umc.menteup.dto.TurmaResponse;
 import com.umc.menteup.exception.ApiException;
@@ -89,6 +90,7 @@ public class PerfilService {
     }
     @Transactional
     public void alterarSenha(String username, String senhaAtual, String novaSenha) {
+        RegraSenha.exigirTamanhoEmBytes(novaSenha);
         Usuario usuario = carregarUsuario(username);
 
         // Verificação de senha antiga para atuzalição da nova

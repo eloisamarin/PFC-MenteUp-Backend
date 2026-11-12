@@ -20,7 +20,11 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.client.RestClient;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import com.umc.menteup.model.Usuario;
 import com.umc.menteup.repository.Codigo2FARepository;
+import com.umc.menteup.repository.UsuarioRepository;
 import com.umc.menteup.service.EmailService;
 
 /**
@@ -54,6 +58,12 @@ abstract class IntegracaoBase {
 
     @Autowired
     protected Codigo2FARepository codigo2FARepository;
+
+    @Autowired
+    private UsuarioRepository usuarioRepositoryBase;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @MockitoBean
     protected EmailService emailService; // serviço externo: nenhum e-mail real é enviado
@@ -97,10 +107,17 @@ abstract class IntegracaoBase {
         usuario.put("usuario", email);
         usuario.put("senha", SENHA);
         usuario.put("tipoUsuario", tipo);
+        usuario.put("aceitouTermos", true);
         return usuario;
     }
 
     protected Long cadastrarUsuario(String email, String tipo) {
+        // O cadastro público não aceita ADMINISTRADOR: o administrador do teste é gravado direto no banco,
+        // como acontece com o primeiro administrador do sistema
+        if ("ADMINISTRADOR".equals(tipo)) {
+            return criarAdministradorNoBanco(email);
+        }
+
         ResponseEntity<Map<String, Object>> resposta = client.post().uri("/usuarios/cadastrar")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(buildUsuario("Usuário Teste", email, tipo))
@@ -109,6 +126,15 @@ abstract class IntegracaoBase {
 
         assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         return id(resposta.getBody());
+    }
+
+    protected Long criarAdministradorNoBanco(String email) {
+        Usuario administrador = new Usuario();
+        administrador.setNomeUsuario("Usuário Teste");
+        administrador.setUsuario(email);
+        administrador.setSenha(passwordEncoder.encode(SENHA));
+        administrador.setTipoUsuario("ADMINISTRADOR");
+        return usuarioRepositoryBase.save(administrador).getId();
     }
 
     /** Faz os dois passos do login (senha + código 2FA) e devolve "Bearer ...". */

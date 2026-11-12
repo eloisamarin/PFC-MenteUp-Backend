@@ -20,6 +20,7 @@ public class Usuario {
     private Long id;
 
     @NotBlank(message = "O Atributo Nome é Obrigatório!")
+    @Size(max = 100, message = "O nome deve ter no máximo 100 caracteres.")
     private String nomeUsuario;
 
 
@@ -27,11 +28,12 @@ public class Usuario {
     private String tipoUsuario;
 
     @NotBlank(message =  "O Atributo Usuario é Obrigatório!")
-    @Email(message = "O Atributo Usuario é Obrigatório!")
+    @Email(message = "E-mail inválido.")
     private String usuario;
 
     @NotBlank(message = "O Atributo Senha é Obrigatório!")
-    @Size(min = 8, message = "A Senha deve ter no mínimo 8 caracteres")
+    // Máximo de 72: o BCrypt ignora o que passa de 72 bytes (o hash gravado tem 60, cabe na regra)
+    @Size(min = 8, max = 72, message = "A senha deve ter de 8 a 72 caracteres.")
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String senha;
 
@@ -48,6 +50,8 @@ public class Usuario {
     @JsonIgnoreProperties(value = {"alunos", "atividade"}, allowSetters = true)
     private List<Turma> turma;
 
+    // Token do celular para as notificações: nunca sai no JSON (é gravado pelo PUT /usuarios/fcm-token)
+    @JsonIgnore
     @Column(name = "fcm_token", length = 500)
     private String fcmToken;
 
@@ -60,6 +64,22 @@ public class Usuario {
     @JsonIgnore
     @Column(name = "bloqueado_em")
     private LocalDateTime bloqueadoEm;
+
+    // Criado pelo administrador e ainda sem criar a senha/aceitar o termo (null = false)
+    @JsonIgnore
+    @Column(name = "primeiro_acesso_pendente")
+    private Boolean primeiroAcessoPendente;
+
+    // Quando a pessoa aceitou o Termo de Aceite e a Política de Privacidade
+    @JsonIgnore
+    @Column(name = "termo_aceito_em")
+    private LocalDateTime termoAceitoEm;
+
+    // Só chega na requisição do cadastro público ("Li e aceito o Termo e a Política").
+    // Não vai para o banco nem volta no JSON: o que fica gravado é a data em termoAceitoEm.
+    @Transient
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private boolean aceitouTermos;
 
     public Long getId() {
         return id;
@@ -146,5 +166,35 @@ public class Usuario {
 
     public void setAvatar(AvatarAnimal avatar) {
         this.avatar = avatar;
+    }
+
+    public boolean isPrimeiroAcessoPendente() {
+        return Boolean.TRUE.equals(primeiroAcessoPendente);
+    }
+
+    public void setPrimeiroAcessoPendente(Boolean primeiroAcessoPendente) {
+        this.primeiroAcessoPendente = primeiroAcessoPendente;
+    }
+
+    public boolean isAceitouTermos() {
+        return aceitouTermos;
+    }
+
+    public void setAceitouTermos(boolean aceitouTermos) {
+        this.aceitouTermos = aceitouTermos;
+    }
+
+    public LocalDateTime getTermoAceitoEm() {
+        return termoAceitoEm;
+    }
+
+    public void setTermoAceitoEm(LocalDateTime termoAceitoEm) {
+        this.termoAceitoEm = termoAceitoEm;
+    }
+
+    // Aparece no JSON (só leitura) para a tela de usuários mostrar "Aguardando primeiro acesso"
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    public boolean isAguardandoPrimeiroAcesso() {
+        return isPrimeiroAcessoPendente();
     }
 }

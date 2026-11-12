@@ -62,6 +62,7 @@ public class DesafioService {
         Usuario autor = exigirProfessorOuAdministrador(username);
 
         Turma turma = carregarTurma(request.turmaId());
+        exigirPodeAlterar(turma, autor);
 
         Desafio desafio = new Desafio();
         desafio.setTitulo(request.titulo());
@@ -93,9 +94,10 @@ public class DesafioService {
 
     @Transactional(readOnly = true)
     public DesafioEdicaoResponse buscarParaEdicao(Long desafioId, String username) {
-        exigirProfessorOuAdministrador(username);
+        Usuario usuario = exigirProfessorOuAdministrador(username);
 
         Desafio desafio = carregarDesafio(desafioId);
+        exigirPodeAlterar(desafio.getTurma(), usuario);
 
         exigirAguardando(desafio);
 
@@ -108,11 +110,16 @@ public class DesafioService {
 
         Desafio desafio = carregarDesafio(desafioId);
 
+        // Professor só edita desafio da turma dele e não pode mover para a turma de outro professor
+        Turma novaTurma = carregarTurma(request.turmaId());
+        exigirPodeAlterar(desafio.getTurma(), autor);
+        exigirPodeAlterar(novaTurma, autor);
+
         exigirAguardando(desafio);
 
         desafio.setTitulo(request.titulo());
         desafio.setDescricao(request.descricao());
-        desafio.setTurma(carregarTurma(request.turmaId()));
+        desafio.setTurma(novaTurma);
 
         // Sem respostas enquanto aguarda, então as perguntas podem ser trocadas por inteiro
         desafio.getPerguntas().clear();
@@ -133,6 +140,7 @@ public class DesafioService {
         Usuario autor = exigirProfessorOuAdministrador(username);
 
         Desafio desafio = carregarDesafio(desafioId);
+        exigirPodeAlterar(desafio.getTurma(), autor);
 
         if (desafio.getStatus() == StatusDesafio.EM_ANDAMENTO) {
             throw ApiException.conflito(
@@ -149,6 +157,7 @@ public class DesafioService {
         Usuario professor = exigirProfessorOuAdministrador(username);
 
         Desafio desafio = carregarDesafio(desafioId);
+        exigirPodeAlterar(desafio.getTurma(), professor);
 
         if (desafio.getStatus() != StatusDesafio.AGUARDANDO) {
             throw ApiException.conflito("DESAFIO_JA_INICIADO", "Este desafio já foi iniciado.");
@@ -167,6 +176,7 @@ public class DesafioService {
         Usuario professor = exigirProfessorOuAdministrador(username);
 
         Desafio desafio = carregarDesafio(desafioId);
+        exigirPodeAlterar(desafio.getTurma(), professor);
 
         if (desafio.getStatus() != StatusDesafio.EM_ANDAMENTO) {
             throw ApiException.conflito("DESAFIO_NAO_ESTA_EM_ANDAMENTO", "Este desafio não está em andamento.");
@@ -462,6 +472,27 @@ public class DesafioService {
         return turmaRepository.findById(turmaId)
                 .orElseThrow(() -> ApiException.naoEncontrado(
                         "TURMA_NAO_ENCONTRADA", "Turma não encontrada."));
+    }
+
+    /*
+     * Quem cria, edita, exclui e conduz (iniciar/avançar) um desafio:
+     * - administrador: qualquer desafio;
+     * - professor: só os desafios das turmas em que é o professor responsável.
+     * Mesma regra das atividades (AtividadeService) e das turmas (TurmaService).
+     */
+    private static void exigirPodeAlterar(Turma turma, Usuario usuario) {
+        if (TipoUsuario.ehAdministrador(usuario)) {
+            return;
+        }
+
+        boolean professorDaTurma = turma != null
+                && turma.getProfessor() != null
+                && turma.getProfessor().getId().equals(usuario.getId());
+
+        if (!professorDaTurma) {
+            throw ApiException.proibido("SEM_ACESSO_AO_DESAFIO",
+                    "Só o professor da turma ou um administrador pode alterar ou conduzir os desafios dela.");
+        }
     }
 
     private static void exigirAguardando(Desafio desafio) {

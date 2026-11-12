@@ -24,19 +24,22 @@ public class QuestionarioService {
     private final TemplateResolver templateResolver;
     private final ProgressoAtividadeRepository progressoRepository;
     private final ResultadoAtividadeRepository resultadoRepository;
+    private final AtividadeService atividadeService;
 
      public QuestionarioService(
             AtividadeRepository atividadeRepository,
             LogSistemaService logSistemaService,
             TemplateResolver templateResolver,
             ProgressoAtividadeRepository progressoRepository,
-            ResultadoAtividadeRepository resultadoRepository
+            ResultadoAtividadeRepository resultadoRepository,
+            AtividadeService atividadeService
     ){
         this.atividadeRepository = atividadeRepository;
         this.logSistemaService = logSistemaService;
         this.templateResolver = templateResolver;
         this.progressoRepository = progressoRepository;
         this.resultadoRepository = resultadoRepository;
+        this.atividadeService = atividadeService;
     }
 
     @Transactional
@@ -46,8 +49,13 @@ public class QuestionarioService {
             String username
     ){
         Atividade atividade = atividadeRepository.findById(atividadeId)
-                .orElseThrow(() ->new RuntimeException("Atividade não encontrada")
-                );
+                .orElseThrow(() -> ApiException.naoEncontrado(
+                        "ATIVIDADE_NAO_ENCONTRADA",
+                        "Atividade não encontrada."
+                ));
+
+        // Professor só cadastra questões nas atividades das turmas dele
+        atividadeService.exigirPodeAlterar(atividade.getTurma(), username);
 
         TipoAtividade tipo = definirTipo(atividade, request.tipo());
         TemplateAtividade template = templateResolver.resolver(tipo);
@@ -75,6 +83,8 @@ public class QuestionarioService {
                         "ATIVIDADE_NAO_ENCONTRADA",
                         "Atividade não encontrada."
                 ));
+
+        atividadeService.exigirPodeAlterar(atividade.getTurma(), username);
 
         if (progressoRepository.existsByAtividade_Id(atividadeId)
                 || resultadoRepository.existsByAtividade_Id(atividadeId)) {

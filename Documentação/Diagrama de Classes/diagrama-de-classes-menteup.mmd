@@ -1,0 +1,340 @@
+---
+title: MenteUp — Diagrama de Classes (domínio)
+---
+classDiagram
+    direction TB
+
+    namespace UsuariosEAcesso {
+        class Usuario {
+            -Long id
+            -String nomeUsuario
+            -String tipoUsuario «ALUNO | PROFESSOR | ADMINISTRADOR»
+            -String usuario «e-mail»
+            -String senha «hash BCrypt»
+            -AvatarAnimal avatar
+            -String fcmToken
+            -Integer tentativasLogin
+            -LocalDateTime bloqueadoEm
+            +estaBloqueado() boolean
+            +getTentativasLogin() int
+        }
+        class TipoUsuario {
+            <<utilitária>>
+            +String ALUNO$
+            +String PROFESSOR$
+            +String ADMINISTRADOR$
+            +ehAluno(Usuario) boolean$
+            +ehProfessor(Usuario) boolean$
+            +ehAdministrador(Usuario) boolean$
+            +ehProfessorOuAdministrador(Usuario) boolean$
+        }
+        class Codigo2FA {
+            -Long id
+            -String usuario «e-mail»
+            -String codigo
+            -LocalDateTime expiracao
+            -boolean utilizado
+        }
+        class TokenRedefinicaoSenha {
+            -Long id
+            -String tokenHash «SHA-256»
+            -LocalDateTime expiracao
+            -boolean utilizado
+        }
+        class AvatarAnimal {
+            <<enumeration>>
+            CACHORRO
+            GATO
+            RAPOSA
+            PANDA
+            COALA
+            TIGRE
+            LEAO
+            SAPO
+            MACACO
+            COELHO
+        }
+    }
+
+    namespace Turmas {
+        class Turma {
+            -Long id
+            -String nome
+        }
+        class SolicitacaoTurma {
+            -Long id
+            -TipoSolicitacao tipo
+            -StatusSolicitacao status
+            -LocalDateTime criadaEm
+            -LocalDateTime respondidaEm
+            +estaPendente() boolean
+        }
+        class TipoSolicitacao {
+            <<enumeration>>
+            ENTRADA
+            SAIDA
+        }
+        class StatusSolicitacao {
+            <<enumeration>>
+            PENDENTE
+            APROVADA
+            RECUSADA
+            CANCELADA
+        }
+    }
+
+    namespace Atividades {
+        class Atividade {
+            -Long id
+            -String titulo
+            -String descricao
+            -Integer pontuacao
+            -StatusAtividade status
+            -TipoAtividade tipo
+            -LocalDateTime dataCriacao
+            -Date dataAtualizacao
+        }
+        class Pergunta {
+            -Long id
+            -String enunciado
+        }
+        class Alternativa {
+            -Long id
+            -String texto
+            -Boolean correta
+            -Integer ordem
+        }
+        class ProgressoAtividade {
+            -Long id
+            -LocalDateTime iniciadoEm
+            -LocalDateTime atualizadoEm
+        }
+        class RespostaAtividade {
+            -Long id
+            -List~Long~ alternativasIds «ordenação»
+            -Boolean correta
+        }
+        class ResultadoAtividade {
+            -Long id
+            -Integer acertos
+            -Integer pontuacao
+            -LocalDateTime concluida_em
+            -String comentarioProfessor
+            -LocalDateTime comentadoEm
+        }
+        class StatusAtividade {
+            <<enumeration>>
+            PENDENTE
+            EM_ANDAMENTO
+            CONCLUIDO
+        }
+        class TipoAtividade {
+            <<enumeration>>
+            QUIZ
+            VERDADEIRO_FALSO
+            ASSOCIACAO
+            ORDENACAO
+            LACUNAS
+        }
+    }
+
+    namespace DesafiosAoVivo {
+        class Desafio {
+            -Long id
+            -String titulo
+            -String descricao
+            -StatusDesafio status
+            -LocalDateTime dataCriacao
+            -LocalDateTime dataAtualizacao
+            -Integer indicePerguntaAtual
+            -LocalDateTime perguntaExpiraEm
+        }
+        class PerguntaDesafio {
+            -Long id
+            -String enunciado
+            -Integer tempoSegundos
+            -Integer ordem
+        }
+        class AlternativaDesafio {
+            -Long id
+            -String texto
+            -Boolean correta
+        }
+        class RespostaDesafio {
+            -Long id
+            -Boolean correta
+            -Integer pontos
+            -LocalDateTime respondidaEm
+        }
+        class StatusDesafio {
+            <<enumeration>>
+            AGUARDANDO
+            EM_ANDAMENTO
+            ENCERRADO
+        }
+    }
+
+    namespace Gamificacao {
+        class Conquista {
+            -Long id
+            -String codigo
+            -String nome
+            -String descricao
+            -CategoriaConquista categoria
+            -TipoRegraConquista tipoRegra
+            -Integer meta
+            -Integer recompensaXp
+            -String icone
+            -RaridadeConquista raridade
+            -Boolean ativa
+            -Boolean secreta
+            -Integer ordemExibicao
+        }
+        class UsuarioConquista {
+            -Long id
+            -Integer progressoAtual
+            -Integer meta
+            -Boolean desbloqueada
+            -LocalDateTime dataDesbloqueio
+            -Integer xpConcedido
+            -Boolean visualizada
+            -LocalDateTime ultimaAvaliacao
+            -Long versao
+            +nova(Usuario, Conquista) UsuarioConquista$
+        }
+        class GamificacaoUsuario {
+            -Long id
+            -Integer diasConsecutivos
+            -Integer maiorSequencia
+            -LocalDate ultimoAcesso
+            -Integer posicaoRankingAtual
+            -Integer piorPosicaoRanking
+            -LocalDateTime atualizadoEm
+            +novo(Usuario) GamificacaoUsuario$
+        }
+        class CategoriaConquista {
+            <<enumeration>>
+            NIVEL
+            ATIVIDADE
+            RANKING
+            INTENSIVAO
+        }
+        class TipoRegraConquista {
+            <<enumeration>>
+            XP_ACUMULADO
+            CONTAGEM_ATIVIDADES
+            APROVEITAMENTO
+            SEQUENCIA_DIAS
+            EVOLUCAO_RANKING
+            POSICAO_RANKING
+        }
+        class RaridadeConquista {
+            <<enumeration>>
+            BRONZE
+            PRATA
+            OURO
+            ESPECIAL
+        }
+    }
+
+    namespace Auditoria {
+        class LogSistema {
+            -Long id
+            -AcaoLog acao
+            -EntidadeLog entidade
+            -Long entidadeId
+            -LocalDateTime dataHora
+            -ResultadoLog resultado
+            -String descricao
+            -String ip
+            -String dados «JSON»
+        }
+        class AcaoLog {
+            <<enumeration>>
+            CRIAR_ATIVIDADE
+            EDITAR_ATIVIDADE
+            EXCLUIR_ATIVIDADE
+            PUBLICAR_ATIVIDADE
+            CRIAR_QUESTAO
+            CRIAR_TURMA
+            EDITAR_TURMA
+            EXCLUIR_TURMA
+            ADICIONAR_ALUNO_TURMA
+            REMOVER_ALUNO_TURMA
+            CRIAR_DESAFIO
+            EDITAR_DESAFIO
+            EXCLUIR_DESAFIO
+            INICIAR_DESAFIO
+            ENCERRAR_DESAFIO
+            COMENTAR_RESULTADO
+            LOGIN
+            INICIAR_ATIVIDADE
+            CONCLUIR_ATIVIDADE
+            RESPONDER_QUESTAO
+            RESPONDER_DESAFIO
+            DESBLOQUEAR_CONQUISTA
+            CADASTRAR_USUARIO
+            EDITAR_USUARIO
+            FALHA_LOGIN
+            ERRO_SISTEMA
+            ALTERACAO_PERMISSAO
+            ACESSO_NEGADO
+        }
+        class EntidadeLog {
+            <<enumeration>>
+            ATIVIDADE
+            QUESTIONARIO
+            QUESTAO
+            TURMA
+            USUARIO
+            CONQUISTA
+            DESAFIO
+        }
+        class ResultadoLog {
+            <<enumeration>>
+            SUCESSO
+            FALHA
+        }
+    }
+
+    %% ================= Relacionamentos =================
+    %% Turmas
+    Turma "0..*" --> "0..1" Usuario : professor
+    Turma "0..*" -- "0..*" Usuario : alunos
+    SolicitacaoTurma "0..*" --> "1" Turma : turma
+    SolicitacaoTurma "0..*" --> "1" Usuario : aluno
+    SolicitacaoTurma "0..*" --> "0..1" Usuario : respondidaPor
+
+    %% Atividades
+    Turma "0..1" o-- "0..*" Atividade : atividades
+    Usuario "1" <-- "0..*" Atividade : autor
+    Atividade "1" *-- "0..*" Pergunta : perguntas
+    Pergunta "1" *-- "1..*" Alternativa : alternativas
+    ProgressoAtividade "0..*" --> "1" Usuario : aluno
+    ProgressoAtividade "0..*" --> "1" Atividade
+    ProgressoAtividade "1" *-- "0..*" RespostaAtividade : respostas
+    RespostaAtividade "0..*" --> "1" Pergunta
+    RespostaAtividade "0..*" --> "0..1" Alternativa
+    ResultadoAtividade "0..*" --> "1" Usuario : aluno
+    ResultadoAtividade "0..*" --> "1" Atividade
+    ResultadoAtividade "0..*" --> "0..1" Usuario : comentadoPor
+
+    %% Desafios
+    Desafio "0..*" --> "1" Turma
+    Desafio "0..*" --> "0..1" Usuario : autor
+    Desafio "1" *-- "1..*" PerguntaDesafio : perguntas
+    PerguntaDesafio "1" *-- "2..4" AlternativaDesafio : alternativas
+    RespostaDesafio "0..*" --> "1" PerguntaDesafio
+    RespostaDesafio "0..*" --> "1" AlternativaDesafio
+    RespostaDesafio "0..*" --> "1" Usuario : aluno
+
+    %% Gamificação
+    UsuarioConquista "0..*" --> "1" Usuario
+    UsuarioConquista "0..*" --> "1" Conquista
+    GamificacaoUsuario "0..1" --> "1" Usuario
+
+    %% Acesso e auditoria
+    TokenRedefinicaoSenha "0..*" --> "1" Usuario
+    Codigo2FA ..> Usuario : pelo e-mail
+    LogSistema "0..*" --> "0..1" Usuario
+    TipoUsuario ..> Usuario : consulta o tipo

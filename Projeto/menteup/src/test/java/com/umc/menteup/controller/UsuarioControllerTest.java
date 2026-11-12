@@ -32,6 +32,7 @@ import com.umc.menteup.model.Usuario;
 import com.umc.menteup.repository.Codigo2FARepository;
 import com.umc.menteup.repository.LogSistemaRepository;
 import com.umc.menteup.repository.UsuarioRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import com.umc.menteup.service.EmailService;
 import com.umc.menteup.service.UsuarioService;
 import com.umc.menteup.util.JwtHelper;
@@ -56,6 +57,9 @@ public class UsuarioControllerTest {
     private UsuarioRepository usuarioRepository;
 
     @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
     private Codigo2FARepository codigo2FARepository;
 
     @Autowired
@@ -78,6 +82,7 @@ public class UsuarioControllerTest {
         corpo.put("usuario", usuario.getUsuario());
         corpo.put("tipoUsuario", usuario.getTipoUsuario());
         corpo.put("senha", senha);
+        corpo.put("aceitouTermos", true);
         return corpo;
     }
 
@@ -87,8 +92,9 @@ public class UsuarioControllerTest {
         logSistemaRepository.deleteAll(); // logs referenciam usuários (FK)
         usuarioRepository.deleteAll();
 
-        usuarioService.cadastrarUsuario(
-                TestBuilder.criarUsuario(null, "Root", USUARIO_ADMIN, SENHA_ADMIN, "ADMINISTRADOR"));
+        // O cadastro público não aceita ADMINISTRADOR: o administrador do teste vai direto para o banco
+        usuarioRepository.save(TestBuilder.criarUsuario(
+                null, "Root", USUARIO_ADMIN, passwordEncoder.encode(SENHA_ADMIN), "ADMINISTRADOR"));
 
         token = JwtHelper.obterToken(testRestTemplate, codigo2FARepository, USUARIO_ADMIN, SENHA_ADMIN);
     }

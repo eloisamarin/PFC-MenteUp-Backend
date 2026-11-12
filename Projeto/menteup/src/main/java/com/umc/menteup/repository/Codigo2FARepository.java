@@ -8,6 +8,9 @@ import java.util.Optional;
 public interface Codigo2FARepository  extends JpaRepository<Codigo2FA,Long> {
 
     Optional<Codigo2FA> findTopByUsuarioAndUtilizadoFalseOrderByIdDesc(String usuario);
+
+    // Último código gerado (usado ou não): base para o reenvio
+    Optional<Codigo2FA> findTopByUsuarioOrderByIdDesc(String usuario);
     void deleteByUsuario(String usuario);
 
 }

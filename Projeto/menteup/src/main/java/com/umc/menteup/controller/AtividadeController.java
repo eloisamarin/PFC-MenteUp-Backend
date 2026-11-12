@@ -72,9 +72,16 @@ public class AtividadeController {
 
         exigirTurmaInformada(atividade);
 
-        if (turmaRepository.existsById(atividade.getTurma().getId())) {
+        Turma turma = turmaRepository.findById(atividade.getTurma().getId()).orElse(null);
+
+        if (turma != null) {
+
+            // Professor só cria atividade nas turmas dele. O autor é quem está logado (token),
+            // nunca um "usuario" vindo no corpo da requisição.
+            Usuario autor = atividadeService.exigirPodeAlterar(turma, authentication.getName());
 
             atividade.setId(null);
+            atividade.setUsuario(autor);
 
             ///Salva pelo service para os alunos receberem a notificação
             Atividade salva = atividadeService.criarAtividade(atividade);
@@ -124,17 +131,22 @@ public class AtividadeController {
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        if (!turmaRepository.existsById(atividade.getTurma().getId())) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Turma não existe",
-                    null
-            );
-        }
+        Turma novaTurma = turmaRepository.findById(atividade.getTurma().getId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Turma não existe",
+                        null
+                ));
+
+        // Professor só edita atividade da turma dele e não pode mover para a turma de outro professor
+        atividadeService.exigirPodeAlterar(existente.getTurma(), authentication.getName());
+        atividadeService.exigirPodeAlterar(novaTurma, authentication.getName());
 
         StatusAtividade statusAnterior = existente.getStatus();
 
         atividade.setPerguntas(existente.getPerguntas());
+        // O autor não muda na edição
+        atividade.setUsuario(existente.getUsuario());
         // O tipo é definido no cadastro do questionário (etapa 2) e não muda pela edição dos dados gerais.
         atividade.setTipo(existente.getTipo());
 
@@ -206,6 +218,9 @@ public class AtividadeController {
         Atividade atividade = atividadeRepository.findById(id)
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        // Professor só exclui atividade da turma dele
+        atividadeService.exigirPodeAlterar(atividade.getTurma(), authentication.getName());
 
         atividadeRepository.deleteById(id);
 

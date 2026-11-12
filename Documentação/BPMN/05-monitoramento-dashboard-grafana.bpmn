@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Definicoes_05-monitoramento-dashboard-grafana" targetNamespace="https://menteup.umc.br/bpmn"
+                  exporter="MenteUp" exporterVersion="1.0">
+  <bpmn:collaboration id="Colaboracao_05-monitoramento-dashboard-grafana">
+    <bpmn:participant id="Participante_05-monitoramento-dashboard-grafana" name="MenteUp — Monitoramento pela dashboard do Grafana" processRef="Processo_05-monitoramento-dashboard-grafana" />
+  </bpmn:collaboration>
+  <bpmn:process id="Processo_05-monitoramento-dashboard-grafana" isExecutable="false">
+    <bpmn:laneSet id="Raias_05-monitoramento-dashboard-grafana">
+      <bpmn:lane id="R_Admin" name="Administrador">
+        <bpmn:flowNodeRef>Inicio</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Entrar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Analisar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fim</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="R_Grafana" name="Grafana (plugin Infinity)">
+        <bpmn:flowNodeRef>Chamar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Montar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fim_Erro</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="R_Api" name="Back-end MenteUp (API /dashboard)">
+        <bpmn:flowNodeRef>G_Token</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Negar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Calcular</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Inicio" name="Acompanhar indicadores">
+      <bpmn:outgoing>Fluxo_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Entrar" name="Entrar no Grafana como admin (localhost:3001)">
+      <bpmn:incoming>Fluxo_1</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sendTask id="Chamar" name="Chamar a API com o token X-Dashboard-Token">
+      <bpmn:incoming>Fluxo_2</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_3</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:exclusiveGateway id="G_Token" name="Token válido?">
+      <bpmn:incoming>Fluxo_3</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_4</bpmn:outgoing>
+      <bpmn:outgoing>Fluxo_5</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Negar" name="Responder 401">
+      <bpmn:incoming>Fluxo_5</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_7</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Calcular" name="Calcular indicadores agregados (sem dados pessoais)">
+      <bpmn:incoming>Fluxo_4</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_6</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Montar" name="Montar Big Numbers e gráficos">
+      <bpmn:incoming>Fluxo_6</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_8</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="Analisar" name="Analisar uso e aprendizado da plataforma">
+      <bpmn:incoming>Fluxo_8</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_9</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="Fim" name="Atualiza a cada 1 minuto">
+      <bpmn:incoming>Fluxo_9</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="Fim_Erro" name="Painel com erro">
+      <bpmn:incoming>Fluxo_7</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Fluxo_1" sourceRef="Inicio" targetRef="Entrar" />
+    <bpmn:sequenceFlow id="Fluxo_2" sourceRef="Entrar" targetRef="Chamar" />
+    <bpmn:sequenceFlow id="Fluxo_3" sourceRef="Chamar" targetRef="G_Token" />
+    <bpmn:sequenceFlow id="Fluxo_4" name="Sim" sourceRef="G_Token" targetRef="Calcular" />
+    <bpmn:sequenceFlow id="Fluxo_5" name="Não" sourceRef="G_Token" targetRef="Negar" />
+    <bpmn:sequenceFlow id="Fluxo_6" sourceRef="Calcular" targetRef="Montar" />
+    <bpmn:sequenceFlow id="Fluxo_7" sourceRef="Negar" targetRef="Fim_Erro" />
+    <bpmn:sequenceFlow id="Fluxo_8" sourceRef="Montar" targetRef="Analisar" />
+    <bpmn:sequenceFlow id="Fluxo_9" sourceRef="Analisar" targetRef="Fim" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagrama_05-monitoramento-dashboard-grafana">
+    <bpmndi:BPMNPlane id="Plano_05-monitoramento-dashboard-grafana" bpmnElement="Colaboracao_05-monitoramento-dashboard-grafana">
+      <bpmndi:BPMNShape id="Participante_05-monitoramento-dashboard-grafana_di" bpmnElement="Participante_05-monitoramento-dashboard-grafana" isHorizontal="true">
+        <dc:Bounds x="120" y="80" width="1495" height="630" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Admin_di" bpmnElement="R_Admin" isHorizontal="true">
+        <dc:Bounds x="150" y="80" width="1465" height="210" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Grafana_di" bpmnElement="R_Grafana" isHorizontal="true">
+        <dc:Bounds x="150" y="290" width="1465" height="210" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Api_di" bpmnElement="R_Api" isHorizontal="true">
+        <dc:Bounds x="150" y="500" width="1465" height="210" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_di" bpmnElement="Inicio">
+        <dc:Bounds x="232" y="167" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="195" y="209" width="110" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Entrar_di" bpmnElement="Entrar">
+        <dc:Bounds x="355" y="149" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Chamar_di" bpmnElement="Chamar">
+        <dc:Bounds x="530" y="359" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Token_di" bpmnElement="G_Token" isMarkerVisible="true">
+        <dc:Bounds x="750" y="580" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="657" y="555" width="105" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Negar_di" bpmnElement="Negar">
+        <dc:Bounds x="880" y="629" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Calcular_di" bpmnElement="Calcular">
+        <dc:Bounds x="880" y="509" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Montar_di" bpmnElement="Montar">
+        <dc:Bounds x="1055" y="359" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Analisar_di" bpmnElement="Analisar">
+        <dc:Bounds x="1230" y="149" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_di" bpmnElement="Fim">
+        <dc:Bounds x="1457" y="167" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1501" y="171" width="100" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Erro_di" bpmnElement="Fim_Erro">
+        <dc:Bounds x="1107" y="442" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1151" y="446" width="100" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Fluxo_1_di" bpmnElement="Fluxo_1">
+        <di:waypoint x="268" y="185" />
+        <di:waypoint x="355" y="185" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_2_di" bpmnElement="Fluxo_2">
+        <di:waypoint x="495" y="185" />
+        <di:waypoint x="512" y="185" />
+        <di:waypoint x="512" y="395" />
+        <di:waypoint x="530" y="395" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_3_di" bpmnElement="Fluxo_3">
+        <di:waypoint x="670" y="395" />
+        <di:waypoint x="775" y="395" />
+        <di:waypoint x="775" y="580" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_4_di" bpmnElement="Fluxo_4">
+        <di:waypoint x="775" y="580" />
+        <di:waypoint x="775" y="545" />
+        <di:waypoint x="880" y="545" />
+        <bpmndi:BPMNLabel><dc:Bounds x="781" y="554" width="34" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_5_di" bpmnElement="Fluxo_5">
+        <di:waypoint x="775" y="630" />
+        <di:waypoint x="775" y="665" />
+        <di:waypoint x="880" y="665" />
+        <bpmndi:BPMNLabel><dc:Bounds x="781" y="640" width="34" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_6_di" bpmnElement="Fluxo_6">
+        <di:waypoint x="1020" y="545" />
+        <di:waypoint x="1038" y="545" />
+        <di:waypoint x="1038" y="395" />
+        <di:waypoint x="1055" y="395" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_7_di" bpmnElement="Fluxo_7">
+        <di:waypoint x="1020" y="665" />
+        <di:waypoint x="1064" y="665" />
+        <di:waypoint x="1064" y="460" />
+        <di:waypoint x="1107" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_8_di" bpmnElement="Fluxo_8">
+        <di:waypoint x="1195" y="395" />
+        <di:waypoint x="1212" y="395" />
+        <di:waypoint x="1212" y="185" />
+        <di:waypoint x="1230" y="185" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_9_di" bpmnElement="Fluxo_9">
+        <di:waypoint x="1370" y="185" />
+        <di:waypoint x="1457" y="185" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

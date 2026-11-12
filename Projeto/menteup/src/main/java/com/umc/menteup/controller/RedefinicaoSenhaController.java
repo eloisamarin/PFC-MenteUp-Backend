@@ -1,6 +1,7 @@
 package com.umc.menteup.controller;
 
 import com.umc.menteup.dto.EsqueciSenhaRequest;
+import com.umc.menteup.dto.PrimeiroAcessoRequest;
 import com.umc.menteup.dto.RedefinirSenhaRequest;
 import com.umc.menteup.service.RedefinicaoSenhaService;
 import jakarta.validation.Valid;
@@ -30,5 +31,12 @@ public class RedefinicaoSenhaController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void redefinirSenha(@Valid @RequestBody RedefinirSenhaRequest request) {
         redefinicaoSenhaService.redefinir(request.token(), request.novaSenha());
+    }
+
+    // POST /usuarios/senha/primeiro-acesso: quem foi criado pelo administrador cria a senha e aceita o termo
+    @PostMapping("/primeiro-acesso")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void primeiroAcesso(@Valid @RequestBody PrimeiroAcessoRequest request) {
+        redefinicaoSenhaService.concluirPrimeiroAcesso(request.token(), request.novaSenha(), request.aceitouTermos());
     }
 }

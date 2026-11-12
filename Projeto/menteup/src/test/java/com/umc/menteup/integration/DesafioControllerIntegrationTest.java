@@ -825,6 +825,65 @@ class DesafioControllerIntegrationTest extends IntegracaoBase {
 
     // ------------------------------------------------------------------- Helpers
 
+    // ------------------------------------------------------------ Professor só nas turmas dele
+
+    @Test
+    void professor_naoDeveCriarDesafioNaTurmaDeOutroProfessor() {
+        Sessao dono = novaSessao("PROFESSOR");
+        Sessao outro = novaSessao("PROFESSOR");
+        Long turmaDoDono = criarTurma(dono);
+
+        ResponseEntity<Map<String, Object>> resposta = criar(outro, buildDesafio(turmaDoDono, 1));
+
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(resposta.getBody()).containsEntry("codigo", "SEM_ACESSO_AO_DESAFIO");
+    }
+
+    @Test
+    void professor_naoDeveEditarExcluirNemConduzirDesafioDeOutroProfessor() {
+        // Arrange
+        Cenario c = cenario(1);
+        Sessao outro = novaSessao("PROFESSOR");
+
+        // Act + Assert
+        assertThat(buscarParaEdicao(outro, c.desafioId()).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(atualizar(outro, c.desafioId(), buildDesafio(c.turmaId(), 1)).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(iniciar(outro, c.desafioId()).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(excluir(outro, c.desafioId()).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+
+        // O dono conduz normalmente; o outro também não avança
+        assertThat(iniciar(c.professor(), c.desafioId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+        esgotarTempo(c.desafioId());
+        assertThat(avancar(outro, c.desafioId()).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(desafioRepository.existsById(c.desafioId())).isTrue();
+    }
+
+    @Test
+    void professor_naoDeveMoverDesafioParaATurmaDeOutroProfessor() {
+        Cenario c = cenario(1);
+        Sessao outro = novaSessao("PROFESSOR");
+        Long turmaDoOutro = criarTurma(outro);
+
+        ResponseEntity<Map<String, Object>> resposta = atualizar(c.professor(), c.desafioId(), buildDesafio(turmaDoOutro, 1));
+
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(desafioRepository.findById(c.desafioId()).orElseThrow().getTurma().getId()).isEqualTo(c.turmaId());
+    }
+
+    @Test
+    void administrador_deveEditarConduzirEExcluirDesafioDeQualquerProfessor() {
+        Cenario c = cenario(1);
+        Sessao administrador = novaSessao("ADMINISTRADOR");
+
+        assertThat(atualizar(administrador, c.desafioId(), buildDesafio(c.turmaId(), 1)).getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+        assertThat(iniciar(administrador, c.desafioId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+        esgotarTempo(c.desafioId());
+        assertThat(avancar(administrador, c.desafioId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(excluir(administrador, c.desafioId()).getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+    }
+
     private static Map<String, Object> buildDesafio(Long turmaId, int quantidadePerguntas) {
         List<Map<String, Object>> perguntas = new java.util.ArrayList<>();
         for (int i = 1; i <= quantidadePerguntas; i++) {

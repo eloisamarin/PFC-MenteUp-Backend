@@ -79,7 +79,8 @@ public class AtividadeService {
         if (atividade.getTurma() == null ||
                 atividade.getTurma().getId() == null) {
 
-            throw new IllegalArgumentException(
+            throw ApiException.requisicaoInvalida(
+                    "TURMA_OBRIGATORIA",
                     "A turma da atividade é obrigatória."
             );
         }
@@ -87,7 +88,8 @@ public class AtividadeService {
         Turma turma = turmaRepository.findById(
                 atividade.getTurma().getId()
         ).orElseThrow(() ->
-                new IllegalArgumentException(
+                ApiException.naoEncontrado(
+                        "TURMA_NAO_ENCONTRADA",
                         "Turma não encontrada."
                 )
         );
@@ -185,6 +187,35 @@ public class AtividadeService {
         return Optional.of(
                 atividadeRepository.save(atividade)
         );
+    }
+
+    /*
+     * Quem pode criar, editar ou excluir uma atividade (e as questões dela):
+     * - administrador: qualquer atividade;
+     * - professor: só as atividades das turmas dele;
+     * - aluno: nenhuma (o SecurityConfig já barra antes de chegar aqui).
+     * Mesma regra das turmas (TurmaService).
+     */
+    public Usuario exigirPodeAlterar(Turma turma, String username) {
+        Usuario usuario = usuarioRepository.findByUsuario(username)
+                .orElseThrow(() -> ApiException.naoAutenticado(
+                        "USUARIO_NAO_ENCONTRADO", "Usuário não encontrado."));
+
+        if (TipoUsuario.ehAdministrador(usuario)) {
+            return usuario;
+        }
+
+        boolean professorDaTurma = TipoUsuario.ehProfessor(usuario)
+                && turma != null
+                && turma.getProfessor() != null
+                && turma.getProfessor().getId().equals(usuario.getId());
+
+        if (!professorDaTurma) {
+            throw ApiException.proibido("SEM_ACESSO_A_ATIVIDADE",
+                    "Só o professor da turma ou um administrador pode alterar as atividades dela.");
+        }
+
+        return usuario;
     }
 
     public boolean deletarAtividade(Long id) {

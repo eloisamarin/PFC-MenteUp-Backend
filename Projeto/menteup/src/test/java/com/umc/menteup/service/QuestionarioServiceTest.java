@@ -39,6 +39,7 @@ class QuestionarioServiceTest {
     @Mock private LogSistemaService logSistemaService;
     @Mock private ProgressoAtividadeRepository progressoRepository;
     @Mock private ResultadoAtividadeRepository resultadoRepository;
+    @Mock private AtividadeService atividadeService;
 
     @Spy private TemplateResolver templateResolver = new TemplateResolver(List.of(new QuizTemplate()));
 
@@ -50,10 +51,11 @@ class QuestionarioServiceTest {
     void atividadeInexistente() {
         when(atividadeRepository.findById(ATIVIDADE_ID)).thenReturn(Optional.empty());
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
+        ApiException ex = assertThrows(ApiException.class,
                 () -> service.cadastrarQuesitonario(ATIVIDADE_ID, requestComDuasPerguntas(), USERNAME));
 
-        assertEquals("Atividade não encontrada", ex.getMessage());
+        assertEquals("Atividade não encontrada.", ex.getMessage());
+        assertEquals(org.springframework.http.HttpStatus.NOT_FOUND, ex.getStatus());
 
         verify(atividadeRepository, never()).save(any());
         verifyNoInteractions(logSistemaService);
@@ -211,7 +213,8 @@ class QuestionarioServiceTest {
         TemplateResolver comVerdadeiroFalso = new TemplateResolver(List.of(
                 new QuizTemplate(), new com.umc.menteup.template.VerdadeiroFalsoTemplate()));
         QuestionarioService servico = new QuestionarioService(
-                atividadeRepository, logSistemaService, comVerdadeiroFalso, progressoRepository, resultadoRepository);
+                atividadeRepository, logSistemaService, comVerdadeiroFalso, progressoRepository, resultadoRepository,
+                atividadeService);
 
         Atividade salva = servico.substituirQuestionario(ATIVIDADE_ID, verdadeiroFalso, USERNAME);
 

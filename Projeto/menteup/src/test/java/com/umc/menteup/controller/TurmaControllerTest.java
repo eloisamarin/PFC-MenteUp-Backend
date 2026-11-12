@@ -29,6 +29,7 @@ import com.umc.menteup.repository.Codigo2FARepository;
 import com.umc.menteup.repository.LogSistemaRepository;
 import com.umc.menteup.repository.TurmaRepository;
 import com.umc.menteup.repository.UsuarioRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import com.umc.menteup.service.EmailService;
 import com.umc.menteup.service.UsuarioService;
 import com.umc.menteup.util.JwtHelper;
@@ -55,6 +56,9 @@ public class TurmaControllerTest{
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     private TurmaRepository turmaRepository;
@@ -89,8 +93,9 @@ public class TurmaControllerTest{
 
         usuarioService.cadastrarUsuario(
                 TestBuilder.criarUsuario(null, "Professor", EMAIL_PROFESSOR, SENHA, "PROFESSOR"));
-        usuarioService.cadastrarUsuario(
-                TestBuilder.criarUsuario(null, "Administrador", EMAIL_ADMIN, SENHA, "ADMINISTRADOR"));
+        // O cadastro público não aceita ADMINISTRADOR: o administrador do teste vai direto para o banco
+        usuarioRepository.save(TestBuilder.criarUsuario(
+                null, "Administrador", EMAIL_ADMIN, passwordEncoder.encode(SENHA), "ADMINISTRADOR"));
         alunoId = usuarioService.cadastrarUsuario(
                 TestBuilder.criarUsuario(null, "Aluno", EMAIL_ALUNO, SENHA, "ALUNO")).get().getId();
 

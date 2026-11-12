@@ -65,5 +65,21 @@ public class EmailService {
         mailSender.send(mensagem);
     }
 
+    // Convite de quem foi cadastrado pelo administrador: criar a senha e aceitar o termo
+    public void enviarConvitePrimeiroAcesso(String destinatario, String nome, String link) {
+        SimpleMailMessage mensagem = new SimpleMailMessage();
+        mensagem.setTo(destinatario);
+        mensagem.setSubject("MenteUp - Bem-vindo(a)! Crie sua senha");
+        mensagem.setText(
+                "Olá, " + nome + "!\n\n"
+                        + "Um administrador criou a sua conta no MenteUp.\n"
+                        + "Para começar, acesse o link abaixo, leia e aceite o Termo de Aceite e a "
+                        + "Política de Privacidade e crie a sua senha:\n\n"
+                        + link
+                        + "\n\nO link vale por 3 dias e só pode ser usado uma vez.\n"
+                        + "Se ele expirar, use \"Esqueci minha senha\" na tela de login para receber um novo.\n\n"
+                        + "Se você não esperava este e-mail, pode ignorá-lo.\n");
 
+        mailSender.send(mensagem);
+    }
 }

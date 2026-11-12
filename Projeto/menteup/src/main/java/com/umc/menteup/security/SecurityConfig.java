@@ -24,6 +24,7 @@ public class SecurityConfig {
             "/usuarios/logar",
             "/usuarios/cadastrar",
             "/usuarios/validar-2fa",
+            "/usuarios/reenviar-2fa",
             "/error/**",
             "/",
             "/docs",
@@ -32,6 +33,7 @@ public class SecurityConfig {
             "/swagger-resources/**",
             "/usuarios/senha/esqueci",
             "/usuarios/senha/redefinir",
+            "/usuarios/senha/primeiro-acesso",
     };
 
     @Autowired
@@ -62,10 +64,17 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS).permitAll()
                         .requestMatchers("/alunos/me/**").hasRole("ALUNO")
                         .requestMatchers("/logs/**").hasRole("ADMINISTRADOR")
+                        // Criar usuário de qualquer tipo (inclusive administrador): só administrador
+                        .requestMatchers(HttpMethod.POST, "/usuarios").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.GET, "/dashboard/**").hasAnyRole("ADMINISTRADOR", "DASHBOARD")
                         .requestMatchers("/dashboard/**").denyAll()
                         ///só os professores e administradores cadastram ou editam questões
                         .requestMatchers("/atividades/*/questionario").hasAnyRole("PROFESSOR", "ADMINISTRADOR")
+                        // Criar, editar e excluir atividade: só professor e administrador.
+                        // O aluno continua podendo ver (GET) e salvar o progresso (PUT /atividades/{id}/progresso).
+                        .requestMatchers(HttpMethod.POST, "/atividades").hasAnyRole("PROFESSOR", "ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/atividades").hasAnyRole("PROFESSOR", "ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/atividades/*").hasAnyRole("PROFESSOR", "ADMINISTRADOR")
                         .anyRequest().authenticated()
 
                 )

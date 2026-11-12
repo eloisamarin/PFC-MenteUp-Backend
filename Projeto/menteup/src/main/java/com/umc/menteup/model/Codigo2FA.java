@@ -1,6 +1,8 @@
 package com.umc.menteup.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 
 import java.time.LocalDateTime;
 
@@ -24,6 +26,15 @@ public class Codigo2FA {
 
     @Column(nullable = false)
     private boolean utilizado = false;
+
+    // Erros de digitação deste código. Ao chegar no limite, o código é inutilizado (contra força bruta).
+    // Pode ser nulo nas linhas antigas da tabela: getTentativas() trata como 0.
+    @Column(name = "tentativas")
+    private Integer tentativas = 0;
+
+    // Quantas vezes o código já foi reenviado desde o login com a senha (o reenvio tem limite)
+    @Column(name = "reenvios")
+    private Integer reenvios = 0;
 
     // Construtor vazio exigido pelo JPA
     public Codigo2FA() {
@@ -90,5 +101,30 @@ public class Codigo2FA {
 
     public void setUtilizado(boolean utilizado) {
         this.utilizado = utilizado;
+    }
+
+    public int getTentativas() {
+        return tentativas == null ? 0 : tentativas;
+    }
+
+    public void setTentativas(Integer tentativas) {
+        this.tentativas = tentativas;
+    }
+
+    public int getReenvios() {
+        return reenvios == null ? 0 : reenvios;
+    }
+
+    public void setReenvios(Integer reenvios) {
+        this.reenvios = reenvios;
+    }
+
+    /** Conta um erro; ao chegar no limite, inutiliza o código. Devolve as tentativas que ainda restam. */
+    public int registrarTentativaErrada(int limite) {
+        this.tentativas = getTentativas() + 1;
+        if (this.tentativas >= limite) {
+            this.utilizado = true;
+        }
+        return Math.max(0, limite - this.tentativas);
     }
 }

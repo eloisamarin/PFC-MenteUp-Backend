@@ -3,7 +3,7 @@ package com.umc.menteup.dto;
 import jakarta.validation.constraints.NotBlank;
 
 public class FcmTokenRequest {
-    @NotBlank(message = "O totek Firebase é obrigatório")
+    @NotBlank(message = "O token Firebase é obrigatório")
     private String fcmToken;
 
     public String getFcmToken() {

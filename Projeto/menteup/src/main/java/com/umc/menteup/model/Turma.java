@@ -2,6 +2,7 @@ package com.umc.menteup.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.persistence.FetchType;
 import jakarta.validation.constraints.NotBlank;
@@ -40,7 +41,10 @@ public class Turma {
             joinColumns = @JoinColumn(name = "turma_id"),
             inverseJoinColumns = @JoinColumn(name = "aluno_id")
     )
-    @JsonIgnoreProperties("turmas")
+    // LGPD: na turma, cada aluno sai só com id, nome e tipo
+    @JsonIgnoreProperties(
+            value = {"usuario", "turma", "atividade", "aguardandoPrimeiroAcesso"},
+            allowSetters = true)
     private List<Usuario> alunos = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -48,5 +52,20 @@ public class Turma {
     @JsonIgnore
     private Usuario professor;
 
+    // Entrada (POST/PUT /turmas): o administrador escolhe o professor responsável.
+    // Não vai para o banco: o vínculo fica gravado em "professor".
+    @Transient
+    @JsonProperty(value = "professorId", access = JsonProperty.Access.WRITE_ONLY)
+    private Long professorIdInformado;
 
+    // Saída: o professor responsável aparece nas telas de turma, atividade e desafio
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    public ProfessorResponsavel getProfessorResponsavel() {
+        return professor == null
+                ? null
+                : new ProfessorResponsavel(professor.getId(), professor.getNomeUsuario());
+    }
+
+    public record ProfessorResponsavel(Long id, String nome) {
+    }
 }

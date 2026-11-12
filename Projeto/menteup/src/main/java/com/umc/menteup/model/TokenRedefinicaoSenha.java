@@ -31,6 +31,14 @@ public class TokenRedefinicaoSenha {
     @Column(nullable = false)
     private boolean utilizado = false;
 
+    // true = convite de primeiro acesso (criar senha + aceitar o termo); null/false = redefinição de senha
+    @Column(name = "primeiro_acesso")
+    private Boolean primeiroAcesso;
+
+    public boolean ehPrimeiroAcesso() {
+        return Boolean.TRUE.equals(primeiroAcesso);
+    }
+
     // Usado pelo service para criar um link novo
     public TokenRedefinicaoSenha(Usuario usuario, String tokenHash, LocalDateTime expiracao) {
         this.usuario = usuario;

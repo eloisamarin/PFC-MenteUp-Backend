@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Definicoes_02-entrada-e-saida-de-turma" targetNamespace="https://menteup.umc.br/bpmn"
+                  exporter="MenteUp" exporterVersion="1.0">
+  <bpmn:collaboration id="Colaboracao_02-entrada-e-saida-de-turma">
+    <bpmn:participant id="Participante_02-entrada-e-saida-de-turma" name="MenteUp — Entrada e saída de turma" processRef="Processo_02-entrada-e-saida-de-turma" />
+  </bpmn:collaboration>
+  <bpmn:process id="Processo_02-entrada-e-saida-de-turma" isExecutable="false">
+    <bpmn:laneSet id="Raias_02-entrada-e-saida-de-turma">
+      <bpmn:lane id="R_Aluno" name="Aluno">
+        <bpmn:flowNodeRef>Inicio</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Escolher</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_Matriculado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PedirEntrar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PedirSair</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fim_Nao</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fim_Atualizada</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fim_Recusado</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="R_Sistema" name="Sistema MenteUp">
+        <bpmn:flowNodeRef>Registrar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_Valido</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Recusar409</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Atualizar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>MarcarRecusado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AtualizarDireto</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="R_Professor" name="Professor da turma ou Administrador">
+        <bpmn:flowNodeRef>Analisar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_Aprovar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Inicio_Direto</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Direto</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fim_Direto</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Inicio" name="Acessar Turmas">
+      <bpmn:outgoing>Fluxo_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Escolher" name="Escolher a turma">
+      <bpmn:incoming>Fluxo_1</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Matriculado" name="Já está na turma?">
+      <bpmn:incoming>Fluxo_2</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_3</bpmn:outgoing>
+      <bpmn:outgoing>Fluxo_4</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="PedirEntrar" name="Pedir para entrar">
+      <bpmn:incoming>Fluxo_3</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="PedirSair" name="Pedir para sair">
+      <bpmn:incoming>Fluxo_4</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_6</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Registrar" name="Validar e registrar pedido PENDENTE">
+      <bpmn:incoming>Fluxo_5</bpmn:incoming>
+      <bpmn:incoming>Fluxo_6</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_7</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="G_Valido" name="Pedido válido?">
+      <bpmn:incoming>Fluxo_7</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_8</bpmn:outgoing>
+      <bpmn:outgoing>Fluxo_9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Recusar409" name="Avisar o motivo (já tem pedido aberto, já está na turma...)">
+      <bpmn:incoming>Fluxo_9</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_10</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Nao" name="Pedido não enviado">
+      <bpmn:incoming>Fluxo_10</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Analisar" name="Analisar o pedido no detalhe da turma">
+      <bpmn:incoming>Fluxo_8</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_11</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Aprovar" name="Aprovar?">
+      <bpmn:incoming>Fluxo_11</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_12</bpmn:outgoing>
+      <bpmn:outgoing>Fluxo_13</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Atualizar" name="Incluir ou retirar o aluno e registrar no log">
+      <bpmn:incoming>Fluxo_12</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_14</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="MarcarRecusado" name="Marcar pedido como RECUSADO">
+      <bpmn:incoming>Fluxo_13</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_15</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Atualizada" name="Turma atualizada para o aluno">
+      <bpmn:incoming>Fluxo_14</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="Fim_Recusado" name="Pedido recusado">
+      <bpmn:incoming>Fluxo_15</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:startEvent id="Inicio_Direto" name="Gerenciar alunos da turma">
+      <bpmn:outgoing>Fluxo_16</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Direto" name="Adicionar ou remover aluno diretamente">
+      <bpmn:incoming>Fluxo_16</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_17</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="AtualizarDireto" name="Atualizar matrícula (só o professor da turma ou admin)">
+      <bpmn:incoming>Fluxo_17</bpmn:incoming>
+      <bpmn:outgoing>Fluxo_18</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Direto" name="Matrícula atualizada">
+      <bpmn:incoming>Fluxo_18</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Fluxo_1" sourceRef="Inicio" targetRef="Escolher" />
+    <bpmn:sequenceFlow id="Fluxo_2" sourceRef="Escolher" targetRef="G_Matriculado" />
+    <bpmn:sequenceFlow id="Fluxo_3" name="Não" sourceRef="G_Matriculado" targetRef="PedirEntrar" />
+    <bpmn:sequenceFlow id="Fluxo_4" name="Sim" sourceRef="G_Matriculado" targetRef="PedirSair" />
+    <bpmn:sequenceFlow id="Fluxo_5" sourceRef="PedirEntrar" targetRef="Registrar" />
+    <bpmn:sequenceFlow id="Fluxo_6" sourceRef="PedirSair" targetRef="Registrar" />
+    <bpmn:sequenceFlow id="Fluxo_7" sourceRef="Registrar" targetRef="G_Valido" />
+    <bpmn:sequenceFlow id="Fluxo_8" name="Sim" sourceRef="G_Valido" targetRef="Analisar" />
+    <bpmn:sequenceFlow id="Fluxo_9" name="Não" sourceRef="G_Valido" targetRef="Recusar409" />
+    <bpmn:sequenceFlow id="Fluxo_10" sourceRef="Recusar409" targetRef="Fim_Nao" />
+    <bpmn:sequenceFlow id="Fluxo_11" sourceRef="Analisar" targetRef="G_Aprovar" />
+    <bpmn:sequenceFlow id="Fluxo_12" name="Sim" sourceRef="G_Aprovar" targetRef="Atualizar" />
+    <bpmn:sequenceFlow id="Fluxo_13" name="Não" sourceRef="G_Aprovar" targetRef="MarcarRecusado" />
+    <bpmn:sequenceFlow id="Fluxo_14" sourceRef="Atualizar" targetRef="Fim_Atualizada" />
+    <bpmn:sequenceFlow id="Fluxo_15" sourceRef="MarcarRecusado" targetRef="Fim_Recusado" />
+    <bpmn:sequenceFlow id="Fluxo_16" sourceRef="Inicio_Direto" targetRef="Direto" />
+    <bpmn:sequenceFlow id="Fluxo_17" sourceRef="Direto" targetRef="AtualizarDireto" />
+    <bpmn:sequenceFlow id="Fluxo_18" sourceRef="AtualizarDireto" targetRef="Fim_Direto" />
+    <bpmn:textAnnotation id="Nota_1"><bpmn:text>O aluno pode cancelar o pedido enquanto ele estiver PENDENTE.</bpmn:text></bpmn:textAnnotation>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagrama_02-entrada-e-saida-de-turma">
+    <bpmndi:BPMNPlane id="Plano_02-entrada-e-saida-de-turma" bpmnElement="Colaboracao_02-entrada-e-saida-de-turma">
+      <bpmndi:BPMNShape id="Participante_02-entrada-e-saida-de-turma_di" bpmnElement="Participante_02-entrada-e-saida-de-turma" isHorizontal="true">
+        <dc:Bounds x="120" y="80" width="1845" height="760" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Aluno_di" bpmnElement="R_Aluno" isHorizontal="true">
+        <dc:Bounds x="150" y="80" width="1815" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Sistema_di" bpmnElement="R_Sistema" isHorizontal="true">
+        <dc:Bounds x="150" y="310" width="1815" height="300" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Professor_di" bpmnElement="R_Professor" isHorizontal="true">
+        <dc:Bounds x="150" y="610" width="1815" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_di" bpmnElement="Inicio">
+        <dc:Bounds x="232" y="177" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="195" y="219" width="110" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Escolher_di" bpmnElement="Escolher">
+        <dc:Bounds x="355" y="159" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Matriculado_di" bpmnElement="G_Matriculado" isMarkerVisible="true">
+        <dc:Bounds x="575" y="170" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="482" y="145" width="105" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PedirEntrar_di" bpmnElement="PedirEntrar">
+        <dc:Bounds x="705" y="99" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PedirSair_di" bpmnElement="PedirSair">
+        <dc:Bounds x="705" y="219" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Registrar_di" bpmnElement="Registrar">
+        <dc:Bounds x="880" y="424" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Valido_di" bpmnElement="G_Valido" isMarkerVisible="true">
+        <dc:Bounds x="1100" y="435" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1007" y="410" width="105" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Recusar409_di" bpmnElement="Recusar409">
+        <dc:Bounds x="1055" y="324" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Nao_di" bpmnElement="Fim_Nao">
+        <dc:Bounds x="1282" y="237" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1326" y="241" width="100" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Analisar_di" bpmnElement="Analisar">
+        <dc:Bounds x="1230" y="689" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Aprovar_di" bpmnElement="G_Aprovar" isMarkerVisible="true">
+        <dc:Bounds x="1450" y="700" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1357" y="675" width="105" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Atualizar_di" bpmnElement="Atualizar">
+        <dc:Bounds x="1580" y="364" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="MarcarRecusado_di" bpmnElement="MarcarRecusado">
+        <dc:Bounds x="1580" y="484" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Atualizada_di" bpmnElement="Fim_Atualizada">
+        <dc:Bounds x="1807" y="117" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1851" y="121" width="100" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Recusado_di" bpmnElement="Fim_Recusado">
+        <dc:Bounds x="1807" y="237" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1851" y="241" width="100" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_Direto_di" bpmnElement="Inicio_Direto">
+        <dc:Bounds x="232" y="767" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="195" y="809" width="110" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Direto_di" bpmnElement="Direto">
+        <dc:Bounds x="355" y="749" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AtualizarDireto_di" bpmnElement="AtualizarDireto">
+        <dc:Bounds x="530" y="514" width="140" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Direto_di" bpmnElement="Fim_Direto">
+        <dc:Bounds x="757" y="767" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="801" y="771" width="100" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Fluxo_1_di" bpmnElement="Fluxo_1">
+        <di:waypoint x="268" y="195" />
+        <di:waypoint x="355" y="195" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_2_di" bpmnElement="Fluxo_2">
+        <di:waypoint x="495" y="195" />
+        <di:waypoint x="575" y="195" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_3_di" bpmnElement="Fluxo_3">
+        <di:waypoint x="600" y="170" />
+        <di:waypoint x="600" y="135" />
+        <di:waypoint x="705" y="135" />
+        <bpmndi:BPMNLabel><dc:Bounds x="606" y="144" width="34" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_4_di" bpmnElement="Fluxo_4">
+        <di:waypoint x="600" y="220" />
+        <di:waypoint x="600" y="255" />
+        <di:waypoint x="705" y="255" />
+        <bpmndi:BPMNLabel><dc:Bounds x="606" y="230" width="34" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_5_di" bpmnElement="Fluxo_5">
+        <di:waypoint x="845" y="135" />
+        <di:waypoint x="862" y="135" />
+        <di:waypoint x="862" y="460" />
+        <di:waypoint x="880" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_6_di" bpmnElement="Fluxo_6">
+        <di:waypoint x="845" y="255" />
+        <di:waypoint x="862" y="255" />
+        <di:waypoint x="862" y="460" />
+        <di:waypoint x="880" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_7_di" bpmnElement="Fluxo_7">
+        <di:waypoint x="1020" y="460" />
+        <di:waypoint x="1100" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_8_di" bpmnElement="Fluxo_8">
+        <di:waypoint x="1125" y="485" />
+        <di:waypoint x="1125" y="725" />
+        <di:waypoint x="1230" y="725" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1131" y="597" width="34" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_9_di" bpmnElement="Fluxo_9">
+        <di:waypoint x="1125" y="435" />
+        <di:waypoint x="1125" y="396" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1131" y="408" width="34" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_10_di" bpmnElement="Fluxo_10">
+        <di:waypoint x="1125" y="324" />
+        <di:waypoint x="1125" y="255" />
+        <di:waypoint x="1282" y="255" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_11_di" bpmnElement="Fluxo_11">
+        <di:waypoint x="1370" y="725" />
+        <di:waypoint x="1450" y="725" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_12_di" bpmnElement="Fluxo_12">
+        <di:waypoint x="1475" y="700" />
+        <di:waypoint x="1475" y="400" />
+        <di:waypoint x="1580" y="400" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1481" y="542" width="34" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_13_di" bpmnElement="Fluxo_13">
+        <di:waypoint x="1500" y="725" />
+        <di:waypoint x="1540" y="725" />
+        <di:waypoint x="1540" y="520" />
+        <di:waypoint x="1580" y="520" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1505" y="705" width="34" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_14_di" bpmnElement="Fluxo_14">
+        <di:waypoint x="1720" y="400" />
+        <di:waypoint x="1745" y="400" />
+        <di:waypoint x="1745" y="135" />
+        <di:waypoint x="1807" y="135" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_15_di" bpmnElement="Fluxo_15">
+        <di:waypoint x="1720" y="520" />
+        <di:waypoint x="1790" y="520" />
+        <di:waypoint x="1790" y="255" />
+        <di:waypoint x="1807" y="255" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_16_di" bpmnElement="Fluxo_16">
+        <di:waypoint x="268" y="785" />
+        <di:waypoint x="355" y="785" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_17_di" bpmnElement="Fluxo_17">
+        <di:waypoint x="495" y="785" />
+        <di:waypoint x="512" y="785" />
+        <di:waypoint x="512" y="550" />
+        <di:waypoint x="530" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_18_di" bpmnElement="Fluxo_18">
+        <di:waypoint x="670" y="550" />
+        <di:waypoint x="714" y="550" />
+        <di:waypoint x="714" y="785" />
+        <di:waypoint x="757" y="785" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Nota_1_di" bpmnElement="Nota_1">
+        <dc:Bounds x="880" y="90" width="210" height="60" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

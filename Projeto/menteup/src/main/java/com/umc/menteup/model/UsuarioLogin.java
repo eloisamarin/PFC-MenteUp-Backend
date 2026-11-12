@@ -1,10 +1,20 @@
 package com.umc.menteup.model;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+
+// Entrada do /logar (usuario + senha) e também a resposta do login (token, nome, tipo...).
+// As validações só valem na entrada, onde há @Valid.
 public class UsuarioLogin {
 
     private Long id;
     private String nome;
+
+    @NotBlank(message = "O e-mail é obrigatório.")
+    @Email(message = "E-mail inválido.")
     private String usuario;
+
+    @NotBlank(message = "A senha é obrigatória.")
     private String senha;
     private String token;
     private String tipoUsuario;

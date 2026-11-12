@@ -154,7 +154,7 @@ public class PerfilIntegrationTest extends IntegracaoBase {
         assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(resposta.getBody()).containsEntry("codigo", "VALIDACAO_FALHOU");
         assertThat((Map<String, String>) resposta.getBody().get("campos"))
-                .containsEntry("novaSenha", "A nova senha deve ter no mínimo 8 caracteres");
+                .containsEntry("novaSenha", "A nova senha deve ter de 8 a 72 caracteres");
     }
 
     // ------------------------------------------------- POST /usuarios/me/exclusao
