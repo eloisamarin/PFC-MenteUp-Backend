@@ -25,7 +25,7 @@ class ConquistaRegrasTest {
     void primeiroAcessoIniciaSequenciaEmUm() {
         GamificacaoUsuario g = estado(0, 0, null);
         assertTrue(IntensivaoService.atualizarSequencia(g, HOJE));
-        assertEquals(99, g.getDiasConsecutivos());
+        assertEquals(1, g.getDiasConsecutivos());
         assertEquals(1, g.getMaiorSequencia());
         assertEquals(HOJE, g.getUltimoAcesso());
     }
