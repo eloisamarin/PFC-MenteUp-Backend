@@ -1,5 +1,8 @@
 package com.umc.menteup.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.umc.menteup.dto.EsqueciSenhaRequest;
 import com.umc.menteup.dto.PrimeiroAcessoRequest;
 import com.umc.menteup.dto.RedefinirSenhaRequest;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/usuarios/senha")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 
+@Tag(name = "Usuários e login", description = "Cadastro, login com código de 2 etapas e gestão de usuários")
 public class RedefinicaoSenhaController {
     private final RedefinicaoSenhaService redefinicaoSenhaService;
 
@@ -20,6 +24,7 @@ public class RedefinicaoSenhaController {
     }
 
     // POST /usuarios/senha/esqueci: sempre 204, exista o e-mail ou não
+    @Operation(summary = "Esqueci minha senha: envia o link por e-mail")
     @PostMapping("/esqueci")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void esqueciSenha(@Valid @RequestBody EsqueciSenhaRequest request) {
@@ -27,6 +32,7 @@ public class RedefinicaoSenhaController {
     }
 
     // POST /usuarios/senha/redefinir: troca a senha usando o token do link
+    @Operation(summary = "Cria a nova senha pelo link do e-mail")
     @PostMapping("/redefinir")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void redefinirSenha(@Valid @RequestBody RedefinirSenhaRequest request) {
@@ -34,6 +40,7 @@ public class RedefinicaoSenhaController {
     }
 
     // POST /usuarios/senha/primeiro-acesso: quem foi criado pelo administrador cria a senha e aceita o termo
+    @Operation(summary = "Primeiro acesso: aceita os termos e cria a senha")
     @PostMapping("/primeiro-acesso")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void primeiroAcesso(@Valid @RequestBody PrimeiroAcessoRequest request) {

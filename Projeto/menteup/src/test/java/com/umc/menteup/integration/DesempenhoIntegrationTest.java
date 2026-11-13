@@ -210,7 +210,8 @@ class DesempenhoIntegrationTest extends IntegracaoBase {
     // ------------------------------------------------------------------ Helpers
 
     /** Responde todas as perguntas e conclui a atividade, gerando o resultado do aluno. */
-    private void concluirAtividade(Sessao aluno, Long atividadeId, List<PerguntaCriada> perguntas, boolean acertarTodas) {
+    private void concluirAtividade(
+            Sessao aluno, Long atividadeId, List<PerguntaCriada> perguntas, boolean acertarTodas) {
         for (PerguntaCriada pergunta : perguntas) {
             // A primeira alternativa é a correta (regra do helper cadastrarQuestionario)
             Long alternativa = acertarTodas ? pergunta.alternativas().get(0) : pergunta.alternativas().get(1);

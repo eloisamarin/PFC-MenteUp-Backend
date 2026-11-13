@@ -1,5 +1,8 @@
 package com.umc.menteup.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.umc.menteup.dto.*;
 import com.umc.menteup.service.DesempenhoService;
 import jakarta.validation.Valid;
@@ -12,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/turmas")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
+@Tag(name = "Desempenho", description = "Desempenho da turma e do aluno, e comentários do professor")
 public class DesempenhoController {
 
     // O service onde estão as regras: quem pode ver e como os números são calculados
@@ -33,6 +37,7 @@ public class DesempenhoController {
      * e getName() devolve o e-mail do usuário logado. Assim, ninguém
      * consegue se passar por outra pessoa enviando outro e-mail na requisição.
      */
+    @Operation(summary = "Turmas para acompanhar o desempenho")
     @GetMapping("/minhas")
     public ResponseEntity<List<TurmaResponse>> listarTurmas(Authentication authentication) {
         return ResponseEntity.ok(desempenhoService.listarTurmas(authentication.getName()));
@@ -42,6 +47,7 @@ public class DesempenhoController {
     as atividades concluídas de cada aluno, além da média e da participação da turma.
      */
 
+    @Operation(summary = "Desempenho da turma")
     @GetMapping("/{id}/desempenho")
     public ResponseEntity<DesempenhoTurmaResponse> buscarDesempenho(
             @PathVariable Long id,
@@ -54,6 +60,7 @@ public class DesempenhoController {
      * O professor da turma (ou o administrador) comenta a atividade feita pelo aluno.
      * Enviar de novo substitui o comentário anterior.
      */
+    @Operation(summary = "Professor comenta o resultado de um aluno")
     @PutMapping("/{turmaId}/resultados/{resultadoId}/comentario")
     public ResponseEntity<ComentarioResponse> comentar(
             @PathVariable Long turmaId,
@@ -69,6 +76,7 @@ public class DesempenhoController {
      * GET /turmas/{turmaId}/alunos/{alunoId}/desempenho
      * Desempenho individual: atividades (com perguntas e comentário) e desafios do aluno.
      */
+    @Operation(summary = "Desempenho de um aluno na turma")
     @GetMapping("/{turmaId}/alunos/{alunoId}/desempenho")
     public ResponseEntity<DesempenhoIndividualResponse> buscarDesempenhoDoAluno(
             @PathVariable Long turmaId,

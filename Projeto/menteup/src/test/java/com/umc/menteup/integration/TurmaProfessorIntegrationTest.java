@@ -151,7 +151,9 @@ class TurmaProfessorIntegrationTest extends IntegracaoBase {
     private ResponseEntity<Map<String, Object>> criar(Sessao autor, String nome, Long professorId) {
         Map<String, Object> corpo = new HashMap<>();
         corpo.put("nome", nome);
-        if (professorId != null) corpo.put("professorId", professorId);
+        if (professorId != null) {
+            corpo.put("professorId", professorId);
+        }
 
         return client.post().uri("/turmas")
                 .header(HttpHeaders.AUTHORIZATION, autor.token())
@@ -165,7 +167,9 @@ class TurmaProfessorIntegrationTest extends IntegracaoBase {
         Map<String, Object> corpo = new HashMap<>();
         corpo.put("id", turmaId);
         corpo.put("nome", nome);
-        if (professorId != null) corpo.put("professorId", professorId);
+        if (professorId != null) {
+            corpo.put("professorId", professorId);
+        }
 
         return client.put().uri("/turmas")
                 .header(HttpHeaders.AUTHORIZATION, autor.token())

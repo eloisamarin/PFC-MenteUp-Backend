@@ -1,5 +1,8 @@
 package com.umc.menteup.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.umc.menteup.dto.LogSistemaResponse;
 import com.umc.menteup.model.AcaoLog;
 import com.umc.menteup.model.EntidadeLog;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/logs")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
+@Tag(name = "Logs do sistema", description = "Histórico de ações (somente administrador)")
 public class LogSistemaController {
     private final LogSistemaRepository logSistemaRepository;
 
@@ -23,6 +27,7 @@ public class LogSistemaController {
         this.logSistemaRepository = logSistemaRepository;
     }
 
+    @Operation(summary = "Lista os logs com filtros")
     @GetMapping
     public ResponseEntity<Page<LogSistemaResponse>> listar(
             @RequestParam(required = false) Long usuarioId,

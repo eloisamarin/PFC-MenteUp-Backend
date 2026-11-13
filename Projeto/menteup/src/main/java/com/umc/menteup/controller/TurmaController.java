@@ -1,12 +1,13 @@
 package com.umc.menteup.controller;
 
 import java.util.List;
-import java.util.Optional;
 
 import com.umc.menteup.model.Turma;
 import com.umc.menteup.repository.TurmaRepository;
 
 import com.umc.menteup.service.TurmaService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,14 +22,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.validation.Valid;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/turmas")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
+@Tag(name = "Turmas", description = "Criação de turmas e vínculo de alunos e professor")
 public class TurmaController {
 
     @Autowired
@@ -36,12 +36,13 @@ public class TurmaController {
 
     @Autowired
     private TurmaService turmaService;
-
+    @Operation(summary = "Lista todas as turmas")
     @GetMapping("/all")
     public ResponseEntity<List<Turma>> getAll() {
         return ResponseEntity.ok(turmaRepository.findAll());
     }
 
+    @Operation(summary = "Busca uma turma pelo id")
     @GetMapping("/{id}")
     public ResponseEntity<Turma> getById(@PathVariable Long id) {
         return turmaRepository.findById(id)
@@ -49,6 +50,7 @@ public class TurmaController {
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
+    @Operation(summary = "Busca turmas pelo nome")
     @GetMapping("/nome/{nome}")
     public ResponseEntity<List<Turma>> getAllByNome(
             @PathVariable String nome) {
@@ -59,6 +61,7 @@ public class TurmaController {
     }
 
     // Somente PROFESSOR ou ADMINISTRADOR realiza criação de Turma
+    @Operation(summary = "Cria uma turma (o administrador pode escolher o professor)")
     @PostMapping
     public ResponseEntity<Turma> post(
             @Valid @RequestBody Turma turma,
@@ -69,6 +72,7 @@ public class TurmaController {
     }
 
     // Somente PROFESSOR ou ADMINISTRADOR realiza vinculamento de alunos com Turmas
+    @Operation(summary = "Vincula um aluno à turma")
     @PostMapping("/{turmaId}/alunos/{alunoId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void vincularAluno(
@@ -80,6 +84,7 @@ public class TurmaController {
     }
 
     // Somente PROFESSOR ou ADMINISTRADOR remove alunos de Turmas
+    @Operation(summary = "Remove um aluno da turma")
     @DeleteMapping("/{turmaId}/alunos/{alunoId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removerAluno(
@@ -91,6 +96,7 @@ public class TurmaController {
     }
 
     // Somente PROFESSOR ou ADMINISTRADOR realiza atualizar a Turma
+    @Operation(summary = "Renomeia a turma ou troca o professor responsável")
     @PutMapping
     public ResponseEntity<Turma> put(
             @Valid @RequestBody Turma turma,
@@ -102,6 +108,7 @@ public class TurmaController {
 
     // Somente PROFESSOR ou ADMINISTRADOR deletar a turma
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Exclui a turma")
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id, Authentication authentication) {
 

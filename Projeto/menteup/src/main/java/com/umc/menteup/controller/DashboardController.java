@@ -1,5 +1,8 @@
 package com.umc.menteup.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 
 import com.umc.menteup.dto.DashboardDtos.AcertoTurma;
 import com.umc.menteup.dto.DashboardDtos.AcoesDia;
@@ -22,6 +25,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/dashboard")
+@Tag(name = "Dashboard (Grafana)", description = "Indicadores lidos pelo Grafana com o token da dashboard")
 public class DashboardController {
 
     private final DashboardService dashboardService;
@@ -30,11 +34,13 @@ public class DashboardController {
         this.dashboardService = dashboardService;
     }
 
+    @Operation(summary = "Números gerais (big numbers)")
     @GetMapping("/resumo")
     public Resumo resumo() {
         return dashboardService.resumo();
     }
 
+    @Operation(summary = "Atividades concluídas por dia")
     @GetMapping("/atividades-concluidas-por-dia")
     public List<ConclusoesDia> atividadesConcluidasPorDia(
             @RequestParam(required = false) Long de,
@@ -42,6 +48,7 @@ public class DashboardController {
         return dashboardService.atividadesConcluidasPorDia(de, ate);
     }
 
+    @Operation(summary = "Desafios por dia")
     @GetMapping("/desafios-por-dia")
     public List<DesafiosDia> desafiosPorDia(
             @RequestParam(required = false) Long de,
@@ -49,6 +56,7 @@ public class DashboardController {
         return dashboardService.desafiosPorDia(de, ate);
     }
 
+    @Operation(summary = "Ações no sistema por dia")
     @GetMapping("/acoes-por-dia")
     public List<AcoesDia> acoesPorDia(
             @RequestParam(required = false) Long de,
@@ -56,26 +64,31 @@ public class DashboardController {
         return dashboardService.acoesPorDia(de, ate);
     }
 
+    @Operation(summary = "Percentual de acerto por turma")
     @GetMapping("/acerto-por-turma")
     public List<AcertoTurma> acertoPorTurma() {
         return dashboardService.acertoPorTurma();
     }
 
+    @Operation(summary = "Alunos por turma")
     @GetMapping("/alunos-por-turma")
     public List<Item> alunosPorTurma() {
         return dashboardService.alunosPorTurma();
     }
 
+    @Operation(summary = "Atividades por tipo (template)")
     @GetMapping("/atividades-por-template")
     public List<Item> atividadesPorTemplate() {
         return dashboardService.atividadesPorTemplate();
     }
 
+    @Operation(summary = "Atividades por status")
     @GetMapping("/atividades-por-status")
     public List<Item> atividadesPorStatus() {
         return dashboardService.atividadesPorStatus();
     }
 
+    @Operation(summary = "Avatares mais escolhidos")
     @GetMapping("/avatares")
     public List<Item> avatares() {
         return dashboardService.avatares();
