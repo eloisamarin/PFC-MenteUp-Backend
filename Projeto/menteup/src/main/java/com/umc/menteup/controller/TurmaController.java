@@ -2,6 +2,7 @@ package com.umc.menteup.controller;
 
 import java.util.List;
 
+import com.umc.menteup.dto.ExclusaoTurmaResponse;
 import com.umc.menteup.model.Turma;
 import com.umc.menteup.repository.TurmaRepository;
 
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -36,10 +38,30 @@ public class TurmaController {
 
     @Autowired
     private TurmaService turmaService;
-    @Operation(summary = "Lista todas as turmas")
+    @Operation(summary = "Lista as turmas (as arquivadas só com incluirArquivadas=true)")
     @GetMapping("/all")
-    public ResponseEntity<List<Turma>> getAll() {
-        return ResponseEntity.ok(turmaRepository.findAll());
+    public ResponseEntity<List<Turma>> getAll(
+            @RequestParam(defaultValue = "false") boolean incluirArquivadas) {
+        return ResponseEntity.ok(turmaService.listar(incluirArquivadas));
+    }
+
+    @Operation(summary = "Verifica se a turma pode ser excluída e o que a impede")
+    @GetMapping("/{id}/exclusao")
+    public ResponseEntity<ExclusaoTurmaResponse> verificarExclusao(
+            @PathVariable Long id, Authentication authentication) {
+        return ResponseEntity.ok(turmaService.verificarExclusao(id, authentication.getName()));
+    }
+
+    @Operation(summary = "Arquiva a turma (some das listas e mantém o histórico)")
+    @PutMapping("/{id}/arquivar")
+    public ResponseEntity<Turma> arquivar(@PathVariable Long id, Authentication authentication) {
+        return ResponseEntity.ok(turmaService.alterarArquivamento(id, true, authentication.getName()));
+    }
+
+    @Operation(summary = "Desarquiva a turma")
+    @PutMapping("/{id}/desarquivar")
+    public ResponseEntity<Turma> desarquivar(@PathVariable Long id, Authentication authentication) {
+        return ResponseEntity.ok(turmaService.alterarArquivamento(id, false, authentication.getName()));
     }
 
     @Operation(summary = "Busca uma turma pelo id")

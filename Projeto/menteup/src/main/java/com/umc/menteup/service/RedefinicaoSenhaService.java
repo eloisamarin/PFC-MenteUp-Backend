@@ -86,7 +86,7 @@ public class RedefinicaoSenhaService {
     // POST /usuarios/senha/primeiro-acesso: cria a senha e registra o aceite do termo
     @Transactional
     public void concluirPrimeiroAcesso(String token, String novaSenha, boolean aceitouTermos) {
-        RegraSenha.exigirTamanhoEmBytes(novaSenha);
+        RegraSenha.validarNovaSenha(novaSenha);
         if (!aceitouTermos) {
             throw ApiException.requisicaoInvalida("TERMO_NAO_ACEITO",
                     "Para usar o MenteUp, é preciso aceitar o Termo de Aceite e a Política de Privacidade.");
@@ -144,7 +144,7 @@ public class RedefinicaoSenhaService {
     // POST /usuarios/senha/redefinir
     @Transactional
     public void redefinir(String token, String novaSenha) {
-        RegraSenha.exigirTamanhoEmBytes(novaSenha);
+        RegraSenha.validarNovaSenha(novaSenha);
         // Link de convite não serve aqui: senão daria para criar a senha sem aceitar o termo
         TokenRedefinicaoSenha registro = tokenValido(token, false);
 

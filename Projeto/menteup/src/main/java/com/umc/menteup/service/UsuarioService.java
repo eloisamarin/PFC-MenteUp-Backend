@@ -144,6 +144,9 @@ public class UsuarioService {
                     "Para criar a conta, é preciso aceitar o Termo de Aceite e a Política de Privacidade.");
         }
 
+        // RF01, RF03 a RF06 e RF09: senha forte, sem espaço nas pontas
+        RegraSenha.validarNovaSenha(usuario.getSenha());
+
         if (usuarioRepository.findByUsuario(usuario.getUsuario()).isPresent()) {
             return Optional.empty();
         }
@@ -208,7 +211,6 @@ public class UsuarioService {
     }
 
     private Usuario salvarNovo(Usuario usuario) {
-        RegraSenha.exigirTamanhoEmBytes(usuario.getSenha());
         usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
         usuario.setId(null);
         return usuarioRepository.save(usuario);

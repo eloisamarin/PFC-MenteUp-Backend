@@ -25,4 +25,6 @@ public interface ProgressoAtividadeRepository extends JpaRepository<ProgressoAti
 
     ///Impede a troca das questões depois de já enviado por algum aluno
     boolean existsByAtividade_Id(Long atividadeId);
+
+    long countByAtividade_Turma_Id(Long turmaId);
 }

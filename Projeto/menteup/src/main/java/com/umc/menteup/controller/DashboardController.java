@@ -1,5 +1,7 @@
 package com.umc.menteup.controller;
 
+import com.umc.menteup.dto.DashboardDtos.Painel;
+import org.springframework.security.core.Authentication;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -25,13 +27,24 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/dashboard")
-@Tag(name = "Dashboard (Grafana)", description = "Indicadores lidos pelo Grafana com o token da dashboard")
+@Tag(name = "Dashboard", description = "Painel do sistema por perfil e indicadores lidos pelo Grafana")
 public class DashboardController {
 
     private final DashboardService dashboardService;
 
     public DashboardController(DashboardService dashboardService) {
         this.dashboardService = dashboardService;
+    }
+
+    @Operation(summary = "Painel do sistema com filtros (aluno: os próprios dados; professor: as turmas dele; "
+            + "administrador: tudo)")
+    @GetMapping("/painel")
+    public Painel painel(
+            @RequestParam(defaultValue = "30") int dias,
+            @RequestParam(required = false) Long turmaId,
+            @RequestParam(required = false) Long alunoId,
+            Authentication authentication) {
+        return dashboardService.painel(authentication.getName(), dias, turmaId, alunoId);
     }
 
     @Operation(summary = "Números gerais (big numbers)")

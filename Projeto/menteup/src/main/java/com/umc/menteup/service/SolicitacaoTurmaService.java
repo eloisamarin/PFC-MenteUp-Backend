@@ -59,6 +59,8 @@ public class SolicitacaoTurmaService {
                 .forEach(s -> pendentes.putIfAbsent(s.getTurma().getId(), s));
 
         return turmaRepository.findAll().stream()
+                // Arquivada só aparece para quem já é da turma (pode pedir para sair)
+                .filter(turma -> !turma.isArquivada() || estaMatriculado(turma.getId(), aluno.getId()))
                 .sorted(Comparator.comparing(Turma::getNome, String.CASE_INSENSITIVE_ORDER))
                 .map(turma -> {
                     SolicitacaoTurma pendente = pendentes.get(turma.getId());
@@ -90,6 +92,10 @@ public class SolicitacaoTurmaService {
 
         if (tipo == Tipo.ENTRADA && matriculado) {
             throw ApiException.conflito("JA_MATRICULADO", "Você já está nesta turma.");
+        }
+        // Turma arquivada não recebe alunos novos (sair continua permitido)
+        if (tipo == Tipo.ENTRADA) {
+            TurmaService.exigirTurmaAtiva(turma);
         }
         if (tipo == Tipo.SAIDA && !matriculado) {
             throw ApiException.conflito("NAO_MATRICULADO", "Você não está nesta turma.");
@@ -136,6 +142,8 @@ public class SolicitacaoTurmaService {
         Usuario aluno = solicitacao.getAluno();
 
         if (solicitacao.getTipo() == Tipo.ENTRADA) {
+            // Pedido feito antes de a turma ser arquivada: não pode mais ser aprovado
+            TurmaService.exigirTurmaAtiva(turma);
             if (!estaMatriculado(turma.getId(), aluno.getId())) {
                 turma.getAlunos().add(aluno);
             }

@@ -48,7 +48,8 @@ public class RankingService {
                         aluno.getNomeUsuario(),
                         pontos(atividades, aluno.getId()) + pontos(desafios, aluno.getId())
                                 + pontos(conquistas, aluno.getId()),
-                        quantidade(atividades, aluno.getId())
+                        quantidade(atividades, aluno.getId()),
+                        aluno.getAvatar() != null ? aluno.getAvatar().name() : null
                 ))
                 ///Só entra quem já fez alguma coisa
                 .filter(r -> r.pontuacaoTotal() > 0 || r.atividadeConcluidas() > 0)

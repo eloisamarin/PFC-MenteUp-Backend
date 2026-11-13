@@ -27,7 +27,7 @@ import com.umc.menteup.repository.UsuarioRepository;
  */
 class RedefinicaoSenhaIntegrationTest extends IntegracaoBase {
 
-    private static final String NOVA_SENHA = "nova-senha-123";
+    private static final String NOVA_SENHA = "Nova-Senha-123";
     private static final String SENHA_ERRADA = "senha-errada-123";
 
     @Autowired
@@ -113,7 +113,7 @@ class RedefinicaoSenhaIntegrationTest extends IntegracaoBase {
         redefinir(token, NOVA_SENHA);
 
         // Act
-        ResponseEntity<Map<String, Object>> resposta = redefinir(token, "outra-senha-123");
+        ResponseEntity<Map<String, Object>> resposta = redefinir(token, "Outra-Senha-123");
 
         // Assert
         assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);

@@ -28,7 +28,7 @@ import com.umc.menteup.repository.UsuarioRepository;
  */
 class PrimeiroAcessoIntegrationTest extends IntegracaoBase {
 
-    private static final String NOVA_SENHA = "senha-do-convite-123";
+    private static final String NOVA_SENHA = "Senha-do-Convite-123";
 
     @Autowired
     private UsuarioRepository usuarioRepository;

@@ -10,6 +10,7 @@ import com.umc.menteup.repository.TurmaRepository;
 import com.umc.menteup.service.AtividadeService;
 import com.umc.menteup.service.LogSistemaService;
 import com.umc.menteup.service.ProgressoAtividadeService;
+import com.umc.menteup.service.TurmaService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
@@ -87,6 +88,7 @@ public class AtividadeController {
             // Professor só cria atividade nas turmas dele. O autor é quem está logado (token),
             // nunca um "usuario" vindo no corpo da requisição.
             Usuario autor = atividadeService.exigirPodeAlterar(turma, authentication.getName());
+            TurmaService.exigirTurmaAtiva(turma);
 
             atividade.setId(null);
             atividade.setUsuario(autor);
@@ -150,6 +152,10 @@ public class AtividadeController {
         // Professor só edita atividade da turma dele e não pode mover para a turma de outro professor
         atividadeService.exigirPodeAlterar(existente.getTurma(), authentication.getName());
         atividadeService.exigirPodeAlterar(novaTurma, authentication.getName());
+        // Mudar a atividade para outra turma: só se ela não estiver arquivada
+        if (!novaTurma.getId().equals(existente.getTurma().getId())) {
+            TurmaService.exigirTurmaAtiva(novaTurma);
+        }
 
         StatusAtividade statusAnterior = existente.getStatus();
 

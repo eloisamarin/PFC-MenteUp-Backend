@@ -63,6 +63,7 @@ public class DesafioService {
 
         Turma turma = carregarTurma(request.turmaId());
         exigirPodeAlterar(turma, autor);
+        TurmaService.exigirTurmaAtiva(turma);
 
         Desafio desafio = new Desafio();
         desafio.setTitulo(request.titulo());
@@ -114,6 +115,9 @@ public class DesafioService {
         Turma novaTurma = carregarTurma(request.turmaId());
         exigirPodeAlterar(desafio.getTurma(), autor);
         exigirPodeAlterar(novaTurma, autor);
+        if (!novaTurma.getId().equals(desafio.getTurma().getId())) {
+            TurmaService.exigirTurmaAtiva(novaTurma);
+        }
 
         exigirAguardando(desafio);
 
@@ -314,6 +318,7 @@ public class DesafioService {
 
         Map<Long, int[]> placar = new LinkedHashMap<>();
         Map<Long, String> nomes = new LinkedHashMap<>();
+        Map<Long, String> avatares = new LinkedHashMap<>();
 
         for (RespostaDesafio resposta : respostaRepository.buscarTodasDoDesafio(desafioId)) {
             if (resposta.getPergunta().getId().equals(perguntaAberta)) {
@@ -322,6 +327,9 @@ public class DesafioService {
 
             Long alunoId = resposta.getUsuario().getId();
             nomes.putIfAbsent(alunoId, resposta.getUsuario().getNomeUsuario());
+            if (resposta.getUsuario().getAvatar() != null) {
+                avatares.putIfAbsent(alunoId, resposta.getUsuario().getAvatar().name());
+            }
 
             int[] pontosEAcertos = placar.computeIfAbsent(alunoId, id -> new int[2]);
             pontosEAcertos[0] += resposta.getPontos();
@@ -339,7 +347,8 @@ public class DesafioService {
         for (Long alunoId : ordenados) {
             int[] pontosEAcertos = placar.get(alunoId);
             ranking.add(new RankingDesafioResponse(
-                    ranking.size() + 1, alunoId, nomes.get(alunoId), pontosEAcertos[0], pontosEAcertos[1]));
+                    ranking.size() + 1, alunoId, nomes.get(alunoId), pontosEAcertos[0], pontosEAcertos[1],
+                    avatares.get(alunoId)));
         }
 
         return ranking;

@@ -45,7 +45,8 @@ import org.junit.jupiter.api.Tag;
 abstract class IntegracaoBase {
 
     // Gerada a cada execução: é só de teste e não deixa nenhuma senha fixa no repositório
-    protected static final String SENHA = UUID.randomUUID().toString();
+    // Atende às regras de senha forte (maiúscula, minúscula, número e caractere especial)
+    protected static final String SENHA = "Aa1!" + UUID.randomUUID();
 
     protected static final ParameterizedTypeReference<Map<String, Object>> JSON =
             new ParameterizedTypeReference<>() {
@@ -247,6 +248,24 @@ abstract class IntegracaoBase {
                                 .map(IntegracaoBase::id)
                                 .toList()))
                 .toList();
+    }
+
+    /** Responde todas as perguntas (certas ou erradas) e conclui a atividade. */
+    protected void concluirAtividade(
+            Sessao aluno, Long atividadeId, List<PerguntaCriada> perguntas, boolean acertarTodas) {
+        for (PerguntaCriada pergunta : perguntas) {
+            // A primeira alternativa é a correta (regra do helper cadastrarQuestionario)
+            Long alternativa = acertarTodas ? pergunta.alternativas().get(0) : pergunta.alternativas().get(1);
+            responder(aluno, atividadeId, pergunta.id(), alternativa);
+        }
+
+        ResponseEntity<Map<String, Object>> conclusao = client.post()
+                .uri("/atividades/{id}/respostas", atividadeId)
+                .header(HttpHeaders.AUTHORIZATION, aluno.token())
+                .retrieve()
+                .toEntity(JSON);
+
+        assertThat(conclusao.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     }
 
     protected ResponseEntity<Map<String, Object>> responder(
