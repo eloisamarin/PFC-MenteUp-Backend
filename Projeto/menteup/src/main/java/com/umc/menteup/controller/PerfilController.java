@@ -1,5 +1,8 @@
 package com.umc.menteup.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.umc.menteup.dto.AlterarAvatarRequest;
 import com.umc.menteup.dto.AlterarSenhaRequest;
 import com.umc.menteup.dto.ExcluirContaRequest;
@@ -14,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/usuarios/me")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
+@Tag(name = "Meu perfil", description = "Dados, senha, avatar e exclusão da conta de quem está logado")
 public class PerfilController {
     private final PerfilService perfilService;
 
@@ -22,12 +26,14 @@ public class PerfilController {
     }
 
     // GET /usuarios/me: perfil
+    @Operation(summary = "Mostra o perfil de quem está logado")
     @GetMapping
     public ResponseEntity<PerfilResponse> buscarPerfil(Authentication authentication) {
         return ResponseEntity.ok(perfilService.buscarPerfil(authentication.getName()));
     }
 
     // PUT /usuarios/me/senha: troca a senha, confirmando a atual
+    @Operation(summary = "Troca a senha (pede a senha atual)")
     @PutMapping("/senha")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void alterarSenha(
@@ -37,6 +43,7 @@ public class PerfilController {
         perfilService.alterarSenha(authentication.getName(), request.senhaAtual(), request.novaSenha());
     }
     // POST /usuarios/me/exclusao: anonimiza os dados do próprio usuário
+    @Operation(summary = "Exclui a própria conta")
     @PostMapping("/exclusao")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void excluirConta(
@@ -46,6 +53,7 @@ public class PerfilController {
         perfilService.excluirConta(authentication.getName(), request.senha());
     }
     // PUT /usuarios/me/avatar: escolhe a foto de perfil
+    @Operation(summary = "Escolhe o avatar")
     @PutMapping("/avatar")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void alterarAvatar(

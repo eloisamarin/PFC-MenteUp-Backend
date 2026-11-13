@@ -1,5 +1,8 @@
 package com.umc.menteup.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.umc.menteup.dto.*;
 import com.umc.menteup.model.*;
 import com.umc.menteup.repository.AtividadeRepository;
@@ -21,6 +24,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/atividades")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
+@Tag(name = "Atividades", description = "Criação, questionário, progresso, respostas e exclusão de atividades")
 public class AtividadeController {
 
     @Autowired
@@ -38,11 +42,13 @@ public class AtividadeController {
     @Autowired
     private LogSistemaService logSistemaService;
 
+    @Operation(summary = "Lista todas as atividades")
     @GetMapping
     public ResponseEntity<List<Atividade>> getAll() {
         return ResponseEntity.ok(atividadeRepository.findAll());
     }
 
+    @Operation(summary = "Busca a atividade com as perguntas")
     @GetMapping("/{id}")
     public ResponseEntity<QuestionarioResponse> getById(
             @PathVariable Long id,
@@ -56,6 +62,7 @@ public class AtividadeController {
         );
     }
 
+    @Operation(summary = "Busca atividades pelo título")
     @GetMapping("/titulo/{titulo}")
     public ResponseEntity<List<Atividade>> getByTitulo(
             @PathVariable String titulo) {
@@ -65,6 +72,7 @@ public class AtividadeController {
         );
     }
 
+    @Operation(summary = "Cria uma atividade")
     @PostMapping
     public ResponseEntity<Atividade> post(
             @Valid @RequestBody Atividade atividade,
@@ -112,6 +120,7 @@ public class AtividadeController {
         );
     }
 
+    @Operation(summary = "Edita ou publica a atividade")
     @PutMapping
     public ResponseEntity<Atividade> put(
             @Valid @RequestBody Atividade atividade,
@@ -194,6 +203,7 @@ public class AtividadeController {
         return ResponseEntity.ok(salva);
     }
 
+    @Operation(summary = "Salva a resposta do aluno em andamento")
     @PutMapping("/{id}/progresso")
     public ResponseEntity<ProgressoAtividadeResponse> salvarProgresso(
             @PathVariable Long id,
@@ -210,6 +220,7 @@ public class AtividadeController {
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Exclui a atividade")
     @DeleteMapping("/{id}")
     public void delete(
             @PathVariable Long id,

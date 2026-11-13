@@ -1,5 +1,8 @@
 package com.umc.menteup.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 
 import java.util.List;
 import java.util.Optional;
@@ -33,23 +36,27 @@ import org.springframework.security.core.Authentication;
 @RestController
 @RequestMapping("/usuarios")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
+@Tag(name = "Usuários e login", description = "Cadastro, login com código de 2 etapas e gestão de usuários")
 public class UsuarioController {
 
     @Autowired
     private UsuarioService usuarioService;
 
     // Administrador: com e-mail. Professor e aluno: só id, nome e tipo (LGPD)
+    @Operation(summary = "Lista os usuários (e-mail só para administrador; professor vê o dos alunos)")
     @GetMapping("/all")
     public ResponseEntity<List<UsuarioListagemResponse>> getAll(Authentication authentication) {
         return ResponseEntity.ok(usuarioService.listar(authentication.getName()));
     }
 
     // Só o próprio usuário ou o administrador
+    @Operation(summary = "Busca um usuário (só o próprio ou o administrador)")
     @GetMapping("/{id}")
     public ResponseEntity<UsuarioListagemResponse> getById(@PathVariable Long id, Authentication authentication) {
         return ResponseEntity.ok(usuarioService.buscarPorId(id, authentication.getName()));
     }
 
+    @Operation(summary = "Cadastro público de aluno ou professor")
     @PostMapping("/cadastrar")
     public ResponseEntity<Usuario> post(@Valid @RequestBody Usuario usuario) {
         return usuarioService.cadastrarUsuario(usuario)
@@ -59,6 +66,7 @@ public class UsuarioController {
 
     // Só o administrador: cria aluno, professor ou outro administrador.
     // A pessoa recebe um e-mail para criar a senha e aceitar o termo.
+    @Operation(summary = "Administrador cria usuário e envia convite por e-mail")
     @PostMapping
     public ResponseEntity<Usuario> criarPorAdministrador(
             @Valid @RequestBody NovoUsuarioRequest pedido,
@@ -68,6 +76,7 @@ public class UsuarioController {
                 .body(usuarioService.criarUsuarioPorAdministrador(pedido, authentication.getName()));
     }
 
+    @Operation(summary = "Atualiza nome, e-mail e tipo do usuário")
     @PutMapping("/atualizar")
     public ResponseEntity<Usuario> put(
             @Valid @RequestBody AtualizarUsuarioRequest dados,
@@ -79,6 +88,7 @@ public class UsuarioController {
     }
 
     // Passo 1: valida usuário e senha e envia o código 2FA por e-mail
+    @Operation(summary = "Login, passo 1: confere e-mail e senha e envia o código")
     @PostMapping("/logar")
     public ResponseEntity<UsuarioLogin> autenticar(@Valid @RequestBody Optional<UsuarioLogin> usuarioLogin) {
         return usuarioService.autenticarUsuario(usuarioLogin)
@@ -87,6 +97,7 @@ public class UsuarioController {
     }
 
     // Passo 2: valida o código 2FA e devolve o token JWT
+    @Operation(summary = "Login, passo 2: confere o código e devolve o token")
     @PostMapping("/validar-2fa")
     public ResponseEntity<UsuarioLogin> validarCodigo2FA(@Valid @RequestBody Codigo2FARequest request) {
         return usuarioService.validarCodigo2FA(request.getUsuario(), request.getCodigo())
@@ -95,12 +106,14 @@ public class UsuarioController {
     }
 
     // "Reenviar código": manda um novo código 2FA para quem acabou de entrar com a senha
+    @Operation(summary = "Envia um novo código de login")
     @PostMapping("/reenviar-2fa")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void reenviarCodigo2FA(@Valid @RequestBody ReenviarCodigo2FARequest request) {
         usuarioService.reenviarCodigo2FA(request.usuario());
     }
 
+    @Operation(summary = "Registra o token do celular para notificações")
     @PostMapping("/fcm-token")
     public ResponseEntity<?> registrarToken(
             @Valid @RequestBody FcmTokenRequest request,
