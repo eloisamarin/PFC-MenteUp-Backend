@@ -36,6 +36,8 @@ public interface ResultadoAtividadeRepository extends JpaRepository<ResultadoAti
     ///Impede que as questões sejam trocadas depois do envio de algum aluno
     boolean existsByAtividade_Id(Long atividadeId);
 
+    long countByAtividade_Turma_Id(Long turmaId);
+
     @Query("""
         SELECT new com.umc.menteup.dto.ResumoDesempenhoAluno(
             r.usuario.id, SUM(r.pontuacao), SUM(r.acertos), COUNT(r.id)

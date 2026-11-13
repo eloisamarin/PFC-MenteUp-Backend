@@ -5,6 +5,8 @@ public record RankingDesafioResponse(
         Long usuarioId,
         String nomeUsuario,
         Integer pontos,
-        Integer acertos
+        Integer acertos,
+        // Animal escolhido no perfil (ex.: "PANDA"); null mostra as iniciais
+        String avatar
 ) {
 }

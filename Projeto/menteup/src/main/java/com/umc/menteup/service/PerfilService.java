@@ -91,7 +91,7 @@ public class PerfilService {
     }
     @Transactional
     public void alterarSenha(String username, String senhaAtual, String novaSenha) {
-        RegraSenha.exigirTamanhoEmBytes(novaSenha);
+        RegraSenha.validarNovaSenha(novaSenha);
         Usuario usuario = carregarUsuario(username);
 
         // Verificação de senha antiga para atuzalição da nova

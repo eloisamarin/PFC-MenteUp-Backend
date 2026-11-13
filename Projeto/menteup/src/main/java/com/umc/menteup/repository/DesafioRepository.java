@@ -11,6 +11,8 @@ public interface DesafioRepository extends JpaRepository<Desafio, Long> {
 
     List<Desafio> findAllByOrderByDataCriacaoDesc();
 
+    long countByTurma_Id(Long turmaId);
+
     @Query("""
             select d from Desafio d
             join fetch d.turma t

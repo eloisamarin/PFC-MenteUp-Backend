@@ -66,6 +66,10 @@ public class SecurityConfig {
                         .requestMatchers("/logs/**").hasRole("ADMINISTRADOR")
                         // Criar usuário de qualquer tipo (inclusive administrador): só administrador
                         .requestMatchers(HttpMethod.POST, "/usuarios").hasRole("ADMINISTRADOR")
+                        // Painel do sistema: todo usuário logado (o service recorta os dados por perfil).
+                        // O token do Grafana não serve aqui.
+                        .requestMatchers(HttpMethod.GET, "/dashboard/painel")
+                        .hasAnyRole("ALUNO", "PROFESSOR", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.GET, "/dashboard/**").hasAnyRole("ADMINISTRADOR", "DASHBOARD")
                         .requestMatchers("/dashboard/**").denyAll()
                         ///só os professores e administradores cadastram ou editam questões

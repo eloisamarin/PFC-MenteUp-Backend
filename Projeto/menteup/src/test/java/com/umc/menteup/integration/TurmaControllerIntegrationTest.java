@@ -483,7 +483,7 @@ class TurmaControllerIntegrationTest extends IntegracaoBase {
     }
 
     @Test
-    void excluir_turmaComAtividadeEAluno_deveRemoverAAtividadeEManterOAluno() {
+    void excluir_turmaComAlunoVinculado_deveRetornar409ENaoExcluir() {
         // Arrange
         Sessao professor = novaSessao("PROFESSOR");
         Sessao aluno = novaSessao("ALUNO");
@@ -494,12 +494,49 @@ class TurmaControllerIntegrationTest extends IntegracaoBase {
         // Act
         ResponseEntity<Map<String, Object>> resposta = excluir(professor, turmaId);
 
+        // Assert: recusado; a turma, a atividade e o vínculo do aluno continuam
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(resposta.getBody()).containsEntry("codigo", "TURMA_COM_ALUNOS");
+        assertThat((String) resposta.getBody().get("mensagem")).contains("1 aluno vinculado");
+        assertThat(turmaRepository.existsById(turmaId)).isTrue();
+        assertThat(atividadeRepository.findById(atividadeId)).isPresent();
+        assertThat(turmaRepository.findAllByAlunos_Id(aluno.id())).hasSize(1);
+    }
+
+    @Test
+    void excluir_mesmoComoAdministrador_turmaComAlunosDeveSerRecusada() {
+        Sessao administrador = novaSessao("ADMINISTRADOR");
+        Sessao aluno = novaSessao("ALUNO");
+        Long turmaId = criarTurma(administrador);
+        vincularAluno(administrador, turmaId, aluno.id());
+
+        ResponseEntity<Map<String, Object>> resposta = excluir(administrador, turmaId);
+
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(turmaRepository.existsById(turmaId)).isTrue();
+    }
+
+    @Test
+    void excluir_depoisDeRemoverOsAlunos_deveExcluirATurmaEAtividadesEManterOAluno() {
+        // Arrange: o aluno é removido antes
+        Sessao professor = novaSessao("PROFESSOR");
+        Sessao aluno = novaSessao("ALUNO");
+        Long turmaId = criarTurma(professor);
+        vincularAluno(professor, turmaId, aluno.id());
+        Long atividadeId = criarAtividade(professor, turmaId, "PENDENTE");
+        client.delete().uri("/turmas/{turmaId}/alunos/{alunoId}", turmaId, aluno.id())
+                .header(HttpHeaders.AUTHORIZATION, professor.token())
+                .retrieve()
+                .toBodilessEntity();
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta = excluir(professor, turmaId);
+
         // Assert
         assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
         assertThat(atividadeRepository.findById(atividadeId)).isEmpty();
-        assertThat(turmaRepository.findAllByAlunos_Id(aluno.id())).isEmpty();
 
-        // Só o próprio usuário ou o administrador consultam /usuarios/{id}
+        // O aluno continua cadastrado (só o próprio usuário ou o administrador consultam /usuarios/{id})
         ResponseEntity<Void> alunoAposExclusao = client.get().uri("/usuarios/{id}", aluno.id())
                 .header(HttpHeaders.AUTHORIZATION, novaSessao("ADMINISTRADOR").token())
                 .retrieve()

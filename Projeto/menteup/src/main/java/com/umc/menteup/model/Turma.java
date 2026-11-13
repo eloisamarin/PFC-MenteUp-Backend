@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import jakarta.persistence.FetchType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -67,5 +68,22 @@ public class Turma {
     }
 
     public record ProfessorResponsavel(Long id, String nome) {
+    }
+
+    // Turma arquivada: sai das listas e não recebe atividades, desafios nem alunos novos,
+    // mas o histórico (resultados, desafios e pontos dos alunos) continua valendo.
+    // Só muda pelas rotas de arquivar/desarquivar; linhas antigas do banco (nulo) contam como ativas.
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    @Column(name = "arquivada", columnDefinition = "boolean default false")
+    private Boolean arquivada = false;
+
+    @JsonProperty(value = "arquivada", access = JsonProperty.Access.READ_ONLY)
+    public boolean isArquivada() {
+        return Boolean.TRUE.equals(arquivada);
+    }
+
+    public void setArquivada(boolean arquivada) {
+        this.arquivada = arquivada;
     }
 }

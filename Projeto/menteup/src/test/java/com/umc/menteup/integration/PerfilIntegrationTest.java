@@ -17,7 +17,7 @@ import java.util.Map;
 
 
 public class PerfilIntegrationTest extends IntegracaoBase {
-    private static final String NOVA_SENHA = "nova-senha-123";
+    private static final String NOVA_SENHA = "Nova-Senha-123";
 
     @Autowired
     private UsuarioRepository usuarioRepository;

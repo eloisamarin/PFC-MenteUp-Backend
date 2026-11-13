@@ -18,17 +18,24 @@ public record UsuarioListagemResponse(
         String nomeUsuario,
         String tipoUsuario,
         String usuario,
-        Boolean aguardandoPrimeiroAcesso
+        Boolean aguardandoPrimeiroAcesso,
+        // Animal escolhido no perfil (ex.: "PANDA"); ausente mostra as iniciais
+        String avatar
 ) {
+
+    private static String avatarDe(Usuario usuario) {
+        return usuario.getAvatar() != null ? usuario.getAvatar().name() : null;
+    }
 
     public static UsuarioListagemResponse resumido(Usuario usuario) {
         return new UsuarioListagemResponse(
-                usuario.getId(), usuario.getNomeUsuario(), usuario.getTipoUsuario(), null, null);
+                usuario.getId(), usuario.getNomeUsuario(), usuario.getTipoUsuario(), null, null, avatarDe(usuario));
     }
 
     public static UsuarioListagemResponse comEmail(Usuario usuario) {
         return new UsuarioListagemResponse(
-                usuario.getId(), usuario.getNomeUsuario(), usuario.getTipoUsuario(), usuario.getUsuario(), null);
+                usuario.getId(), usuario.getNomeUsuario(), usuario.getTipoUsuario(), usuario.getUsuario(), null,
+                avatarDe(usuario));
     }
 
     public static UsuarioListagemResponse completo(Usuario usuario) {
@@ -37,6 +44,7 @@ public record UsuarioListagemResponse(
                 usuario.getNomeUsuario(),
                 usuario.getTipoUsuario(),
                 usuario.getUsuario(),
-                usuario.isAguardandoPrimeiroAcesso());
+                usuario.isAguardandoPrimeiroAcesso(),
+                avatarDe(usuario));
     }
 }

@@ -20,8 +20,8 @@ class SenhaEmBytesIntegrationTest extends IntegracaoBase {
 
     // 40 caracteres (passa no @Size), mas 80 bytes
     private static final String SENHA_COM_ACENTOS_LONGA = "á".repeat(40);
-    // 36 caracteres e exatamente 72 bytes: ainda vale
-    private static final String SENHA_NO_LIMITE = "ç".repeat(36);
+    // 38 caracteres e exatamente 72 bytes (4 de "Aa1!" + 34 "ç" de 2 bytes): ainda vale
+    private static final String SENHA_NO_LIMITE = "Aa1!" + "ç".repeat(34);
 
     @Test
     void senhasDoTeste_temOsTamanhosEsperados() {
