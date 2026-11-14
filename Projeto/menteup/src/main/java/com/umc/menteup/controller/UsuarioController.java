@@ -87,6 +87,18 @@ public class UsuarioController {
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
+    @Operation(summary = "Administrador aprova o pedido de cadastro de professor")
+    @PutMapping("/{id}/aprovar")
+    public ResponseEntity<UsuarioListagemResponse> aprovarProfessor(@PathVariable Long id, Authentication authentication) {
+        return ResponseEntity.ok(usuarioService.aprovarProfessor(id, authentication.getName()));
+    }
+
+    @Operation(summary = "Administrador rejeita o pedido de cadastro de professor")
+    @PutMapping("/{id}/rejeitar")
+    public ResponseEntity<UsuarioListagemResponse> rejeitarProfessor(@PathVariable Long id, Authentication authentication) {
+        return ResponseEntity.ok(usuarioService.rejeitarProfessor(id, authentication.getName()));
+    }
+
     // Passo 1: valida usuário e senha e envia o código 2FA por e-mail
     @Operation(summary = "Login, passo 1: confere e-mail e senha e envia o código")
     @PostMapping("/logar")

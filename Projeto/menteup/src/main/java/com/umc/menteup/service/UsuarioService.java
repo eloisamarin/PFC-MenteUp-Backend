@@ -9,6 +9,7 @@ import com.umc.menteup.model.AcaoLog;
 import com.umc.menteup.model.Codigo2FA;
 import com.umc.menteup.model.EntidadeLog;
 import com.umc.menteup.model.ResultadoLog;
+import com.umc.menteup.model.StatusCadastro;
 import com.umc.menteup.model.TipoUsuario;
 import com.umc.menteup.model.Usuario;
 import com.umc.menteup.model.UsuarioLogin;
@@ -147,20 +148,30 @@ public class UsuarioService {
         // RF01, RF03 a RF06 e RF09: senha forte, sem espaço nas pontas
         RegraSenha.validarNovaSenha(usuario.getSenha());
 
-        if (usuarioRepository.findByUsuario(usuario.getUsuario()).isPresent()) {
+        Optional<Usuario> existente = usuarioRepository.findByUsuario(usuario.getUsuario());
+
+        ///Quem teve o pedido de professor rejeitado pode enviar um novo
+        boolean reenvio = existente.isPresent()
+                && existente.get().getStatusCadastro() == StatusCadastro.REJEITADA;
+
+        if (existente.isPresent() && !reenvio) {
             return Optional.empty();
         }
 
         usuario.setTipoUsuario(tipo);
         usuario.setTermoAceitoEm(LocalDateTime.now());
-        Usuario salvo = salvarNovo(usuario);
+        ///Professor só entra depois que o administrador aprovar
+        usuario.setStatusCadastro(TipoUsuario.PROFESSOR.equals(tipo) ? StatusCadastro.PENDENTE : null);
+        Usuario salvo = reenvio ? reenviarPedido(existente.get(), usuario) : salvarNovo(usuario);
 
         logSistemaService.registrarSucesso(
                 salvo,
                 AcaoLog.CADASTRAR_USUARIO,
                 EntidadeLog.USUARIO,
                 salvo.getId(),
-                "Usuário \"" + salvo.getNomeUsuario() + "\" cadastrado.",
+                salvo.getStatusCadastro() == StatusCadastro.PENDENTE
+                        ? "Pedido de cadastro de professor de \"" + salvo.getNomeUsuario() + "\" enviado."
+                        : "Usuário \"" + salvo.getNomeUsuario() + "\" cadastrado.",
                 Map.of("tipo", String.valueOf(salvo.getTipoUsuario()))
         );
 
@@ -208,6 +219,67 @@ public class UsuarioService {
         );
 
         return salvo;
+    }
+
+    ///Aproveita a conta rejeitada com os dados do novo pedido
+    private Usuario reenviarPedido(Usuario conta, Usuario pedido) {
+        conta.setNomeUsuario(pedido.getNomeUsuario());
+        conta.setTipoUsuario(pedido.getTipoUsuario());
+        conta.setSenha(passwordEncoder.encode(pedido.getSenha()));
+        conta.setTermoAceitoEm(pedido.getTermoAceitoEm());
+        conta.setStatusCadastro(pedido.getStatusCadastro());
+        conta.setTentativasLogin(0);
+        conta.setBloqueadoEm(null);
+        return usuarioRepository.save(conta);
+    }
+
+    public UsuarioListagemResponse aprovarProfessor(Long id, String username) {
+        return responderPedidoProfessor(id, username, true);
+    }
+
+    public UsuarioListagemResponse rejeitarProfessor(Long id, String username) {
+        return responderPedidoProfessor(id, username, false);
+    }
+
+    ///Administrador aprova ou rejeita o pedido e a pessoa recebe a resposta por e-mail
+    private UsuarioListagemResponse responderPedidoProfessor(Long id, String username, boolean aprovar) {
+        Usuario autor = carregarLogado(username);
+
+        if (!TipoUsuario.ehAdministrador(autor)) {
+            throw ApiException.proibido("SOMENTE_ADMINISTRADOR",
+                    "Somente administradores podem responder pedidos de professor.");
+        }
+
+        Usuario alvo = usuarioRepository.findById(id)
+                .orElseThrow(() -> ApiException.naoEncontrado(
+                        "USUARIO_NAO_ENCONTRADO", "Usuário não encontrado."));
+
+        if (alvo.getStatusCadastro() != StatusCadastro.PENDENTE) {
+            throw ApiException.conflito("PEDIDO_NAO_PENDENTE",
+                    "Este usuário não tem pedido de professor aguardando resposta.");
+        }
+
+        alvo.setStatusCadastro(aprovar ? StatusCadastro.APROVADA : StatusCadastro.REJEITADA);
+        Usuario salvo = usuarioRepository.save(alvo);
+
+        logSistemaService.registrarSucesso(
+                autor,
+                AcaoLog.ALTERACAO_PERMISSAO,
+                EntidadeLog.USUARIO,
+                salvo.getId(),
+                "Pedido de professor de \"" + salvo.getNomeUsuario() + "\" "
+                        + (aprovar ? "aprovado." : "rejeitado."),
+                Map.of("statusCadastro", salvo.getStatusCadastro().name())
+        );
+
+        ///Se o e-mail falhar, a resposta do administrador continua valendo
+        try {
+            emailService.enviarResultadoCadastroProfessor(salvo.getUsuario(), salvo.getNomeUsuario(), aprovar);
+        } catch (Exception e) {
+            log.warn("Falha ao avisar o usuário {} sobre o pedido de professor: {}", salvo.getId(), e.getMessage());
+        }
+
+        return UsuarioListagemResponse.completo(salvo);
     }
 
     private Usuario salvarNovo(Usuario usuario) {
@@ -324,6 +396,19 @@ public class UsuarioService {
 
         // Acertou a senha: zera o contador
         usuario.ifPresent(this::zerarTentativas);
+
+        ///Professor sem aprovação não recebe o código de acesso
+        StatusCadastro status = usuario.map(Usuario::getStatusCadastro).orElse(null);
+        if (status == StatusCadastro.PENDENTE) {
+            registrarFalhaLogin(login.getUsuario(), "Cadastro de professor aguardando aprovação.");
+            throw ApiException.proibido("CADASTRO_PENDENTE", "Aguardando aprovação do seu cadastro.");
+        }
+        if (status == StatusCadastro.REJEITADA) {
+            registrarFalhaLogin(login.getUsuario(), "Cadastro de professor rejeitado.");
+            throw ApiException.proibido("CADASTRO_REJEITADO",
+                    "Seu cadastro como professor não foi aprovado. "
+                            + "Você pode enviar um novo pedido pela tela de cadastro.");
+        }
 
         if (!gerarEEnviarCodigo2FA(login.getUsuario(), 0)) {
             return Optional.empty();

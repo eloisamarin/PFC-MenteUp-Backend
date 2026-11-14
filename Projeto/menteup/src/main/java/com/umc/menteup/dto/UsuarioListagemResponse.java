@@ -20,8 +20,15 @@ public record UsuarioListagemResponse(
         String usuario,
         Boolean aguardandoPrimeiroAcesso,
         // Animal escolhido no perfil (ex.: "PANDA"); ausente mostra as iniciais
-        String avatar
+        String avatar,
+        ///Pedido de professor: PENDENTE, APROVADA ou REJEITADA (só para o administrador)
+        String statusCadastro
 ) {
+
+    public UsuarioListagemResponse(Long id, String nomeUsuario, String tipoUsuario, String usuario,
+                                   Boolean aguardandoPrimeiroAcesso, String avatar) {
+        this(id, nomeUsuario, tipoUsuario, usuario, aguardandoPrimeiroAcesso, avatar, null);
+    }
 
     private static String avatarDe(Usuario usuario) {
         return usuario.getAvatar() != null ? usuario.getAvatar().name() : null;
@@ -45,6 +52,7 @@ public record UsuarioListagemResponse(
                 usuario.getTipoUsuario(),
                 usuario.getUsuario(),
                 usuario.isAguardandoPrimeiroAcesso(),
-                avatarDe(usuario));
+                avatarDe(usuario),
+                usuario.getStatusCadastro() != null ? usuario.getStatusCadastro().name() : null);
     }
 }

@@ -81,6 +81,12 @@ public class Usuario {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private boolean aceitouTermos;
 
+    ///Pedido de professor aguardando o administrador. Só sai no JSON, ninguém envia pelo cadastro
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status_cadastro", length = 10)
+    private StatusCadastro statusCadastro;
+
     public Long getId() {
         return id;
     }
@@ -182,6 +188,14 @@ public class Usuario {
 
     public void setAceitouTermos(boolean aceitouTermos) {
         this.aceitouTermos = aceitouTermos;
+    }
+
+    public StatusCadastro getStatusCadastro() {
+        return statusCadastro;
+    }
+
+    public void setStatusCadastro(StatusCadastro statusCadastro) {
+        this.statusCadastro = statusCadastro;
     }
 
     public LocalDateTime getTermoAceitoEm() {
