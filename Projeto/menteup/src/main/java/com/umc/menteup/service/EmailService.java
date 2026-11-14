@@ -89,6 +89,20 @@ public class EmailService {
                         + "Se você não esperava este e-mail, pode ignorá-lo.\n");
     }
 
+    ///Avisa se o pedido para ser professor foi aprovado ou não
+    public void enviarResultadoCadastroProfessor(String destinatario, String nome, boolean aprovado) {
+        enviar(destinatario,
+                aprovado
+                        ? "MenteUp - Cadastro de professor aprovado"
+                        : "MenteUp - Cadastro de professor não aprovado",
+                "Olá, " + nome + "!\n\n"
+                        + (aprovado
+                        ? "Seu cadastro como professor no MenteUp foi aprovado.\n"
+                                + "Você já pode entrar na plataforma com seu e-mail e senha.\n"
+                        : "Seu cadastro como professor no MenteUp não foi aprovado.\n"
+                                + "Se quiser, você pode enviar um novo pedido pela tela de cadastro.\n"));
+    }
+
     // Escolhe a forma de envio. Se der erro, a exceção sobe: quem chama decide o que fazer
     // (no login, por exemplo, o código não enviado conta como falha).
     private void enviar(String destinatario, String assunto, String texto) {

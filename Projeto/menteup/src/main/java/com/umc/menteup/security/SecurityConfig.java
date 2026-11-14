@@ -66,6 +66,9 @@ public class SecurityConfig {
                         .requestMatchers("/logs/**").hasRole("ADMINISTRADOR")
                         // Criar usuário de qualquer tipo (inclusive administrador): só administrador
                         .requestMatchers(HttpMethod.POST, "/usuarios").hasRole("ADMINISTRADOR")
+                        ///Responder pedidos de professor: só administrador
+                        .requestMatchers(HttpMethod.PUT, "/usuarios/*/aprovar", "/usuarios/*/rejeitar")
+                        .hasRole("ADMINISTRADOR")
                         // Painel do sistema: todo usuário logado (o service recorta os dados por perfil).
                         // O token do Grafana não serve aqui.
                         .requestMatchers(HttpMethod.GET, "/dashboard/painel")
