@@ -6,13 +6,19 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.umc.menteup.model.DocumentoLegal;
+import com.umc.menteup.model.TipoDocumento;
+import com.umc.menteup.service.DocumentoLegalService;
 
 // Termo de Aceite e Política de Privacidade servidos pelo back-end, sem login
 class DocumentoLegalIntegrationTest extends IntegracaoBase {
+
+    @Autowired
+    private DocumentoLegalService documentoLegalService;
 
     @Test
     void atual_semToken_deveTrazerOTextoDaVersaoVigente() {
@@ -26,7 +32,8 @@ class DocumentoLegalIntegrationTest extends IntegracaoBase {
         assertThat(termo.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(termo.getBody())
                 .containsEntry("tipo", "TERMO")
-                .containsEntry("versao", "1.0")
+                // A vigente muda conforme a data: 1.0 até a 1.1 entrar em vigor
+                .containsEntry("versao", documentoLegalService.vigente(TipoDocumento.TERMO).getVersao())
                 .containsKey("vigenteDesde");
         assertThat((String) termo.getBody().get("conteudo")).startsWith("## 1. Apresentação");
 
