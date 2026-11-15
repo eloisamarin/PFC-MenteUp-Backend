@@ -186,7 +186,7 @@ public class TurmaService {
                 AcaoLog.ADICIONAR_ALUNO_TURMA,
                 EntidadeLog.TURMA,
                 turma.getId(),
-                "Aluno \"" + aluno.getNomeUsuario() + "\" vinculado à turma \"" + turma.getNome() + "\".",
+                "Aluno #" + aluno.getId() + " vinculado à turma \"" + turma.getNome() + "\".",
                 Map.of("alunoId", aluno.getId(), "turmaId", turma.getId())
         );
     }
@@ -215,7 +215,7 @@ public class TurmaService {
                 AcaoLog.REMOVER_ALUNO_TURMA,
                 EntidadeLog.TURMA,
                 turma.getId(),
-                "Aluno \"" + aluno.getNomeUsuario() + "\" removido da turma \"" + turma.getNome() + "\".",
+                "Aluno #" + aluno.getId() + " removido da turma \"" + turma.getNome() + "\".",
                 Map.of("alunoId", aluno.getId(), "turmaId", turma.getId())
         );
     }
@@ -413,7 +413,7 @@ public class TurmaService {
     private static String descreverProfessor(Turma turma) {
         return turma.getProfessor() == null
                 ? ""
-                : " (professor responsável: " + turma.getProfessor().getNomeUsuario() + ")";
+                : " (professor responsável: #" + turma.getProfessor().getId() + ")";
     }
 
     private Usuario exigirProfessorOuAdministrador(String username) {

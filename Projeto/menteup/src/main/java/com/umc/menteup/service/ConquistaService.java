@@ -197,7 +197,7 @@ public class ConquistaService {
                 AcaoLog.DESBLOQUEAR_CONQUISTA,
                 EntidadeLog.CONQUISTA,
                 uc.getConquista().getId(),
-                "Aluno \"" + usuario.getNomeUsuario() + "\" desbloqueou a conquista \""
+                "Aluno #" + usuario.getId() + " desbloqueou a conquista \""
                         + uc.getConquista().getNome() + "\".",
                 Map.of(
                         "codigo", uc.getConquista().getCodigo(),

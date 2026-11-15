@@ -10,6 +10,7 @@ import com.umc.menteup.model.TipoUsuario;
 import com.umc.menteup.model.Turma;
 import com.umc.menteup.model.Usuario;
 import com.umc.menteup.repository.Codigo2FARepository;
+import com.umc.menteup.repository.LogSistemaRepository;
 import com.umc.menteup.repository.TurmaRepository;
 import com.umc.menteup.repository.UsuarioRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,21 +28,24 @@ public class PerfilService {
     ///E-mail que fica no lugar do original quando a conta é excluída
     private static final String EMAIL_REMOVIDO_PREFIXO = "removido-";
     private static final String EMAIL_REMOVIDO_DOMINIO = "@menteup.invalid";
+    private static final String NOME_REMOVIDO = "Usuário removido";
 
     private final UsuarioRepository usuarioRepository;
     private final TurmaRepository turmaRepository;
     private final PasswordEncoder passwordEncoder;
     private final Codigo2FARepository codigo2FARepository;
     private final LogSistemaService logSistemaService;
+    private final LogSistemaRepository logSistemaRepository;
 
     public PerfilService(UsuarioRepository usuarioRepository, TurmaRepository turmaRepository,
                          PasswordEncoder passwordEncoder, Codigo2FARepository codigo2FARepository,
-                         LogSistemaService logSistemaService) {
+                         LogSistemaService logSistemaService, LogSistemaRepository logSistemaRepository) {
         this.usuarioRepository = usuarioRepository;
         this.turmaRepository = turmaRepository;
         this.passwordEncoder = passwordEncoder;
         this.codigo2FARepository = codigo2FARepository;
         this.logSistemaService = logSistemaService;
+        this.logSistemaRepository = logSistemaRepository;
     }
 
     @Transactional(readOnly = true)
@@ -116,6 +120,9 @@ public class PerfilService {
         }
 
         usuario.setSenha(passwordEncoder.encode(novaSenha));
+
+        logSistemaService.registrarSucesso(usuario, AcaoLog.ALTERAR_SENHA, EntidadeLog.USUARIO, usuario.getId(),
+                "Usuário #" + usuario.getId() + " trocou a senha pelo perfil.", null);
     }
 
     ///Os dados são apagados de forma que não seja possível identificar a pessoa
@@ -132,6 +139,11 @@ public class PerfilService {
             throw ApiException.proibido(
                     "ADMINISTRADOR_NAO_PODE_EXCLUIR", "Contas de administrador não podem ser excluídas por aqui.");
         }
+
+        // Registro do atendimento do pedido de exclusão (só com o id, sem dados da pessoa)
+        logSistemaService.registrarSucesso(usuario, AcaoLog.EXCLUIR_PROPRIA_CONTA, EntidadeLog.USUARIO,
+                usuario.getId(), "Conta #" + usuario.getId() + " excluída pelo próprio usuário.",
+                Map.of("tipoUsuario", usuario.getTipoUsuario()));
 
         anonimizar(usuario);
     }
@@ -188,7 +200,11 @@ public class PerfilService {
             turma.getAlunos().removeIf(aluno -> aluno.getId().equals(usuario.getId()));
         }
 
-        usuario.setNomeUsuario("Usuário removido");
+        // Os logs antigos escreviam o nome entre aspas: ele sai de lá também
+        logSistemaRepository.substituirNasDescricoes(
+                "\"" + usuario.getNomeUsuario() + "\"", "\"" + NOME_REMOVIDO + "\"");
+
+        usuario.setNomeUsuario(NOME_REMOVIDO);
         usuario.setUsuario(EMAIL_REMOVIDO_PREFIXO + usuario.getId() + EMAIL_REMOVIDO_DOMINIO);
         usuario.setSenha(passwordEncoder.encode(UUID.randomUUID().toString()));
         usuario.setFcmToken(null);

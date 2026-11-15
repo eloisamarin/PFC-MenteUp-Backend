@@ -9,12 +9,17 @@ import com.umc.menteup.model.EntidadeLog;
 import com.umc.menteup.model.LogSistema;
 import com.umc.menteup.model.ResultadoLog;
 import com.umc.menteup.repository.LogSistemaRepository;
+import com.umc.menteup.service.LogSistemaService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/logs")
@@ -22,9 +27,11 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Logs do sistema", description = "Histórico de ações (somente administrador)")
 public class LogSistemaController {
     private final LogSistemaRepository logSistemaRepository;
+    private final LogSistemaService logSistemaService;
 
-    public LogSistemaController(LogSistemaRepository logSistemaRepository) {
+    public LogSistemaController(LogSistemaRepository logSistemaRepository, LogSistemaService logSistemaService) {
         this.logSistemaRepository = logSistemaRepository;
+        this.logSistemaService = logSistemaService;
     }
 
     @Operation(summary = "Lista os logs com filtros")
@@ -34,7 +41,8 @@ public class LogSistemaController {
             @RequestParam(required = false) AcaoLog acao,
             @RequestParam(required = false) EntidadeLog entidade,
             @RequestParam(required = false) ResultadoLog resultado,
-            @PageableDefault(size = 50, sort = "dataHora", direction = Sort.Direction.DESC) Pageable pageable
+            @PageableDefault(size = 50, sort = "dataHora", direction = Sort.Direction.DESC) Pageable pageable,
+            Authentication authentication
     ) {
         Page<LogSistema> pagina = logSistemaRepository. buscar(
                 usuarioId,
@@ -42,7 +50,33 @@ public class LogSistemaController {
                 entidade,
                 resultado,
                 pageable);
+        registrarConsulta(authentication, pageable, usuarioId, acao, entidade, resultado);
         return  ResponseEntity.ok(pagina.map(this::paraResponse));
+    }
+
+    // Acesso administrativo aos logs fica registrado (só a primeira página, para não repetir a cada rolagem)
+    private void registrarConsulta(Authentication authentication, Pageable pageable, Long usuarioId,
+                                   AcaoLog acao, EntidadeLog entidade, ResultadoLog resultado) {
+        if (pageable.getPageNumber() > 0) {
+            return;
+        }
+
+        Map<String, Object> filtros = new LinkedHashMap<>();
+        if (usuarioId != null) {
+            filtros.put("usuarioId", usuarioId);
+        }
+        if (acao != null) {
+            filtros.put("acao", acao.name());
+        }
+        if (entidade != null) {
+            filtros.put("entidade", entidade.name());
+        }
+        if (resultado != null) {
+            filtros.put("resultado", resultado.name());
+        }
+
+        logSistemaService.registrarPorUsername(authentication.getName(), AcaoLog.CONSULTAR_LOGS, null, null,
+                ResultadoLog.SUCESSO, "Consulta aos logs do sistema.", filtros.isEmpty() ? null : filtros);
     }
 
     private LogSistemaResponse paraResponse (LogSistema entrada) {

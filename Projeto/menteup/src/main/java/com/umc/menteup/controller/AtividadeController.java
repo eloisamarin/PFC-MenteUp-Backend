@@ -161,6 +161,10 @@ public class AtividadeController {
         atividade.setTurmas(novasTurmas);
 
         StatusAtividade statusAnterior = existente.getStatus();
+        // Guarda os valores antigos antes de salvar (o save copia os novos para o mesmo objeto)
+        // A pontuação vale nota, então o log mostra a antiga e a nova
+        String tituloAnterior = existente.getTitulo();
+        Integer pontuacaoAnterior = existente.getPontuacao();
 
         atividade.setPerguntas(existente.getPerguntas());
         // O autor não muda na edição
@@ -201,10 +205,12 @@ public class AtividadeController {
                     ResultadoLog.SUCESSO,
                     "Atividade \"" + salva.getTitulo() + "\" editada.",
                     Map.of(
-                            "tituloAnterior", existente.getTitulo(),
+                            "tituloAnterior", tituloAnterior,
                             "tituloNovo", salva.getTitulo(),
                             "statusAnterior", statusAnterior.name(),
-                            "statusNovo", salva.getStatus().name()
+                            "statusNovo", salva.getStatus().name(),
+                            "pontuacaoAnterior", pontuacaoAnterior,
+                            "pontuacaoNova", salva.getPontuacao()
                     )
             );
         }

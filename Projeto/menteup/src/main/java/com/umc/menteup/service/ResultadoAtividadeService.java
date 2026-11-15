@@ -176,7 +176,7 @@ public class ResultadoAtividadeService {
                 AcaoLog.CONCLUIR_ATIVIDADE,
                 EntidadeLog.ATIVIDADE,
                 atividade.getId(),
-                "Aluno \"" + usuario.getNomeUsuario() + "\" concluiu a atividade \"" + atividade.getTitulo() + "\".",
+                "Aluno #" + usuario.getId() + " concluiu a atividade \"" + atividade.getTitulo() + "\".",
                 Map.of(
                         "acertos", acertos,
                         "totalQuestoes", totalQuestoes,

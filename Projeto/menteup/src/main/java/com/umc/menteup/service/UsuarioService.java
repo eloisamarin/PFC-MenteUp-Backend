@@ -200,8 +200,8 @@ public class UsuarioService {
                 EntidadeLog.USUARIO,
                 salvo.getId(),
                 salvo.getStatusCadastro() == StatusCadastro.PENDENTE
-                        ? "Pedido de cadastro de professor de \"" + salvo.getNomeUsuario() + "\" enviado."
-                        : "Usuário \"" + salvo.getNomeUsuario() + "\" cadastrado.",
+                        ? "Pedido de cadastro de professor do usuário #" + salvo.getId() + " enviado."
+                        : "Usuário #" + salvo.getId() + " cadastrado.",
                 Map.of("tipo", String.valueOf(salvo.getTipoUsuario()))
         );
 
@@ -243,7 +243,7 @@ public class UsuarioService {
                 AcaoLog.CADASTRAR_USUARIO,
                 EntidadeLog.USUARIO,
                 salvo.getId(),
-                "Usuário \"" + salvo.getNomeUsuario() + "\" (" + tipo + ") criado pelo administrador;"
+                "Usuário #" + salvo.getId() + " (" + tipo + ") criado pelo administrador;"
                         + " convite enviado por e-mail.",
                 Map.of("tipo", tipo)
         );
@@ -297,7 +297,7 @@ public class UsuarioService {
                 AcaoLog.ALTERACAO_PERMISSAO,
                 EntidadeLog.USUARIO,
                 salvo.getId(),
-                "Pedido de professor de \"" + salvo.getNomeUsuario() + "\" "
+                "Pedido de professor do usuário #" + salvo.getId() + " "
                         + (aprovar ? "aprovado." : "rejeitado."),
                 Map.of("statusCadastro", salvo.getStatusCadastro().name())
         );
@@ -389,9 +389,9 @@ public class UsuarioService {
                 EntidadeLog.USUARIO,
                 salvo.getId(),
                 mudouPerfil
-                        ? "Perfil do usuário \"" + salvo.getNomeUsuario() + "\" alterado de " + tipoAnterior
+                        ? "Perfil do usuário #" + salvo.getId() + " alterado de " + tipoAnterior
                                 + " para " + salvo.getTipoUsuario() + "."
-                        : "Usuário \"" + salvo.getNomeUsuario() + "\" atualizado.",
+                        : "Usuário #" + salvo.getId() + " atualizado.",
                 Map.of(
                         "tipoAnterior", String.valueOf(tipoAnterior),
                         "tipoNovo", String.valueOf(salvo.getTipoUsuario())
@@ -494,7 +494,7 @@ public class UsuarioService {
                             AcaoLog.LOGIN,
                             EntidadeLog.USUARIO,
                             u.getId(),
-                            "Usuário \"" + u.getNomeUsuario() + "\" entrou no sistema.",
+                            "Usuário #" + u.getId() + " entrou no sistema.",
                             null
                     );
                     registrarAcessoIntensivao(u);
