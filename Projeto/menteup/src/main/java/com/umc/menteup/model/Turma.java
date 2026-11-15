@@ -41,7 +41,7 @@ public class Turma {
     )
     // LGPD: na turma, cada aluno sai só com id, nome e tipo
     @JsonIgnoreProperties(
-            value = {"usuario", "turma", "atividade", "aguardandoPrimeiroAcesso"},
+            value = {"usuario", "turma", "atividade", "aguardandoPrimeiroAcesso", "statusCadastro"},
             allowSetters = true)
     private List<Usuario> alunos = new ArrayList<>();
 

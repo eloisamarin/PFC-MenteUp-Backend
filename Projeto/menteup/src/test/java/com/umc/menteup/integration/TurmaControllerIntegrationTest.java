@@ -122,7 +122,8 @@ class TurmaControllerIntegrationTest extends IntegracaoBase {
 
         // Assert
         assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        assertThat(resposta.getHeaders().getFirst(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN)).isEqualTo("*");
+        assertThat(resposta.getHeaders().getFirst(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN))
+                .isEqualTo("http://localhost:5173");
     }
 
     @Test
