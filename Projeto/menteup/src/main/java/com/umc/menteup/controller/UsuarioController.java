@@ -12,11 +12,13 @@ import java.util.Optional;
 import com.umc.menteup.model.Codigo2FARequest;
 import com.umc.menteup.model.Usuario;
 import com.umc.menteup.model.UsuarioLogin;
+import com.umc.menteup.service.PerfilService;
 import com.umc.menteup.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import com.umc.menteup.dto.FcmTokenRequest;
 import com.umc.menteup.dto.AtualizarUsuarioRequest;
+import com.umc.menteup.dto.ExcluirContaRequest;
 import com.umc.menteup.dto.NovoUsuarioRequest;
 import com.umc.menteup.dto.ReenviarCodigo2FARequest;
 import com.umc.menteup.dto.UsuarioListagemResponse;
@@ -41,6 +44,9 @@ public class UsuarioController {
 
     @Autowired
     private UsuarioService usuarioService;
+
+    @Autowired
+    private PerfilService perfilService;
 
     // Administrador: com e-mail. Professor e aluno: só id, nome e tipo (LGPD)
     @Operation(summary = "Lista os usuários (e-mail só para administrador; professor vê o dos alunos)")
@@ -97,6 +103,18 @@ public class UsuarioController {
     @PutMapping("/{id}/rejeitar")
     public ResponseEntity<UsuarioListagemResponse> rejeitarProfessor(@PathVariable Long id, Authentication authentication) {
         return ResponseEntity.ok(usuarioService.rejeitarProfessor(id, authentication.getName()));
+    }
+
+    ///Administrador exclui um aluno ou professor confirmando com a própria senha
+    @Operation(summary = "Administrador exclui (anonimiza) um aluno ou professor")
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void excluirPorAdministrador(
+            @PathVariable Long id,
+            @Valid @RequestBody ExcluirContaRequest request,
+            Authentication authentication) {
+
+        perfilService.excluirPorAdministrador(id, authentication.getName(), request.senha());
     }
 
     // Passo 1: valida usuário e senha e envia o código 2FA por e-mail

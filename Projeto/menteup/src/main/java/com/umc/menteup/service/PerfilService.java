@@ -4,6 +4,8 @@ import com.umc.menteup.security.RegraSenha;
 import com.umc.menteup.dto.PerfilResponse;
 import com.umc.menteup.dto.TurmaResponse;
 import com.umc.menteup.exception.ApiException;
+import com.umc.menteup.model.AcaoLog;
+import com.umc.menteup.model.EntidadeLog;
 import com.umc.menteup.model.TipoUsuario;
 import com.umc.menteup.model.Turma;
 import com.umc.menteup.model.Usuario;
@@ -16,22 +18,30 @@ import org.springframework.transaction.annotation.Transactional;
 import com.umc.menteup.model.AvatarAnimal;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
 public class PerfilService {
 
+    ///E-mail que fica no lugar do original quando a conta é excluída
+    private static final String EMAIL_REMOVIDO_PREFIXO = "removido-";
+    private static final String EMAIL_REMOVIDO_DOMINIO = "@menteup.invalid";
+
     private final UsuarioRepository usuarioRepository;
     private final TurmaRepository turmaRepository;
     private final PasswordEncoder passwordEncoder;
     private final Codigo2FARepository codigo2FARepository;
+    private final LogSistemaService logSistemaService;
 
     public PerfilService(UsuarioRepository usuarioRepository, TurmaRepository turmaRepository,
-                         PasswordEncoder passwordEncoder, Codigo2FARepository codigo2FARepository) {
+                         PasswordEncoder passwordEncoder, Codigo2FARepository codigo2FARepository,
+                         LogSistemaService logSistemaService) {
         this.usuarioRepository = usuarioRepository;
         this.turmaRepository = turmaRepository;
         this.passwordEncoder = passwordEncoder;
         this.codigo2FARepository = codigo2FARepository;
+        this.logSistemaService = logSistemaService;
     }
 
     @Transactional(readOnly = true)
@@ -108,9 +118,7 @@ public class PerfilService {
         usuario.setSenha(passwordEncoder.encode(novaSenha));
     }
 
-    /*
-     Os dados serão anonimiza que não será possível indentificar a pesssoa.
-     */
+    ///Os dados são apagados de forma que não seja possível identificar a pessoa
     @Transactional
     public void excluirConta(String username, String senha) {
         Usuario usuario = carregarUsuario(username);
@@ -119,24 +127,76 @@ public class PerfilService {
             throw ApiException.requisicaoInvalida("SENHA_INCORRETA", "Senha incorreta.");
         }
 
-        // Evita que o sistema fique sem nenhum administrador
+        ///Evita que o sistema fique sem nenhum administrador
         if (TipoUsuario.ehAdministrador(usuario)) {
             throw ApiException.proibido(
                     "ADMINISTRADOR_NAO_PODE_EXCLUIR", "Contas de administrador não podem ser excluídas por aqui.");
         }
 
+        anonimizar(usuario);
+    }
+
+    ///Administrador exclui um aluno ou professor do mesmo jeito que o próprio usuário faria
+    @Transactional
+    public void excluirPorAdministrador(Long id, String usernameAdmin, String senhaAdmin) {
+        Usuario autor = carregarUsuario(usernameAdmin);
+
+        if (!TipoUsuario.ehAdministrador(autor)) {
+            throw ApiException.proibido("SOMENTE_ADMINISTRADOR",
+                    "Somente administradores podem excluir usuários.");
+        }
+
+        ///Administrador confirma com a própria senha
+        if (!passwordEncoder.matches(senhaAdmin, autor.getSenha())) {
+            throw ApiException.requisicaoInvalida("SENHA_INCORRETA", "Senha incorreta.");
+        }
+
+        Usuario alvo = usuarioRepository.findById(id)
+                .orElseThrow(() -> ApiException.naoEncontrado(
+                        "USUARIO_NAO_ENCONTRADO", "Usuário não encontrado."));
+
+        ///Administrador não pode excluir outro administrador
+        if (TipoUsuario.ehAdministrador(alvo)) {
+            throw ApiException.proibido("ADMINISTRADOR_NAO_PODE_EXCLUIR",
+                    "Contas de administrador não podem ser excluídas.");
+        }
+
+        ///Conta que já foi excluída antes
+        if (ehContaExcluida(alvo)) {
+            throw ApiException.conflito("USUARIO_JA_EXCLUIDO", "Este usuário já foi excluído.");
+        }
+
+        anonimizar(alvo);
+
+        ///O log guarda só o id para não expor quem era a pessoa
+        logSistemaService.registrarSucesso(
+                autor,
+                AcaoLog.EXCLUIR_USUARIO,
+                EntidadeLog.USUARIO,
+                alvo.getId(),
+                "Conta do usuário #" + alvo.getId() + " excluída pelo administrador.",
+                Map.of("tipoUsuario", alvo.getTipoUsuario())
+        );
+    }
+
+    ///Apaga o que identifica a pessoa, mas mantém o usuário e o histórico
+    private void anonimizar(Usuario usuario) {
         String emailOriginal = usuario.getUsuario();
 
-        // O aluno sai das turmas (o vínculo fica do lado da Turma)
+        ///O aluno sai das turmas (o vínculo fica do lado da Turma)
         for (Turma turma : turmaRepository.findAllByAlunos_Id(usuario.getId())) {
             turma.getAlunos().removeIf(aluno -> aluno.getId().equals(usuario.getId()));
         }
 
         usuario.setNomeUsuario("Usuário removido");
-        usuario.setUsuario("removido-" + usuario.getId() + "@menteup.invalid");
+        usuario.setUsuario(EMAIL_REMOVIDO_PREFIXO + usuario.getId() + EMAIL_REMOVIDO_DOMINIO);
         usuario.setSenha(passwordEncoder.encode(UUID.randomUUID().toString()));
         usuario.setFcmToken(null);
 
         codigo2FARepository.deleteByUsuario(emailOriginal);
+    }
+
+    private static boolean ehContaExcluida(Usuario usuario) {
+        return usuario.getUsuario() != null && usuario.getUsuario().endsWith(EMAIL_REMOVIDO_DOMINIO);
     }
 }

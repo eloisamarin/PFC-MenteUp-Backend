@@ -69,6 +69,8 @@ public class SecurityConfig {
                         ///Responder pedidos de professor: só administrador
                         .requestMatchers(HttpMethod.PUT, "/usuarios/*/aprovar", "/usuarios/*/rejeitar")
                         .hasRole("ADMINISTRADOR")
+                        ///Excluir usuário: só administrador
+                        .requestMatchers(HttpMethod.DELETE, "/usuarios/*").hasRole("ADMINISTRADOR")
                         // Painel do sistema: todo usuário logado (o service recorta os dados por perfil).
                         // O token do Grafana não serve aqui.
                         .requestMatchers(HttpMethod.GET, "/dashboard/painel")
