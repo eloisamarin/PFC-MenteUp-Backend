@@ -14,7 +14,6 @@ import java.util.List;
 
 ///Rotas de consulta de conquistas. As rotas /alunos/me/** são só para alunos
 @RestController
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 @Tag(name = "Conquistas", description = "Catálogo de conquistas e conquistas do aluno")
 public class ConquistaController {
 

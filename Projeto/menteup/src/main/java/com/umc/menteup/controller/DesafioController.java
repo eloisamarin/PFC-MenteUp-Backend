@@ -15,7 +15,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/desafios")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 @Tag(name = "Desafios ao vivo", description = "Criação, condução, respostas e ranking dos desafios")
 public class DesafioController {
 

@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/usuarios/me")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 @Tag(name = "Meu perfil", description = "Dados, senha, avatar e exclusão da conta de quem está logado")
 public class PerfilController {
     private final PerfilService perfilService;

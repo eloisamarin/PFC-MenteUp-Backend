@@ -26,7 +26,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/atividades")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 @Tag(name = "Atividades", description = "Criação, questionário, progresso, respostas e exclusão de atividades")
 public class AtividadeController {
 
