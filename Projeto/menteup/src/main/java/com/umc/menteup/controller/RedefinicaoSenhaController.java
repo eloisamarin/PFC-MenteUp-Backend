@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import com.umc.menteup.dto.EsqueciSenhaRequest;
 import com.umc.menteup.dto.PrimeiroAcessoRequest;
 import com.umc.menteup.dto.RedefinirSenhaRequest;
+import com.umc.menteup.security.IpDoCliente;
 import com.umc.menteup.service.RedefinicaoSenhaService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -18,9 +19,11 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Usuários e login", description = "Cadastro, login com código de 2 etapas e gestão de usuários")
 public class RedefinicaoSenhaController {
     private final RedefinicaoSenhaService redefinicaoSenhaService;
+    private final IpDoCliente ipDoCliente;
 
-    public RedefinicaoSenhaController(RedefinicaoSenhaService redefinicaoSenhaService) {
+    public RedefinicaoSenhaController(RedefinicaoSenhaService redefinicaoSenhaService, IpDoCliente ipDoCliente) {
         this.redefinicaoSenhaService = redefinicaoSenhaService;
+        this.ipDoCliente = ipDoCliente;
     }
 
     // POST /usuarios/senha/esqueci: sempre 204, exista o e-mail ou não
@@ -28,7 +31,7 @@ public class RedefinicaoSenhaController {
     @PostMapping("/esqueci")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void esqueciSenha(@Valid @RequestBody EsqueciSenhaRequest request, HttpServletRequest http) {
-        redefinicaoSenhaService.solicitar(request.email(), http.getRemoteAddr());
+        redefinicaoSenhaService.solicitar(request.email(), ipDoCliente.de(http));
     }
 
     // POST /usuarios/senha/redefinir: troca a senha usando o token do link
