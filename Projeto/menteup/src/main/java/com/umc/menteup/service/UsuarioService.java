@@ -376,6 +376,12 @@ public class UsuarioService {
                     "ALTERACAO_DE_TIPO_NEGADA", "Somente administradores podem alterar o tipo de usuário.");
         }
 
+        // Conta de administrador não perde o acesso por aqui: ninguém rebaixa outro administrador nem a si mesmo
+        if (TipoUsuario.ehAdministrador(alvo) && !TipoUsuario.ADMINISTRADOR.equalsIgnoreCase(tipoNovo)) {
+            throw ApiException.proibido("REBAIXAR_ADMINISTRADOR_NEGADO",
+                    "O tipo de uma conta de administrador não pode ser alterado.");
+        }
+
         String email = dados.usuario().trim();
         Optional<Usuario> usuarioExistente = usuarioRepository.findByUsuario(email);
 
