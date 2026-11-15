@@ -81,6 +81,9 @@ public class UsuarioService {
     @Autowired
     private RedefinicaoSenhaService redefinicaoSenhaService;
 
+    @Autowired
+    private DocumentoLegalService documentoLegalService;
+
     private static final Logger log = LoggerFactory.getLogger(UsuarioService.class);
 
     // Senhas erradas seguidas até bloquear a conta
@@ -175,6 +178,9 @@ public class UsuarioService {
                     "Para criar a conta, é preciso aceitar o Termo de Aceite e a Política de Privacidade.");
         }
 
+        // A versão lida precisa ser a que está valendo (senão a pessoa aceitaria um texto antigo)
+        documentoLegalService.conferirVersoesInformadas(usuario.getTermoVersao(), usuario.getPoliticaVersao());
+
         // RF01, RF03 a RF06 e RF09: senha forte, sem espaço nas pontas
         RegraSenha.validarNovaSenha(usuario.getSenha());
 
@@ -193,6 +199,7 @@ public class UsuarioService {
         ///Professor só entra depois que o administrador aprovar
         usuario.setStatusCadastro(TipoUsuario.PROFESSOR.equals(tipo) ? StatusCadastro.PENDENTE : null);
         Usuario salvo = reenvio ? reenviarPedido(existente.get(), usuario) : salvarNovo(usuario);
+        documentoLegalService.registrarAceiteDasVigentes(salvo, salvo.getTermoAceitoEm());
 
         logSistemaService.registrarSucesso(
                 salvo,
@@ -631,6 +638,9 @@ public class UsuarioService {
         usuarioLogin.setAvatar(usuario.getAvatar() == null ? null : usuario.getAvatar().name());
 
         usuarioLogin.setToken(gerarToken(usuario.getUsuario()));
+        usuarioLogin.setAceitesPendentes(documentoLegalService.pendentes(usuario.getId()).stream()
+                .map(documento -> documento.getTipo().name())
+                .toList());
 
         return usuarioLogin;
     }

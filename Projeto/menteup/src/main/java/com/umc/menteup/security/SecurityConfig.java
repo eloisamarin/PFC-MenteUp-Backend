@@ -18,6 +18,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.umc.menteup.service.DocumentoLegalService;
+
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.List;
@@ -47,6 +49,14 @@ public class SecurityConfig {
 
     @Autowired
     private DashboardTokenFilter dashboardTokenFilter;
+
+    @Autowired
+    private DocumentoLegalService documentoLegalService;
+
+    // true: quem não aceitou a versão atual do Termo ou da Política recebe 428 nas demais rotas
+    // Ligue no Render (EXIGIR_ACEITE=true) só depois que o front souber mostrar a tela de aceite
+    @Value("${menteup.documentos.exigir-aceite}")
+    private boolean exigirAceite;
 
     @Bean
     PasswordEncoder passwordEncoder() {
@@ -86,6 +96,8 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                        // Texto do Termo e da Política: lido antes do cadastro e pelo rodapé, sem login
+                        .requestMatchers(HttpMethod.GET, "/documentos/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS).permitAll()
                         .requestMatchers("/alunos/me/**").hasRole("ALUNO")
                         .requestMatchers("/logs/**").hasRole("ADMINISTRADOR")
@@ -124,6 +136,9 @@ public class SecurityConfig {
 
                 .addFilterBefore(dashboardTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                // Depois do token: já sabe quem é a pessoa para conferir o aceite
+                .addFilterAfter(new AceitePendenteFilter(documentoLegalService, exigirAceite),
+                        UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 

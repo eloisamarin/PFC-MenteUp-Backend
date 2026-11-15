@@ -11,6 +11,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface LogSistemaRepository  extends JpaRepository<LogSistema, Long> {
     @Query("""
             SELECT l FROM LogSistema l
@@ -32,4 +34,7 @@ public interface LogSistemaRepository  extends JpaRepository<LogSistema, Long> {
     @Query(value = "UPDATE log_sistema SET descricao = REPLACE(descricao, :nome, :substituto) "
             + "WHERE descricao LIKE CONCAT('%', :nome, '%')", nativeQuery = true)
     int substituirNasDescricoes(@Param("nome") String nome, @Param("substituto") String substituto);
+
+    // Exportação dos dados: registros feitos pela própria pessoa
+    List<LogSistema> findAllByUsuario_IdOrderByDataHoraDesc(Long usuarioId);
 }

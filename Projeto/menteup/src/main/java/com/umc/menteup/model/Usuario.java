@@ -81,6 +81,18 @@ public class Usuario {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private boolean aceitouTermos;
 
+    // Versões do Termo e da Política que a pessoa leu no cadastro (só chegam na requisição)
+    // O aceite de cada versão fica gravado em tb_aceite_documento
+    @Transient
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @Size(max = 20, message = "Versão do Termo inválida.")
+    private String termoVersao;
+
+    @Transient
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @Size(max = 20, message = "Versão da Política inválida.")
+    private String politicaVersao;
+
     ///Pedido de professor aguardando o administrador. Só sai no JSON, ninguém envia pelo cadastro
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Enumerated(EnumType.STRING)
@@ -184,6 +196,22 @@ public class Usuario {
 
     public boolean isAceitouTermos() {
         return aceitouTermos;
+    }
+
+    public String getTermoVersao() {
+        return termoVersao;
+    }
+
+    public void setTermoVersao(String termoVersao) {
+        this.termoVersao = termoVersao;
+    }
+
+    public String getPoliticaVersao() {
+        return politicaVersao;
+    }
+
+    public void setPoliticaVersao(String politicaVersao) {
+        this.politicaVersao = politicaVersao;
     }
 
     public void setAceitouTermos(boolean aceitouTermos) {

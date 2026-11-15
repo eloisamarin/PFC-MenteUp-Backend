@@ -41,6 +41,7 @@ public class RedefinicaoSenhaService {
     private final EmailService emailService;
     private final Clock clock;
     private final LogSistemaService logSistemaService;
+    private final DocumentoLegalService documentoLegalService;
     private final String frontendUrl;
     private final SecureRandom random = new SecureRandom();
 
@@ -51,6 +52,7 @@ public class RedefinicaoSenhaService {
             EmailService emailService,
             Clock clock,
             LogSistemaService logSistemaService,
+            DocumentoLegalService documentoLegalService,
             @Value("${app.frontend.url:http://localhost:5173}") String frontendUrl) {
         this.usuarioRepository = usuarioRepository;
         this.tokenRepository = tokenRepository;
@@ -58,6 +60,7 @@ public class RedefinicaoSenhaService {
         this.emailService = emailService;
         this.clock = clock;
         this.logSistemaService = logSistemaService;
+        this.documentoLegalService = documentoLegalService;
         this.frontendUrl = frontendUrl;
     }
 
@@ -90,12 +93,14 @@ public class RedefinicaoSenhaService {
 
     // POST /usuarios/senha/primeiro-acesso: cria a senha e registra o aceite do termo
     @Transactional
-    public void concluirPrimeiroAcesso(String token, String novaSenha, boolean aceitouTermos) {
+    public void concluirPrimeiroAcesso(String token, String novaSenha, boolean aceitouTermos,
+                                       String termoVersao, String politicaVersao) {
         RegraSenha.validarNovaSenha(novaSenha);
         if (!aceitouTermos) {
             throw ApiException.requisicaoInvalida("TERMO_NAO_ACEITO",
                     "Para usar o MenteUp, é preciso aceitar o Termo de Aceite e a Política de Privacidade.");
         }
+        documentoLegalService.conferirVersoesInformadas(termoVersao, politicaVersao);
 
         TokenRedefinicaoSenha registro = tokenValido(token, true);
         Usuario usuario = registro.getUsuario();
@@ -109,6 +114,8 @@ public class RedefinicaoSenhaService {
 
         registro.setUtilizado(true);
         tokenRepository.save(registro);
+
+        documentoLegalService.registrarAceiteDasVigentes(usuario, usuario.getTermoAceitoEm());
 
         logSistemaService.registrarSucesso(usuario, AcaoLog.ACEITAR_TERMO, EntidadeLog.USUARIO, usuario.getId(),
                 "Usuário #" + usuario.getId() + " criou a senha e aceitou o Termo e a Política.", null);

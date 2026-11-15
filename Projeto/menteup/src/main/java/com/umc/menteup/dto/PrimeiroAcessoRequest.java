@@ -13,6 +13,10 @@ public record PrimeiroAcessoRequest(
         String novaSenha,
 
         // Precisa ser true: quem não aceita o termo não usa a plataforma
-        boolean aceitouTermos
+        boolean aceitouTermos,
+
+        // Versões que a pessoa leu (opcionais enquanto o front novo não é publicado)
+        @Size(max = 20, message = "Versão do Termo inválida") String termoVersao,
+        @Size(max = 20, message = "Versão da Política inválida") String politicaVersao
 ) {
 }

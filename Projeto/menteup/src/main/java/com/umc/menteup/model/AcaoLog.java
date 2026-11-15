@@ -37,6 +37,7 @@ public enum AcaoLog {
     ALTERAR_SENHA,
     REDEFINIR_SENHA,
     ACEITAR_TERMO,
+    EXPORTAR_DADOS,
 
     //Sistema
     FALHA_LOGIN,

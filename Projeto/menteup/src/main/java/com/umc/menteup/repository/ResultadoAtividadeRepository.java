@@ -75,4 +75,12 @@ public interface ResultadoAtividadeRepository extends JpaRepository<ResultadoAti
     @Query("SELECT COALESCE(SUM(r.pontuacao), 0L) FROM ResultadoAtividade r WHERE r.usuario.id = :usuarioId")
     long somarPontuacaoDoUsuario(@Param("usuarioId") Long usuarioId);
 
+    // Exportação dos dados: resultados da pessoa, já com a atividade
+    @Query("""
+        SELECT r FROM ResultadoAtividade r
+        JOIN FETCH r.atividade
+        WHERE r.usuario.id = :usuarioId
+        ORDER BY r.id
+        """)
+    List<ResultadoAtividade> buscarDoUsuarioComAtividade(@Param("usuarioId") Long usuarioId);
 }

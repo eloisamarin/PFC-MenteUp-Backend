@@ -43,6 +43,7 @@ public class RedefinicaoSenhaController {
     @PostMapping("/primeiro-acesso")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void primeiroAcesso(@Valid @RequestBody PrimeiroAcessoRequest request) {
-        redefinicaoSenhaService.concluirPrimeiroAcesso(request.token(), request.novaSenha(), request.aceitouTermos());
+        redefinicaoSenhaService.concluirPrimeiroAcesso(request.token(), request.novaSenha(), request.aceitouTermos(),
+                request.termoVersao(), request.politicaVersao());
     }
 }
