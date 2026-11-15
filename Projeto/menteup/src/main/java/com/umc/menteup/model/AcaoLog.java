@@ -32,6 +32,7 @@ public enum AcaoLog {
     //Usuário
     CADASTRAR_USUARIO,
     EDITAR_USUARIO,
+    EXCLUIR_USUARIO,
 
     //Sistema
     FALHA_LOGIN,
