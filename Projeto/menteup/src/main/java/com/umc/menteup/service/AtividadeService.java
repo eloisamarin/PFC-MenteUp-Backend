@@ -76,6 +76,29 @@ public class AtividadeService {
                 .findAllByTituloContainingIgnoreCase(titulo);
     }
 
+    // Lista completa (com questões e respostas certas) só para quem cria atividades
+    // Administrador vê todas e professor só as das turmas dele. Título nulo traz todas
+    @Transactional(readOnly = true)
+    public List<Atividade> listarParaGestao(String username, String titulo) {
+        Usuario usuario = carregarUsuario(username);
+
+        if (TipoUsuario.ehAdministrador(usuario)) {
+            return titulo == null
+                    ? atividadeRepository.findAll()
+                    : atividadeRepository.findAllByTituloContainingIgnoreCase(titulo);
+        }
+
+        if (TipoUsuario.ehProfessor(usuario)) {
+            return titulo == null
+                    ? atividadeRepository.findDoProfessor(usuario.getId())
+                    : atividadeRepository.findDoProfessorPorTitulo(usuario.getId(), titulo);
+        }
+
+        // O aluno tem a lista própria em /alunos/me/atividades, sem as respostas certas
+        throw ApiException.proibido("SOMENTE_PROFESSOR_OU_ADMINISTRADOR",
+                "Esta listagem é exclusiva para professores e administradores.");
+    }
+
     @Transactional
     public Atividade criarAtividade(Atividade atividade) {
 

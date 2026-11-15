@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @Service
@@ -51,10 +52,61 @@ public class TurmaService {
     }
 
     // Lista das turmas: as arquivadas só aparecem quando pedidas (tela de gestão de turmas)
-    public List<Turma> listar(boolean incluirArquivadas) {
-        return turmaRepository.findAll().stream()
+    // Administrador vê todas, professor as que leciona e aluno as que estuda
+    @Transactional(readOnly = true)
+    public List<Turma> listar(boolean incluirArquivadas, String username) {
+        return turmasVisiveis(carregarLogado(username)).stream()
                 .filter(turma -> incluirArquivadas || !turma.isArquivada())
                 .toList();
+    }
+
+    // Mesma regra da listagem, filtrando pelo nome (sem diferenciar maiúsculas)
+    @Transactional(readOnly = true)
+    public List<Turma> buscarPorNome(String nome, String username) {
+        String procurado = nome.toLowerCase(Locale.ROOT);
+        return turmasVisiveis(carregarLogado(username)).stream()
+                .filter(turma -> turma.getNome() != null
+                        && turma.getNome().toLowerCase(Locale.ROOT).contains(procurado))
+                .toList();
+    }
+
+    // Uma turma com os alunos: só para o administrador, o professor dela ou um aluno matriculado
+    @Transactional(readOnly = true)
+    public Turma buscar(Long id, String username) {
+        Usuario usuario = carregarLogado(username);
+        Turma turma = carregarTurma(id);
+
+        if (!podeVer(turma, usuario)) {
+            throw ApiException.proibido("SEM_ACESSO_A_TURMA", "Você não tem acesso a esta turma.");
+        }
+
+        return turma;
+    }
+
+    private List<Turma> turmasVisiveis(Usuario usuario) {
+        if (TipoUsuario.ehAdministrador(usuario)) {
+            return turmaRepository.findAll();
+        }
+        if (TipoUsuario.ehProfessor(usuario)) {
+            return turmaRepository.findAllByProfessor_Id(usuario.getId());
+        }
+        return turmaRepository.findAllByAlunos_Id(usuario.getId());
+    }
+
+    private boolean podeVer(Turma turma, Usuario usuario) {
+        if (TipoUsuario.ehAdministrador(usuario)) {
+            return true;
+        }
+        if (TipoUsuario.ehProfessor(usuario)) {
+            return turma.getProfessor() != null && turma.getProfessor().getId().equals(usuario.getId());
+        }
+        return turmaRepository.contarMatricula(turma.getId(), usuario.getId()) > 0;
+    }
+
+    private Usuario carregarLogado(String username) {
+        return usuarioRepository.findByUsuario(username)
+                .orElseThrow(() -> ApiException.naoAutenticado(
+                        "USUARIO_NAO_ENCONTRADO", "Usuário não encontrado."));
     }
 
     // Usado antes de criar atividade, desafio ou vincular aluno: turma arquivada não recebe nada novo

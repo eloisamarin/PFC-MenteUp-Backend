@@ -29,4 +29,30 @@ public interface AtividadeRepository extends JpaRepository<Atividade, Long> {
             @Param("statusExcluido")StatusAtividade statusExluido
     );
 
+    // Atividades que têm pelo menos uma turma do professor
+    @Query("""
+            select a from Atividade a
+            where exists (
+                select 1 from Atividade a2 join a2.turmas t
+                where a2 = a and t.professor.id = :professorId
+            )
+            order by a.id
+            """)
+    List<Atividade> findDoProfessor(@Param("professorId") Long professorId);
+
+    // Mesma lista, filtrada pelo título (sem diferenciar maiúsculas)
+    @Query("""
+            select a from Atividade a
+            where exists (
+                select 1 from Atividade a2 join a2.turmas t
+                where a2 = a and t.professor.id = :professorId
+            )
+                and lower(a.titulo) like lower(concat('%', :titulo, '%'))
+            order by a.id
+            """)
+    List<Atividade> findDoProfessorPorTitulo(
+            @Param("professorId") Long professorId,
+            @Param("titulo") String titulo
+    );
+
 }

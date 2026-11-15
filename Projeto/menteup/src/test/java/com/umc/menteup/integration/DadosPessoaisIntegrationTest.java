@@ -18,7 +18,8 @@ import com.umc.menteup.repository.UsuarioRepository;
 
 /*
  * LGPD (minimização): as respostas só trazem os dados pessoais necessários.
- * - /usuarios/all: o aluno recebe só id, nome e tipo; o professor também o e-mail dos alunos
+ * - /usuarios/all: o aluno recebe só id, nome e tipo, e só de quem está nas turmas dele;
+ *   o professor também o e-mail dos alunos
  *   (para adicioná-los na turma); o administrador, o e-mail de todos;
  * - /usuarios/{id}: só o próprio usuário ou o administrador;
  * - turmas e atividades não expõem e-mail nem token do celular (FCM);
@@ -43,6 +44,25 @@ class DadosPessoaisIntegrationTest extends IntegracaoBase {
 
         assertThat(usuarios).isNotEmpty();
         assertThat(usuarios).allSatisfy(u -> assertThat(u.keySet()).containsOnlyElementsOf(CAMPOS_RESUMIDOS));
+    }
+
+    @Test
+    void listarUsuarios_comoAluno_deveTrazerSoQuemEstaNasTurmasDele() {
+        // Arrange
+        Sessao professor = novaSessao("PROFESSOR");
+        Sessao aluno = novaSessao("ALUNO");
+        Sessao colega = novaSessao("ALUNO");
+        Sessao deOutraTurma = novaSessao("ALUNO");
+        Long turmaId = criarTurma(professor);
+        vincularAluno(professor, turmaId, aluno.id());
+        vincularAluno(professor, turmaId, colega.id());
+
+        // Act
+        List<Long> ids = listar(aluno).stream().map(IntegracaoBase::id).toList();
+
+        // Assert
+        assertThat(ids).containsExactlyInAnyOrder(aluno.id(), colega.id(), professor.id());
+        assertThat(ids).doesNotContain(deOutraTurma.id());
     }
 
     @Test

@@ -104,6 +104,9 @@ public class SecurityConfig {
                         .requestMatchers("/atividades/*/questionario").hasAnyRole("PROFESSOR", "ADMINISTRADOR")
                         // Criar, editar e excluir atividade: só professor e administrador.
                         // O aluno continua podendo ver (GET) e salvar o progresso (PUT /atividades/{id}/progresso).
+                        // Listagem completa traz as respostas certas: aluno usa /alunos/me/atividades
+                        .requestMatchers(HttpMethod.GET, "/atividades", "/atividades/titulo/**")
+                        .hasAnyRole("PROFESSOR", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.POST, "/atividades").hasAnyRole("PROFESSOR", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/atividades").hasAnyRole("PROFESSOR", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/atividades/*").hasAnyRole("PROFESSOR", "ADMINISTRADOR")

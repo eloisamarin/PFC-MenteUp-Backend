@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.umc.menteup.dto.ExclusaoTurmaResponse;
 import com.umc.menteup.model.Turma;
-import com.umc.menteup.repository.TurmaRepository;
 
 import com.umc.menteup.service.TurmaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,15 +31,14 @@ import jakarta.validation.Valid;
 public class TurmaController {
 
     @Autowired
-    private TurmaRepository turmaRepository;
-
-    @Autowired
     private TurmaService turmaService;
-    @Operation(summary = "Lista as turmas (as arquivadas só com incluirArquivadas=true)")
+    // Administrador vê todas, professor as que leciona e aluno as que estuda
+    @Operation(summary = "Lista as turmas do usuário logado (as arquivadas só com incluirArquivadas=true)")
     @GetMapping("/all")
     public ResponseEntity<List<Turma>> getAll(
-            @RequestParam(defaultValue = "false") boolean incluirArquivadas) {
-        return ResponseEntity.ok(turmaService.listar(incluirArquivadas));
+            @RequestParam(defaultValue = "false") boolean incluirArquivadas,
+            Authentication authentication) {
+        return ResponseEntity.ok(turmaService.listar(incluirArquivadas, authentication.getName()));
     }
 
     @Operation(summary = "Verifica se a turma pode ser excluída e o que a impede")
@@ -62,22 +60,19 @@ public class TurmaController {
         return ResponseEntity.ok(turmaService.alterarArquivamento(id, false, authentication.getName()));
     }
 
-    @Operation(summary = "Busca uma turma pelo id")
+    @Operation(summary = "Busca uma turma pelo id (administrador, professor da turma ou aluno matriculado)")
     @GetMapping("/{id}")
-    public ResponseEntity<Turma> getById(@PathVariable Long id) {
-        return turmaRepository.findById(id)
-                .map(resposta -> ResponseEntity.ok(resposta))
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    public ResponseEntity<Turma> getById(@PathVariable Long id, Authentication authentication) {
+        return ResponseEntity.ok(turmaService.buscar(id, authentication.getName()));
     }
 
-    @Operation(summary = "Busca turmas pelo nome")
+    @Operation(summary = "Busca pelo nome entre as turmas que o usuário logado pode ver")
     @GetMapping("/nome/{nome}")
     public ResponseEntity<List<Turma>> getAllByNome(
-            @PathVariable String nome) {
+            @PathVariable String nome,
+            Authentication authentication) {
 
-        return ResponseEntity.ok(
-                turmaRepository.findAllByNomeContainingIgnoreCase(nome)
-        );
+        return ResponseEntity.ok(turmaService.buscarPorNome(nome, authentication.getName()));
     }
 
     // Somente PROFESSOR ou ADMINISTRADOR realiza criação de Turma

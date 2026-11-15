@@ -630,4 +630,92 @@ class TurmaControllerIntegrationTest extends IntegracaoBase {
                 .retrieve()
                 .toEntity(JSON);
     }
+
+    // ------------------------------------------------------------- Quem pode ver cada turma
+
+    @Test
+    void listarTodas_comoProfessor_naoDeveTrazerTurmaDeOutroProfessor() {
+        // Arrange
+        Sessao professor = novaSessao("PROFESSOR");
+        Sessao outro = novaSessao("PROFESSOR");
+        Long minha = criarTurma(professor);
+        Long deOutro = criarTurma(outro);
+
+        // Act
+        List<Long> ids = idsDaLista(professor, BASE_PATH + "/all");
+
+        // Assert
+        assertThat(ids).contains(minha).doesNotContain(deOutro);
+    }
+
+    @Test
+    void listarTodas_comoAluno_deveTrazerSoAsTurmasEmQueEstuda() {
+        // Arrange
+        Sessao professor = novaSessao("PROFESSOR");
+        Sessao aluno = novaSessao("ALUNO");
+        Long minha = criarTurma(professor);
+        Long outra = criarTurma(professor);
+        vincularAluno(professor, minha, aluno.id());
+
+        // Act
+        List<Long> ids = idsDaLista(aluno, BASE_PATH + "/all");
+
+        // Assert
+        assertThat(ids).containsExactly(minha).doesNotContain(outra);
+    }
+
+    @Test
+    void buscarPorId_turmaDeOutroProfessor_deveRetornar403() {
+        // Arrange
+        Sessao professor = novaSessao("PROFESSOR");
+        Sessao outro = novaSessao("PROFESSOR");
+        Long turmaId = criarTurma(outro);
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta = buscar(professor, turmaId);
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(resposta.getBody()).containsEntry("codigo", "SEM_ACESSO_A_TURMA");
+    }
+
+    @Test
+    void buscarPorId_comoAluno_soDeveAbrirATurmaEmQueEstuda() {
+        // Arrange
+        Sessao professor = novaSessao("PROFESSOR");
+        Sessao aluno = novaSessao("ALUNO");
+        Long minha = criarTurma(professor);
+        Long outra = criarTurma(professor);
+        vincularAluno(professor, minha, aluno.id());
+
+        // Act + Assert
+        assertThat(buscar(aluno, minha).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(buscar(aluno, outra).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void buscarPorNome_comoProfessor_naoDeveTrazerTurmaDeOutroProfessor() {
+        // Arrange
+        Sessao professor = novaSessao("PROFESSOR");
+        Sessao outro = novaSessao("PROFESSOR");
+        Long deOutro = criarTurma(outro);
+
+        // Act
+        ResponseEntity<List<Map<String, Object>>> resposta = buscarPorNome(professor, "Turma");
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(resposta.getBody()).extracting(IntegracaoBase::id).doesNotContain(deOutro);
+    }
+
+    private List<Long> idsDaLista(Sessao sessao, String uri) {
+        return client.get().uri(uri)
+                .header(HttpHeaders.AUTHORIZATION, sessao.token())
+                .retrieve()
+                .toEntity(LISTA_JSON)
+                .getBody()
+                .stream()
+                .map(IntegracaoBase::id)
+                .toList();
+    }
 }

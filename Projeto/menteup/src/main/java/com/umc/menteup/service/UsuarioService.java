@@ -11,9 +11,11 @@ import com.umc.menteup.model.EntidadeLog;
 import com.umc.menteup.model.ResultadoLog;
 import com.umc.menteup.model.StatusCadastro;
 import com.umc.menteup.model.TipoUsuario;
+import com.umc.menteup.model.Turma;
 import com.umc.menteup.model.Usuario;
 import com.umc.menteup.model.UsuarioLogin;
 import com.umc.menteup.repository.Codigo2FARepository;
+import com.umc.menteup.repository.TurmaRepository;
 import com.umc.menteup.repository.UsuarioRepository;
 import com.umc.menteup.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import org.slf4j.Logger;
@@ -30,9 +33,11 @@ import org.slf4j.LoggerFactory;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class UsuarioService {
@@ -48,6 +53,9 @@ public class UsuarioService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private TurmaRepository turmaRepository;
 
     @Autowired
     private JwtService jwtService;
@@ -91,11 +99,18 @@ public class UsuarioService {
     // LGPD (minimização):
     // - administrador: tudo o que a tela de usuários precisa, inclusive o e-mail;
     // - professor: o e-mail só dos alunos, para escolher o aluno certo ao adicioná-lo na turma;
-    // - aluno: só id, nome e tipo de todos.
+    // - aluno: só id, nome e tipo dos colegas e professores das turmas dele
+    @Transactional(readOnly = true)
     public List<UsuarioListagemResponse> listar(String username) {
         Usuario logado = carregarLogado(username);
         boolean administrador = TipoUsuario.ehAdministrador(logado);
         boolean professor = TipoUsuario.ehProfessor(logado);
+
+        if (!administrador && !professor) {
+            return usuarioRepository.findAllById(pessoasDasTurmasDoAluno(logado)).stream()
+                    .map(UsuarioListagemResponse::resumido)
+                    .toList();
+        }
 
         return usuarioRepository.findAll().stream()
                 .map(usuario -> {
@@ -108,6 +123,21 @@ public class UsuarioService {
                     return UsuarioListagemResponse.resumido(usuario);
                 })
                 .toList();
+    }
+
+    // O próprio aluno, os colegas e os professores das turmas em que ele está
+    private Set<Long> pessoasDasTurmasDoAluno(Usuario aluno) {
+        Set<Long> ids = new LinkedHashSet<>();
+        ids.add(aluno.getId());
+
+        for (Turma turma : turmaRepository.findAllByAlunos_Id(aluno.getId())) {
+            turma.getAlunos().forEach(colega -> ids.add(colega.getId()));
+            if (turma.getProfessor() != null) {
+                ids.add(turma.getProfessor().getId());
+            }
+        }
+
+        return ids;
     }
 
     // Só o próprio usuário ou o administrador consultam os dados de uma pessoa

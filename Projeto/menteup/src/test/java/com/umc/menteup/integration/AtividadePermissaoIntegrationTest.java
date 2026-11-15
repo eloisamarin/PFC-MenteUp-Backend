@@ -19,6 +19,7 @@ import com.umc.menteup.repository.AtividadeRepository;
  * Criar, editar e excluir atividade: só professor e administrador.
  * O professor só mexe nas atividades das turmas dele; o administrador, em todas.
  * O aluno só vê a atividade e salva o próprio progresso.
+ * A listagem completa (com as respostas certas) não é liberada para o aluno
  */
 class AtividadePermissaoIntegrationTest extends IntegracaoBase {
 
@@ -250,5 +251,85 @@ class AtividadePermissaoIntegrationTest extends IntegracaoBase {
         assertThat(edicao.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(exclusao.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
         assertThat(atividadeRepository.existsById(atividadeId)).isFalse();
+    }
+
+    // A listagem completa traz as respostas certas: o aluno usa /alunos/me/atividades
+    @Test
+    void aluno_naoDeveListarAtividadesComRespostas() {
+        // Arrange
+        Sessao professor = novaSessao("PROFESSOR");
+        Sessao aluno = novaSessao("ALUNO");
+        Long turmaId = criarTurma(professor);
+        vincularAluno(professor, turmaId, aluno.id());
+        criarAtividade(professor, turmaId, "EM_ANDAMENTO");
+
+        // Act
+        ResponseEntity<Void> lista = client.get().uri("/atividades")
+                .header(HttpHeaders.AUTHORIZATION, aluno.token())
+                .retrieve()
+                .toBodilessEntity();
+        ResponseEntity<Void> porTitulo = client.get().uri("/atividades/titulo/{titulo}", "Atividade")
+                .header(HttpHeaders.AUTHORIZATION, aluno.token())
+                .retrieve()
+                .toBodilessEntity();
+
+        // Assert
+        assertThat(lista.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(porTitulo.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void professor_deveListarSoAsAtividadesDasTurmasDele() {
+        // Arrange
+        Sessao professor = novaSessao("PROFESSOR");
+        Sessao outro = novaSessao("PROFESSOR");
+        Long minha = criarAtividade(professor, criarTurma(professor), "PENDENTE");
+        Long deOutro = criarAtividade(outro, criarTurma(outro), "PENDENTE");
+
+        // Act
+        List<Long> ids = idsDe(professor, "/atividades");
+
+        // Assert
+        assertThat(ids).contains(minha).doesNotContain(deOutro);
+    }
+
+    @Test
+    void professor_buscaPorTitulo_naoDeveTrazerAtividadeDeOutroProfessor() {
+        // Arrange
+        Sessao professor = novaSessao("PROFESSOR");
+        Sessao outro = novaSessao("PROFESSOR");
+        String titulo = nomeUnico("Titulo compartilhado");
+        Long deOutro = idDaCriada(outro, criarTurma(outro), titulo);
+
+        // Act
+        List<Long> doProfessor = idsDe(professor, "/atividades/titulo/{titulo}", titulo);
+        List<Long> doAdministrador = idsDe(novaSessao("ADMINISTRADOR"), "/atividades/titulo/{titulo}", titulo);
+
+        // Assert
+        assertThat(doProfessor).doesNotContain(deOutro);
+        assertThat(doAdministrador).contains(deOutro);
+    }
+
+    private List<Long> idsDe(Sessao sessao, String uri, Object... variaveis) {
+        return client.get().uri(uri, variaveis)
+                .header(HttpHeaders.AUTHORIZATION, sessao.token())
+                .retrieve()
+                .toEntity(LISTA_JSON)
+                .getBody()
+                .stream()
+                .map(IntegracaoBase::id)
+                .toList();
+    }
+
+    private Long idDaCriada(Sessao autor, Long turmaId, String titulo) {
+        ResponseEntity<Map<String, Object>> resposta = client.post().uri("/atividades")
+                .header(HttpHeaders.AUTHORIZATION, autor.token())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(buildAtividade(titulo, turmaId, "PENDENTE"))
+                .retrieve()
+                .toEntity(JSON);
+
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        return id(resposta.getBody());
     }
 }
