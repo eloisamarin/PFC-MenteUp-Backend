@@ -15,7 +15,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/alunos/me")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 @Tag(name = "Área do aluno", description = "Atividades e turmas do aluno logado")
 public class AlunoController {
 

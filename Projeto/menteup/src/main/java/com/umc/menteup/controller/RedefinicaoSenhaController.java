@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/usuarios/senha")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 
 @Tag(name = "Usuários e login", description = "Cadastro, login com código de 2 etapas e gestão de usuários")
 public class RedefinicaoSenhaController {

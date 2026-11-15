@@ -23,7 +23,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/logs")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 @Tag(name = "Logs do sistema", description = "Histórico de ações (somente administrador)")
 public class LogSistemaController {
     private final LogSistemaRepository logSistemaRepository;

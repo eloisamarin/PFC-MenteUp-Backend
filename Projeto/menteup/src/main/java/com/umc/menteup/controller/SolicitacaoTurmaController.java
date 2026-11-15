@@ -20,7 +20,6 @@ import java.util.List;
  * Professor e administrador: /turmas/{turmaId}/solicitacoes/...
  */
 @RestController
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 @Tag(name = "Solicitações de turma", description = "Aluno pede para entrar ou sair; professor ou administrador aprova")
 public class SolicitacaoTurmaController {
 

@@ -150,11 +150,9 @@ public class LogSistemaService {
             if (attrs == null) {
                 return null;
             }
+            // O IP real já chega aqui pelo server.forward-headers-strategy (o cabeçalho não é lido à mão,
+            // porque quem chama a API poderia escrever qualquer IP nele)
             HttpServletRequest request = attrs.getRequest();
-            String encaminhadoPor = request.getHeader("X-Forwarded-For");
-            if (encaminhadoPor != null && !encaminhadoPor.isBlank()) {
-                return encaminhadoPor.split(",")[0].trim();
-            }
             return request.getRemoteAddr();
         } catch (Exception e) {
             return null;

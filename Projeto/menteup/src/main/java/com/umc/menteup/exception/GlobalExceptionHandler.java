@@ -108,8 +108,8 @@ public class GlobalExceptionHandler {
                 null,
                 null,
                 ResultadoLog.FALHA,
-                "Erro inesperado: " + ex.getClass().getSimpleName()
-                        + (ex.getMessage() != null ? " - " + ex.getMessage() : ""),
+                // Só o tipo do erro: a mensagem pode trazer dados pessoais (e-mail, valores do banco)
+                "Erro inesperado: " + ex.getClass().getSimpleName(),
                 Map.of("excecao", ex.getClass().getName())
         );
 

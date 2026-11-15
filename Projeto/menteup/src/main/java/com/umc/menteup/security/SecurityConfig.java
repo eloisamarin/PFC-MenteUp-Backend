@@ -1,6 +1,7 @@
 package com.umc.menteup.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -57,14 +58,15 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
+    // Endereços do front que podem chamar a API, separados por vírgula (variável CORS_ORIGENS)
+    // Aceita curinga, ex.: https://menteup-*-meutime.vercel.app para as prévias do Vercel
+    @Value("${menteup.cors.origens}")
+    private List<String> origensPermitidas;
+
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        /// Site no Vercel (produção e previews) e o front rodando no computador
-        config.setAllowedOriginPatterns(List.of(
-                "https://*.vercel.app",
-                "http://localhost:5173"
-        ));
+        config.setAllowedOriginPatterns(origensPermitidas);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         /// Guarda a liberação por 1 hora para o navegador não perguntar toda vez
