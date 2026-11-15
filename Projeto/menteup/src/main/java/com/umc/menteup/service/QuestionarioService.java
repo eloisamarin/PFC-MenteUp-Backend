@@ -55,7 +55,7 @@ public class QuestionarioService {
                 ));
 
         // Professor só cadastra questões nas atividades das turmas dele
-        atividadeService.exigirPodeAlterar(atividade.getTurma(), username);
+        atividadeService.exigirPodeAlterarAtividade(atividade, username);
 
         TipoAtividade tipo = definirTipo(atividade, request.tipo());
         TemplateAtividade template = templateResolver.resolver(tipo);
@@ -84,7 +84,7 @@ public class QuestionarioService {
                         "Atividade não encontrada."
                 ));
 
-        atividadeService.exigirPodeAlterar(atividade.getTurma(), username);
+        atividadeService.exigirPodeAlterarAtividade(atividade, username);
 
         if (progressoRepository.existsByAtividade_Id(atividadeId)
                 || resultadoRepository.existsByAtividade_Id(atividadeId)) {

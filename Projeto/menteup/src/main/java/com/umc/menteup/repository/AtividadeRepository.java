@@ -9,14 +9,17 @@ import java.util.List;
 
 public interface AtividadeRepository extends JpaRepository<Atividade, Long> {
     public List <Atividade> findAllByTituloContainingIgnoreCase(@Param("titulo") String titulo);
-    long countByTurma_IdAndStatusNot(Long turmaId, StatusAtividade status);
+    long countByTurmas_IdAndStatusNot(Long turmaId, StatusAtividade status);
 
+    List<Atividade> findAllByTurmas_Id(Long turmaId);
+
+    ///Atividades de qualquer turma em que o aluno está, sem repetir as que estão em mais de uma turma dele
     @Query("""
-            select a from Atividade a 
-                join fetch a.turma t 
+            select a from Atividade a
                 left join fetch a.usuario
-            where t.id in (
-                select t2.id from Turma t2 join t2.alunos al where al.id = :alunoId
+            where exists (
+                select 1 from Atividade a2 join a2.turmas t join t.alunos al
+                where a2 = a and al.id = :alunoId
             )
                 and a.status<> :statusExcluido
             order by a.dataCriacao desc

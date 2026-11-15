@@ -21,6 +21,9 @@ public final class QuestionarioMapper {
                 atividade.getTurma() == null
                         ? null
                         : new TurmaResponse(atividade.getTurma().getId(), atividade.getTurma().getNome()),
+                atividade.getTurmas().stream()
+                        .map(turma -> new TurmaResponse(turma.getId(), turma.getNome()))
+                        .toList(),
                 atividade.getPontuacao(),
                 atividade.getStatus(),
                 atividade.getUsuario() == null

@@ -2,7 +2,10 @@ package com.umc.menteup.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -67,9 +70,18 @@ public class Atividade {
     @UpdateTimestamp
     private Date dataAtualizacao;
 
-    @ManyToOne
+    /// Turmas que recebem a atividade (todas do mesmo professor)
+    @ManyToMany(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
+    @JoinTable(
+            name = "tb_atividade_turma",
+            joinColumns = @JoinColumn(name = "atividade_id"),
+            inverseJoinColumns = @JoinColumn(name = "turma_id"),
+            uniqueConstraints = @UniqueConstraint(columnNames = {"atividade_id", "turma_id"})
+    )
+    @OrderBy("id")
     @JsonIgnoreProperties("atividade")
-    private Turma turma;
+    private List<Turma> turmas = new ArrayList<>();
 
     // Autor da atividade: definido pelo token no POST /atividades, nunca pelo corpo da requisição.
     // Não sai no JSON (o questionário devolve só id e nome pelo UsuarioResponse).
@@ -86,5 +98,25 @@ public class Atividade {
 
     public TipoAtividade getTipo() {
         return TipoAtividade.ouPadrao(tipo);
+    }
+
+    /// Formato antigo com uma turma só: devolve a primeira turma da lista
+    @JsonProperty("turma")
+    @JsonIgnoreProperties("atividade")
+    public Turma getTurma() {
+        return turmas == null || turmas.isEmpty() ? null : turmas.get(0);
+    }
+
+    /// Formato antigo com uma turma só: a atividade passa a ter só essa turma
+    @JsonProperty("turma")
+    public void setTurma(Turma turma) {
+        this.turmas = new ArrayList<>();
+        if (turma != null) {
+            this.turmas.add(turma);
+        }
+    }
+
+    public void setTurmas(List<Turma> turmas) {
+        this.turmas = turmas == null ? new ArrayList<>() : new ArrayList<>(turmas);
     }
 }

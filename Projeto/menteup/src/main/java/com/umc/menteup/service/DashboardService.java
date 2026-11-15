@@ -49,6 +49,18 @@ public class DashboardService {
     private static final String PERGUNTAS_POR_ATIVIDADE =
             "(SELECT atividade_id, COUNT(*) AS total FROM perguntas GROUP BY atividade_id)";
 
+    /// Liga o resultado (alias "r", atividade "a") a cada turma da atividade (alias "atv" e "t")
+    private static final String TURMA_DO_RESULTADO =
+            "JOIN tb_atividade_turma atv ON atv.atividade_id = a.id "
+                    + "JOIN tb_turma t ON t.id = atv.turma_id ";
+
+    /// Atividade em várias turmas: o resultado só conta na turma em que o aluno está
+    /// Atividade de uma turma só: conta sempre nela, mesmo se o aluno já saiu
+    private static final String RESULTADO_CONTA_NA_TURMA =
+            "(EXISTS (SELECT 1 FROM tb_turma_aluno ta WHERE ta.turma_id = atv.turma_id AND ta.aluno_id = r.usuario_id) "
+                    + "OR NOT EXISTS (SELECT 1 FROM tb_atividade_turma outra "
+                    + "WHERE outra.atividade_id = a.id AND outra.turma_id <> atv.turma_id)) ";
+
     private static final Set<String> ACOES_DE_PROFESSOR = Set.of(
             "CRIAR_ATIVIDADE", "EDITAR_ATIVIDADE", "EXCLUIR_ATIVIDADE", "PUBLICAR_ATIVIDADE",
             "CRIAR_QUESTAO", "CRIAR_TURMA", "ADICIONAR_ALUNO_TURMA", "REMOVER_ALUNO_TURMA");
@@ -179,8 +191,9 @@ public class DashboardService {
         return jdbc.query("SELECT t.nome, SUM(r.acertos), SUM(q.total) "
                                 + "FROM resultado_atividade r "
                                 + "JOIN tb_atividade a ON a.id = r.atividade_id "
-                                + "JOIN tb_turma t ON t.id = a.turma_id "
+                                + TURMA_DO_RESULTADO
                                 + "JOIN " + PERGUNTAS_POR_ATIVIDADE + " q ON q.atividade_id = r.atividade_id "
+                                + "WHERE " + RESULTADO_CONTA_NA_TURMA
                                 + "GROUP BY t.id, t.nome",
                         (rs, linha) -> new AcertoTurma(rs.getString(1), percentual(rs.getLong(2), rs.getLong(3))))
                 .stream()
@@ -320,7 +333,7 @@ public class DashboardService {
                         + "FROM resultado_atividade r JOIN tb_atividade a ON a.id = r.atividade_id "
                         + "LEFT JOIN " + PERGUNTAS_POR_ATIVIDADE + " q ON q.atividade_id = r.atividade_id "
                         + "WHERE r.concluida_em >= :inicio AND r.concluida_em < :fim"
-                        + recorte.turma("a") + recorte.aluno("r.usuario_id"),
+                        + recorte.resultadoNaTurma() + recorte.aluno("r.usuario_id"),
                 recorte.parametros(),
                 (rs, linha) -> new long[]{rs.getLong(1), rs.getLong(2), rs.getLong(3), rs.getLong(4)});
 
@@ -336,7 +349,7 @@ public class DashboardService {
                 (rs, linha) -> new long[]{rs.getLong(1), rs.getLong(2), rs.getLong(3)});
 
         Long publicadas = jdbcComNomes.queryForObject(
-                "SELECT COUNT(*) FROM tb_atividade a WHERE a.status <> 'PENDENTE'" + recorte.turma("a"),
+                "SELECT COUNT(*) FROM tb_atividade a WHERE a.status <> 'PENDENTE'" + recorte.atividadeNaTurma(),
                 recorte.parametros(), Long.class);
 
         return new ResumoPainel(
@@ -356,7 +369,7 @@ public class DashboardService {
         jdbcComNomes.query("SELECT CAST(r.concluida_em AS DATE), COUNT(*) FROM resultado_atividade r "
                         + "JOIN tb_atividade a ON a.id = r.atividade_id "
                         + "WHERE r.concluida_em >= :inicio AND r.concluida_em < :fim"
-                        + recorte.turma("a") + recorte.aluno("r.usuario_id")
+                        + recorte.resultadoNaTurma() + recorte.aluno("r.usuario_id")
                         + " GROUP BY CAST(r.concluida_em AS DATE)",
                 recorte.parametros(),
                 rs -> {
@@ -375,10 +388,10 @@ public class DashboardService {
     private List<AcertoTurma> acertoPorTurma(Recorte recorte) {
         return jdbcComNomes.query("SELECT t.nome, SUM(r.acertos), SUM(q.total) FROM resultado_atividade r "
                         + "JOIN tb_atividade a ON a.id = r.atividade_id "
-                        + "JOIN tb_turma t ON t.id = a.turma_id "
+                        + TURMA_DO_RESULTADO
                         + "JOIN " + PERGUNTAS_POR_ATIVIDADE + " q ON q.atividade_id = r.atividade_id "
-                        + "WHERE r.concluida_em >= :inicio AND r.concluida_em < :fim"
-                        + recorte.turma("a") + recorte.aluno("r.usuario_id")
+                        + "WHERE r.concluida_em >= :inicio AND r.concluida_em < :fim AND " + RESULTADO_CONTA_NA_TURMA
+                        + recorte.turma("atv") + recorte.aluno("r.usuario_id")
                         + " GROUP BY t.id, t.nome ORDER BY t.nome",
                 recorte.parametros(),
                 (rs, linha) -> new AcertoTurma(rs.getString(1), percentual(rs.getLong(2), rs.getLong(3))));
@@ -392,7 +405,7 @@ public class DashboardService {
                         + "JOIN tb_atividade a ON a.id = r.atividade_id "
                         + "LEFT JOIN " + PERGUNTAS_POR_ATIVIDADE + " q ON q.atividade_id = r.atividade_id "
                         + "WHERE r.concluida_em >= :inicio AND r.concluida_em < :fim"
-                        + recorte.turma("a") + recorte.aluno("r.usuario_id")
+                        + recorte.resultadoNaTurma() + recorte.aluno("r.usuario_id")
                         + " GROUP BY r.usuario_id",
                 recorte.parametros(),
                 rs -> {
@@ -428,6 +441,19 @@ public class DashboardService {
 
         String turma(String alias) {
             return todasAsTurmas ? "" : " AND " + alias + ".turma_id IN (:turmas)";
+        }
+
+        /// Atividade que está em alguma das turmas do recorte (alias "a")
+        String atividadeNaTurma() {
+            return todasAsTurmas ? "" : " AND EXISTS (SELECT 1 FROM tb_atividade_turma atv "
+                    + "WHERE atv.atividade_id = a.id AND atv.turma_id IN (:turmas))";
+        }
+
+        /// Resultado (alias "r", atividade "a") que conta para alguma das turmas do recorte
+        String resultadoNaTurma() {
+            return todasAsTurmas ? "" : " AND EXISTS (SELECT 1 FROM tb_atividade_turma atv "
+                    + "WHERE atv.atividade_id = a.id AND atv.turma_id IN (:turmas) AND "
+                    + RESULTADO_CONTA_NA_TURMA + ")";
         }
 
         String aluno(String coluna) {

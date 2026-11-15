@@ -19,6 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -81,45 +83,41 @@ public class AtividadeController {
 
         exigirTurmaInformada(atividade);
 
-        Turma turma = turmaRepository.findById(atividade.getTurma().getId()).orElse(null);
+        List<Turma> turmas = carregarTurmas(atividade, "Turma não existe!");
 
-        if (turma != null) {
-
-            // Professor só cria atividade nas turmas dele. O autor é quem está logado (token),
-            // nunca um "usuario" vindo no corpo da requisição.
-            Usuario autor = atividadeService.exigirPodeAlterar(turma, authentication.getName());
+        // Professor só cria atividade nas turmas dele. O autor é quem está logado (token),
+        // nunca um "usuario" vindo no corpo da requisição.
+        Usuario autor = null;
+        for (Turma turma : turmas) {
+            autor = atividadeService.exigirPodeAlterar(turma, authentication.getName());
             TurmaService.exigirTurmaAtiva(turma);
-
-            atividade.setId(null);
-            atividade.setUsuario(autor);
-
-            ///Salva pelo service para os alunos receberem a notificação
-            Atividade salva = atividadeService.criarAtividade(atividade);
-
-            logSistemaService.registrarPorUsername(
-                    authentication.getName(),
-                    AcaoLog.CRIAR_ATIVIDADE,
-                    EntidadeLog.ATIVIDADE,
-                    salva.getId(),
-                    ResultadoLog.SUCESSO,
-                    "Atividade \"" + salva.getTitulo() + "\" criada",
-                    Map.of(
-                            "titulo", salva.getTitulo(),
-                            "turmaId", salva.getTurma().getId(),
-                            "pontuacao", salva.getPontuacao()
-                    )
-            );
-
-            return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(salva);
         }
+        AtividadeService.exigirMesmoProfessor(turmas);
 
-        throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Turma não existe!",
-                null
+        atividade.setId(null);
+        atividade.setUsuario(autor);
+        atividade.setTurmas(turmas);
+
+        ///Salva pelo service para os alunos receberem a notificação
+        Atividade salva = atividadeService.criarAtividade(atividade);
+
+        logSistemaService.registrarPorUsername(
+                authentication.getName(),
+                AcaoLog.CRIAR_ATIVIDADE,
+                EntidadeLog.ATIVIDADE,
+                salva.getId(),
+                ResultadoLog.SUCESSO,
+                "Atividade \"" + salva.getTitulo() + "\" criada",
+                Map.of(
+                        "titulo", salva.getTitulo(),
+                        "turmaIds", idsDasTurmas(salva),
+                        "pontuacao", salva.getPontuacao()
+                )
         );
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(salva);
     }
 
     @Operation(summary = "Edita ou publica a atividade")
@@ -142,20 +140,25 @@ public class AtividadeController {
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        Turma novaTurma = turmaRepository.findById(atividade.getTurma().getId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Turma não existe",
-                        null
-                ));
+        List<Turma> novasTurmas = carregarTurmas(atividade, "Turma não existe");
 
-        // Professor só edita atividade da turma dele e não pode mover para a turma de outro professor
-        atividadeService.exigirPodeAlterar(existente.getTurma(), authentication.getName());
-        atividadeService.exigirPodeAlterar(novaTurma, authentication.getName());
-        // Mudar a atividade para outra turma: só se ela não estiver arquivada
-        if (!novaTurma.getId().equals(existente.getTurma().getId())) {
-            TurmaService.exigirTurmaAtiva(novaTurma);
+        // Professor só edita atividade das turmas dele e não pode passar para a turma de outro professor
+        if (existente.getTurmas().isEmpty()) {
+            atividadeService.exigirPodeAlterar((Turma) null, authentication.getName());
         }
+        for (Turma turma : existente.getTurmas()) {
+            atividadeService.exigirPodeAlterar(turma, authentication.getName());
+        }
+        List<Long> turmasAtuais = idsDasTurmas(existente);
+        for (Turma turma : novasTurmas) {
+            atividadeService.exigirPodeAlterar(turma, authentication.getName());
+            // Colocar a atividade em mais uma turma: só se ela não estiver arquivada
+            if (!turmasAtuais.contains(turma.getId())) {
+                TurmaService.exigirTurmaAtiva(turma);
+            }
+        }
+        AtividadeService.exigirMesmoProfessor(novasTurmas);
+        atividade.setTurmas(novasTurmas);
 
         StatusAtividade statusAnterior = existente.getStatus();
 
@@ -236,8 +239,8 @@ public class AtividadeController {
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        // Professor só exclui atividade da turma dele
-        atividadeService.exigirPodeAlterar(atividade.getTurma(), authentication.getName());
+        // Professor só exclui atividade das turmas dele
+        atividadeService.exigirPodeAlterarAtividade(atividade, authentication.getName());
 
         atividadeRepository.deleteById(id);
 
@@ -255,12 +258,31 @@ public class AtividadeController {
     }
 
     private void exigirTurmaInformada(Atividade atividade) {
-        if (atividade.getTurma() == null || atividade.getTurma().getId() == null) {
+        if (atividade.getTurmas() == null || atividade.getTurmas().isEmpty()
+                || atividade.getTurmas().stream().anyMatch(t -> t == null || t.getId() == null)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "A turma da atividade é obrigatória.",
                     null
             );
         }
+    }
+
+    ///Busca cada turma informada no banco, sem repetir
+    private List<Turma> carregarTurmas(Atividade atividade, String mensagemSeNaoExistir) {
+        List<Turma> turmas = new ArrayList<>();
+        for (Long id : new LinkedHashSet<>(idsDasTurmas(atividade))) {
+            turmas.add(turmaRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            mensagemSeNaoExistir,
+                            null
+                    )));
+        }
+        return turmas;
+    }
+
+    private static List<Long> idsDasTurmas(Atividade atividade) {
+        return atividade.getTurmas().stream().map(Turma::getId).toList();
     }
 }

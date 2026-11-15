@@ -32,9 +32,11 @@ public class MatriculaService {
     }
 
     public void exigirMatricula(Atividade atividade, Usuario aluno) {
-        Turma turma = atividade.getTurma();
+        ///Basta o aluno estar em uma das turmas da atividade
+        boolean matriculado = atividade.getTurmas() != null && atividade.getTurmas().stream()
+                .anyMatch(turma -> turma != null && estaMatriculado(turma.getId(), aluno.getId()));
 
-        if (turma == null || !estaMatriculado(turma.getId(), aluno.getId())) {
+        if (!matriculado) {
             throw ApiException.proibido(
                     "ALUNO_FORA_DA_TURMA",
                     "Você não pertence à turma desta atividade."

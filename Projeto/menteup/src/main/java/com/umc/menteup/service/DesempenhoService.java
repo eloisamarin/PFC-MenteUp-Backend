@@ -112,7 +112,7 @@ public class DesempenhoService {
                 .collect(Collectors.toMap(ResumoDesempenhoAluno::alunoId, Function.identity()));
 
         long totalAtividades = atividadeRepository
-                .countByTurma_IdAndStatusNot(turmaId, StatusAtividade.PENDENTE);
+                .countByTurmas_IdAndStatusNot(turmaId, StatusAtividade.PENDENTE);
 
 
         // Lista Resultado dos Alunos
@@ -171,10 +171,13 @@ public class DesempenhoService {
                 .orElseThrow(() -> ApiException.naoEncontrado(
                         "RESULTADO_NAO_ENCONTRADO", "Resultado não encontrado."));
 
-        Turma turma = resultado.getAtividade().getTurma();
+        // O resultado precisa ser de uma atividade da turma informada na rota
+        Turma turma = resultado.getAtividade().getTurmas().stream()
+                .filter(t -> t.getId().equals(turmaId))
+                .findFirst()
+                .orElse(null);
 
-        // O resultado precisa ser da turma informada na rota
-        if (turma == null || !turma.getId().equals(turmaId)) {
+        if (turma == null) {
             throw ApiException.naoEncontrado(
                     "RESULTADO_NAO_ENCONTRADO", "Resultado não encontrado nesta turma.");
         }
@@ -225,7 +228,7 @@ public class DesempenhoService {
                         "ALUNO_NAO_ENCONTRADO_NA_TURMA", "Aluno não encontrado nesta turma."));
 
         List<AtividadeDoAlunoResponse> atividades = resultadoAtividadeRepository
-                .findAllByUsuario_IdAndAtividade_Turma_Id(alunoId, turmaId)
+                .findAllByUsuario_IdAndAtividade_Turmas_Id(alunoId, turmaId)
                 .stream()
                 .map(resultado -> montarAtividade(resultado, alunoId))
                 .toList();

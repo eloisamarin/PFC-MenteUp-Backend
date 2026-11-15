@@ -28,12 +28,9 @@ public class Turma {
     @Column(length = 255)
     private String nome;
 
-    @OneToMany(
-            fetch = FetchType.LAZY,
-            mappedBy = "turma",
-            cascade = CascadeType.REMOVE
-    )
-    @JsonIgnoreProperties(value = "turma", allowSetters = true)
+    /// Ao excluir a turma, o TurmaService apaga as atividades dela
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "turmas")
+    @JsonIgnoreProperties(value = {"turma", "turmas"}, allowSetters = true)
     private List<Atividade> atividade = new ArrayList<>();
 
     @ManyToMany

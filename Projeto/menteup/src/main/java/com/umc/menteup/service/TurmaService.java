@@ -3,6 +3,7 @@ package com.umc.menteup.service;
 import com.umc.menteup.dto.ExclusaoTurmaResponse;
 import com.umc.menteup.exception.ApiException;
 import com.umc.menteup.model.*;
+import com.umc.menteup.repository.AtividadeRepository;
 import com.umc.menteup.repository.DesafioRepository;
 import com.umc.menteup.repository.ProgressoAtividadeRepository;
 import com.umc.menteup.repository.ResultadoAtividadeRepository;
@@ -27,6 +28,7 @@ public class TurmaService {
     private final DesafioRepository desafioRepository;
     private final ResultadoAtividadeRepository resultadoRepository;
     private final ProgressoAtividadeRepository progressoRepository;
+    private final AtividadeRepository atividadeRepository;
 
     public TurmaService(
             TurmaRepository turmaRepository,
@@ -35,7 +37,8 @@ public class TurmaService {
             SolicitacaoTurmaRepository solicitacaoRepository,
             DesafioRepository desafioRepository,
             ResultadoAtividadeRepository resultadoRepository,
-            ProgressoAtividadeRepository progressoRepository
+            ProgressoAtividadeRepository progressoRepository,
+            AtividadeRepository atividadeRepository
     ) {
         this.turmaRepository = turmaRepository;
         this.usuarioRepository = usuarioRepository;
@@ -44,6 +47,7 @@ public class TurmaService {
         this.desafioRepository = desafioRepository;
         this.resultadoRepository = resultadoRepository;
         this.progressoRepository = progressoRepository;
+        this.atividadeRepository = atividadeRepository;
     }
 
     // Lista das turmas: as arquivadas só aparecem quando pedidas (tela de gestão de turmas)
@@ -229,6 +233,10 @@ public class TurmaService {
 
         // Os pedidos de entrada/saída da turma são apagados junto
         solicitacaoRepository.apagarDaTurma(turmaId);
+        ///As atividades da turma são apagadas junto, mesmo as que também estão em outras turmas
+        atividadeRepository.deleteAll(atividadeRepository.findAllByTurmas_Id(turmaId));
+        atividadeRepository.flush();
+        turma.getAtividade().clear();
         turmaRepository.delete(turma);
 
         logSistemaService.registrarSucesso(
@@ -276,8 +284,8 @@ public class TurmaService {
     private ExclusaoTurmaResponse analisarExclusao(Turma turma) {
         int alunos = turma.getAlunos() == null ? 0 : turma.getAlunos().size();
         long desafios = desafioRepository.countByTurma_Id(turma.getId());
-        long resultados = resultadoRepository.countByAtividade_Turma_Id(turma.getId());
-        long emAndamento = progressoRepository.countByAtividade_Turma_Id(turma.getId());
+        long resultados = resultadoRepository.countByAtividade_Turmas_Id(turma.getId());
+        long emAndamento = progressoRepository.countByAtividade_Turmas_Id(turma.getId());
 
         String motivo = null;
         if (alunos > 0) {

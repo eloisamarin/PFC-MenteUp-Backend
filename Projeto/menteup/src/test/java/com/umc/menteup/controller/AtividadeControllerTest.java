@@ -121,7 +121,8 @@ class AtividadeControllerTest {
         void retornaQuestionario() throws Exception {
             QuestionarioResponse resposta = new QuestionarioResponse(
                     new AtividadeResponse(10L, "Fracoes basicas", "Atividade sobre fracoes",
-                            new TurmaResponse(5L, "Turma A"), 10, StatusAtividade.EM_ANDAMENTO,
+                            new TurmaResponse(5L, "Turma A"), List.of(new TurmaResponse(5L, "Turma A")),
+                            10, StatusAtividade.EM_ANDAMENTO,
                             null, null, TipoAtividade.QUIZ),
                     List.of(),
                     null,
