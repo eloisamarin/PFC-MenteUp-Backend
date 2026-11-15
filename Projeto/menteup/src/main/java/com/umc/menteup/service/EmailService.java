@@ -6,45 +6,41 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
-/*
- * Envio dos e-mails do MenteUp (código de login, redefinição de senha e convite).
- *
- * Duas formas de envio, escolhidas pela configuração:
- * - Com BREVO_API_KEY: envia pela API HTTPS do Brevo. É a forma usada no Render, porque o plano
- *   gratuito do Render bloqueia as portas de SMTP (o Gmail na porta 587 não conecta).
- * - Sem BREVO_API_KEY: envia pelo SMTP do Gmail (spring.mail.*), como no computador de desenvolvimento.
- * O remetente é sempre o EMAIL_PROJETO; no Brevo ele precisa estar cadastrado como "sender" verificado.
- */
+/// Envio dos e-mails do MenteUp (código de login, redefinição de senha, convite e cadastro de professor)
+/// Tudo sai pela API do Brevo, porque o Render gratuito bloqueia o envio por SMTP
+/// O remetente é o EMAIL_PROJETO e precisa estar verificado no Brevo
 @Service
 public class EmailService {
 
     static final String URL_BREVO = "https://api.brevo.com/v3/smtp/email";
     private static final String NOME_REMETENTE = "MenteUp";
 
-    private final JavaMailSender mailSender;
     private final RestClient brevo;
     private final String chaveBrevo;
     private final String remetente;
 
     @Autowired
     public EmailService(
-            JavaMailSender mailSender,
-            @Value("${menteup.email.brevo-api-key:}") String chaveBrevo,
-            @Value("${spring.mail.username:}") String remetente) {
-        this(mailSender, RestClient.builder(), chaveBrevo, remetente);
+            @Value("${menteup.email.brevo-api-key}") String chaveBrevo,
+            @Value("${menteup.email.remetente}") String remetente) {
+        this(RestClient.builder(), chaveBrevo, remetente);
     }
 
     // Usado nos testes, para trocar o servidor do Brevo por um simulado
-    EmailService(JavaMailSender mailSender, RestClient.Builder builder, String chaveBrevo, String remetente) {
-        this.mailSender = mailSender;
+    EmailService(RestClient.Builder builder, String chaveBrevo, String remetente) {
+        ///Sem chave ou sem remetente nenhum e-mail sai, então a aplicação nem sobe
+        if (chaveBrevo == null || chaveBrevo.isBlank()) {
+            throw new IllegalStateException("Configure a variável BREVO_API_KEY para enviar os e-mails");
+        }
+        if (remetente == null || remetente.isBlank()) {
+            throw new IllegalStateException("Configure a variável EMAIL_PROJETO com o remetente dos e-mails");
+        }
         this.brevo = builder.build();
-        this.chaveBrevo = chaveBrevo == null ? "" : chaveBrevo.trim();
-        this.remetente = remetente;
+        this.chaveBrevo = chaveBrevo.trim();
+        this.remetente = remetente.trim();
     }
 
     // Código de verificação
@@ -103,26 +99,10 @@ public class EmailService {
                                 + "Se quiser, você pode enviar um novo pedido pela tela de cadastro.\n"));
     }
 
-    // Escolhe a forma de envio. Se der erro, a exceção sobe: quem chama decide o que fazer
+    // Se der erro, a exceção sobe: quem chama decide o que fazer
     // (no login, por exemplo, o código não enviado conta como falha).
-    private void enviar(String destinatario, String assunto, String texto) {
-        if (chaveBrevo.isEmpty()) {
-            enviarPorSmtp(destinatario, assunto, texto);
-        } else {
-            enviarPeloBrevo(destinatario, assunto, texto);
-        }
-    }
-
-    private void enviarPorSmtp(String destinatario, String assunto, String texto) {
-        SimpleMailMessage mensagem = new SimpleMailMessage();
-        mensagem.setTo(destinatario);
-        mensagem.setSubject(assunto);
-        mensagem.setText(texto);
-        mailSender.send(mensagem);
-    }
-
     // API de e-mail transacional do Brevo (HTTPS, porta 443): https://developers.brevo.com
-    private void enviarPeloBrevo(String destinatario, String assunto, String texto) {
+    private void enviar(String destinatario, String assunto, String texto) {
         Map<String, Object> corpo = Map.of(
                 "sender", Map.of("name", NOME_REMETENTE, "email", remetente),
                 "to", List.of(Map.of("email", destinatario)),

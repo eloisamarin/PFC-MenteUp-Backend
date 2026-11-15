@@ -91,5 +91,5 @@ EXPOSE 8080
 #   -cp app:app/lib/*                     -> classpath: as classes do projeto (app) e todas as bibliotecas (app/lib);
 #   com.umc.menteup.MenteupApplication    -> a classe com o main() que sobe o Spring Boot.
 # As senhas e chaves NÃO ficam na imagem: passe as variáveis de ambiente ao rodar o container
-# (DATABASE_URL, DATABASE_USERNAME, DATABASE_PASSWORD, EMAIL_PROJETO, SENHA_EMAIL, JWT_SECRET...).
+# (DATABASE_URL, DATABASE_USERNAME, DATABASE_PASSWORD, EMAIL_PROJETO, BREVO_API_KEY, JWT_SECRET...).
 ENTRYPOINT ["java","-cp","app:app/lib/*","com.umc.menteup.MenteupApplication"]
