@@ -5,15 +5,13 @@ import tools.jackson.databind.ObjectMapper;
 import com.umc.menteup.model.*;
 import com.umc.menteup.repository.LogSistemaRepository;
 import com.umc.menteup.repository.UsuarioRepository;
-import jakarta.servlet.http.HttpServletRequest;
+import com.umc.menteup.security.IpDoCliente;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 @Service
 public class LogSistemaService {
@@ -23,13 +21,16 @@ public class LogSistemaService {
     private final UsuarioRepository usuarioRepository;
     private final ObjectMapper objectMapper;
     private final TransactionTemplate transacaoDoLog;
+    private final IpDoCliente ipDoCliente;
 
     public LogSistemaService(
             LogSistemaRepository logSistemaRepository,
             UsuarioRepository usuarioRepository,
             ObjectMapper objectMapper,
-            PlatformTransactionManager gerenciadorDeTransacao
+            PlatformTransactionManager gerenciadorDeTransacao,
+            IpDoCliente ipDoCliente
     ) {
+        this.ipDoCliente = ipDoCliente;
         this.logSistemaRepository = logSistemaRepository;
         this.usuarioRepository = usuarioRepository;
         this.objectMapper = objectMapper;
@@ -145,15 +146,7 @@ public class LogSistemaService {
 
     private String obterIpRequisicaoAtual() {
         try {
-            ServletRequestAttributes attrs =
-                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-            if (attrs == null) {
-                return null;
-            }
-            // O IP real já chega aqui pelo server.forward-headers-strategy (o cabeçalho não é lido à mão,
-            // porque quem chama a API poderia escrever qualquer IP nele)
-            HttpServletRequest request = attrs.getRequest();
-            return request.getRemoteAddr();
+            return ipDoCliente.daRequisicaoAtual();
         } catch (Exception e) {
             return null;
         }
