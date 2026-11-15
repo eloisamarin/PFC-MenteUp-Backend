@@ -7,6 +7,7 @@ import com.umc.menteup.dto.EsqueciSenhaRequest;
 import com.umc.menteup.dto.PrimeiroAcessoRequest;
 import com.umc.menteup.dto.RedefinirSenhaRequest;
 import com.umc.menteup.service.RedefinicaoSenhaService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -26,8 +27,8 @@ public class RedefinicaoSenhaController {
     @Operation(summary = "Esqueci minha senha: envia o link por e-mail")
     @PostMapping("/esqueci")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void esqueciSenha(@Valid @RequestBody EsqueciSenhaRequest request) {
-        redefinicaoSenhaService.solicitar(request.email());
+    public void esqueciSenha(@Valid @RequestBody EsqueciSenhaRequest request, HttpServletRequest http) {
+        redefinicaoSenhaService.solicitar(request.email(), http.getRemoteAddr());
     }
 
     // POST /usuarios/senha/redefinir: troca a senha usando o token do link

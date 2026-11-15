@@ -18,12 +18,20 @@ public class UserDetailsImpl implements UserDetails {
     private String username;
     private String password;
     private String tipoUsuario;
+    private int versaoSessao;
+    private boolean bloqueado;
 
     public UserDetailsImpl(Usuario user) {
         this.id = user.getId();
         this.username = user.getUsuario();
         this.password = user.getSenha();
         this.tipoUsuario = user.getTipoUsuario();
+        this.versaoSessao = user.getVersaoSessao();
+        this.bloqueado = user.estaBloqueado();
+    }
+
+    public int getVersaoSessao() {
+        return versaoSessao;
     }
 
     @Override
@@ -53,7 +61,7 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return !bloqueado;
     }
 
     @Override
@@ -65,4 +73,4 @@ public class UserDetailsImpl implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
-}
+}

@@ -16,6 +16,7 @@ public class Codigo2FA {
     @Column(nullable = false)
     private String usuario;
 
+    // Guarda só o hash do código: quem ler o banco não consegue entrar com ele
     @Column(nullable = false)
     private String codigo;
 
@@ -125,4 +126,4 @@ public class Codigo2FA {
         }
         return Math.max(0, limite - this.tentativas);
     }
-}
+}

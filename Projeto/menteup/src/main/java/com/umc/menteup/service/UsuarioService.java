@@ -198,6 +198,7 @@ public class UsuarioService {
         usuario.setTermoAceitoEm(LocalDateTime.now());
         ///Professor só entra depois que o administrador aprovar
         usuario.setStatusCadastro(TipoUsuario.PROFESSOR.equals(tipo) ? StatusCadastro.PENDENTE : null);
+        usuario.setStatusAlteradoEm(usuario.getStatusCadastro() == null ? null : LocalDateTime.now());
         Usuario salvo = reenvio ? reenviarPedido(existente.get(), usuario) : salvarNovo(usuario);
         documentoLegalService.registrarAceiteDasVigentes(salvo, salvo.getTermoAceitoEm());
 
@@ -265,6 +266,7 @@ public class UsuarioService {
         conta.setSenha(passwordEncoder.encode(pedido.getSenha()));
         conta.setTermoAceitoEm(pedido.getTermoAceitoEm());
         conta.setStatusCadastro(pedido.getStatusCadastro());
+        conta.setStatusAlteradoEm(pedido.getStatusAlteradoEm());
         conta.setTentativasLogin(0);
         conta.setBloqueadoEm(null);
         return usuarioRepository.save(conta);
@@ -297,6 +299,8 @@ public class UsuarioService {
         }
 
         alvo.setStatusCadastro(aprovar ? StatusCadastro.APROVADA : StatusCadastro.REJEITADA);
+        // A data da rejeição conta o prazo para descartar o pedido
+        alvo.setStatusAlteradoEm(LocalDateTime.now());
         Usuario salvo = usuarioRepository.save(alvo);
 
         logSistemaService.registrarSucesso(
@@ -473,7 +477,7 @@ public class UsuarioService {
             throw ApiException.naoAutenticado("CODIGO_2FA_EXPIRADO",
                     "O código expirou. Peça um novo código.");
         }
-        if (!c.getCodigo().equals(codigo)) {
+        if (codigo == null || !passwordEncoder.matches(codigo, c.getCodigo())) {
             // Contra força bruta: cada erro conta e, no limite, o código deixa de valer
             int restantes = c.registrarTentativaErrada(MAXIMO_TENTATIVAS_2FA);
             codigo2FARepository.save(c);
@@ -553,7 +557,9 @@ public class UsuarioService {
     private boolean gerarEEnviarCodigo2FA(String usuario, int reenvios) {
         String codigo = String.format("%06d", random.nextInt(1_000_000));
 
-        Codigo2FA novo = new Codigo2FA(usuario, codigo, LocalDateTime.now().plusMinutes(VALIDADE_CODIGO_2FA_MINUTOS));
+        // Vai para o e-mail o código e para o banco só o hash
+        Codigo2FA novo = new Codigo2FA(usuario, passwordEncoder.encode(codigo),
+                LocalDateTime.now().plusMinutes(VALIDADE_CODIGO_2FA_MINUTOS));
         novo.setReenvios(reenvios);
         codigo2FARepository.save(novo);
 
@@ -610,6 +616,7 @@ public class UsuarioService {
         }
 
         usuario.setBloqueadoEm(LocalDateTime.now());
+        usuario.encerrarSessoes();
         usuarioRepository.save(usuario);
 
         throw contaBloqueada();
@@ -637,7 +644,7 @@ public class UsuarioService {
         usuarioLogin.setTipoUsuario(usuario.getTipoUsuario());
         usuarioLogin.setAvatar(usuario.getAvatar() == null ? null : usuario.getAvatar().name());
 
-        usuarioLogin.setToken(gerarToken(usuario.getUsuario()));
+        usuarioLogin.setToken(gerarToken(usuario));
         usuarioLogin.setAceitesPendentes(documentoLegalService.pendentes(usuario.getId()).stream()
                 .map(documento -> documento.getTipo().name())
                 .toList());
@@ -645,7 +652,7 @@ public class UsuarioService {
         return usuarioLogin;
     }
 
-    private String gerarToken(String usuario) {
-        return "Bearer " + jwtService.generateToken(usuario);
+    private String gerarToken(Usuario usuario) {
+        return "Bearer " + jwtService.generateToken(usuario.getUsuario(), usuario.getVersaoSessao());
     }
 }

@@ -11,6 +11,7 @@ import com.umc.menteup.repository.UsuarioRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HexFormat;
@@ -45,6 +47,10 @@ public class RedefinicaoSenhaService {
     private final String frontendUrl;
     private final SecureRandom random = new SecureRandom();
 
+    // Limites do "Esqueci minha senha" contra envio de e-mails em massa
+    private final LimitadorDeTentativas limitePorIp;
+    private final LimitadorDeTentativas limitePorEmail;
+
     public RedefinicaoSenhaService(
             UsuarioRepository usuarioRepository,
             TokenRedefinicaoSenhaRepository tokenRepository,
@@ -53,7 +59,9 @@ public class RedefinicaoSenhaService {
             Clock clock,
             LogSistemaService logSistemaService,
             DocumentoLegalService documentoLegalService,
-            @Value("${app.frontend.url:http://localhost:5173}") String frontendUrl) {
+            @Value("${app.frontend.url:http://localhost:5173}") String frontendUrl,
+            @Value("${menteup.senha.esqueci.limite-ip:10}") int limiteIp,
+            @Value("${menteup.senha.esqueci.limite-email:3}") int limiteEmail) {
         this.usuarioRepository = usuarioRepository;
         this.tokenRepository = tokenRepository;
         this.passwordEncoder = passwordEncoder;
@@ -62,12 +70,25 @@ public class RedefinicaoSenhaService {
         this.logSistemaService = logSistemaService;
         this.documentoLegalService = documentoLegalService;
         this.frontendUrl = frontendUrl;
+        this.limitePorIp = new LimitadorDeTentativas(limiteIp, Duration.ofMinutes(15), clock);
+        this.limitePorEmail = new LimitadorDeTentativas(limiteEmail, Duration.ofHours(1), clock);
     }
 
     // POST /usuarios/senha/esqueci: se o e-mail não existir, não faz nada (e a resposta é a mesma).
     // Quem ainda não fez o primeiro acesso recebe um novo convite (para não pular o aceite do termo).
+    // Muitos pedidos do mesmo IP recebem 429; do mesmo e-mail, o excesso é ignorado sem avisar,
+    // para a resposta continuar não revelando se o e-mail tem conta
     @Transactional
-    public void solicitar(String email) {
+    public void solicitar(String email, String ip) {
+        if (!limitePorIp.tentar(ip == null ? "desconhecido" : ip)) {
+            throw new ApiException(HttpStatus.TOO_MANY_REQUESTS, "MUITOS_PEDIDOS",
+                    "Muitos pedidos de redefinição de senha. Aguarde alguns minutos e tente novamente.");
+        }
+        if (!limitePorEmail.tentar(email.trim().toLowerCase())) {
+            log.info("Pedido de redefinição ignorado: limite por e-mail atingido");
+            return;
+        }
+
         usuarioRepository.findByUsuario(email).ifPresent(usuario -> {
             if (usuario.isPrimeiroAcessoPendente()) {
                 enviarConvite(usuario);
@@ -110,6 +131,7 @@ public class RedefinicaoSenhaService {
         usuario.setPrimeiroAcessoPendente(false);
         usuario.setTentativasLogin(0);
         usuario.setBloqueadoEm(null);
+        usuario.encerrarSessoes();
         usuarioRepository.save(usuario);
 
         registro.setUtilizado(true);
@@ -167,6 +189,8 @@ public class RedefinicaoSenhaService {
         usuario.setSenha(passwordEncoder.encode(novaSenha));
         usuario.setTentativasLogin(0);
         usuario.setBloqueadoEm(null);
+        // Quem descobriu a senha antiga perde o acesso que já tinha aberto
+        usuario.encerrarSessoes();
         usuarioRepository.save(usuario);
 
         registro.setUtilizado(true);
@@ -193,4 +217,4 @@ public class RedefinicaoSenhaService {
             throw new IllegalStateException("SHA-256 indisponível", e);
         }
     }
-}
+}

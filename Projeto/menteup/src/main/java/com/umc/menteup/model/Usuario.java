@@ -60,6 +60,12 @@ public class Usuario {
     @Column(name = "tentativas_login")
     private Integer tentativasLogin;
 
+    // Muda sempre que a senha é trocada ou a conta é bloqueada ou excluída
+    // Os logins feitos antes da mudança deixam de valer (null = 0)
+    @JsonIgnore
+    @Column(name = "versao_sessao")
+    private Integer versaoSessao;
+
     // Preenchido quando a conta é bloqueada
     @JsonIgnore
     @Column(name = "bloqueado_em")
@@ -92,6 +98,24 @@ public class Usuario {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Size(max = 20, message = "Versão da Política inválida.")
     private String politicaVersao;
+
+    // Quando a conta foi criada: base para descartar convites que nunca foram aceitos
+    @JsonIgnore
+    @Column(name = "criado_em")
+    private LocalDateTime criadoEm;
+
+    // Quando o pedido de professor mudou de situação (enviado, aprovado ou rejeitado):
+    // base para descartar os pedidos rejeitados depois do prazo
+    @JsonIgnore
+    @Column(name = "status_alterado_em")
+    private LocalDateTime statusAlteradoEm;
+
+    @PrePersist
+    void registrarCriacao() {
+        if (criadoEm == null) {
+            criadoEm = LocalDateTime.now();
+        }
+    }
 
     ///Pedido de professor aguardando o administrador. Só sai no JSON, ninguém envia pelo cadastro
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
@@ -175,6 +199,15 @@ public class Usuario {
         return bloqueadoEm != null;
     }
 
+    public int getVersaoSessao() {
+        return versaoSessao == null ? 0 : versaoSessao;
+    }
+
+    // Derruba todos os logins abertos desta conta
+    public void encerrarSessoes() {
+        this.versaoSessao = getVersaoSessao() + 1;
+    }
+
     public void setBloqueadoEm(LocalDateTime bloqueadoEm) {
         this.bloqueadoEm = bloqueadoEm;
     }
@@ -220,6 +253,22 @@ public class Usuario {
 
     public StatusCadastro getStatusCadastro() {
         return statusCadastro;
+    }
+
+    public LocalDateTime getCriadoEm() {
+        return criadoEm;
+    }
+
+    public void setCriadoEm(LocalDateTime criadoEm) {
+        this.criadoEm = criadoEm;
+    }
+
+    public LocalDateTime getStatusAlteradoEm() {
+        return statusAlteradoEm;
+    }
+
+    public void setStatusAlteradoEm(LocalDateTime statusAlteradoEm) {
+        this.statusAlteradoEm = statusAlteradoEm;
     }
 
     public void setStatusCadastro(StatusCadastro statusCadastro) {
