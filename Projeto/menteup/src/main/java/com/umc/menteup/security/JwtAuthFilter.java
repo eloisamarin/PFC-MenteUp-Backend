@@ -78,7 +78,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-        if (!jwtService.validateToken(token, userDetails)) {
+        // Conta bloqueada não usa nem os logins que já estavam abertos
+        if (!userDetails.isAccountNonLocked() || !jwtService.validateToken(token, userDetails)) {
             throw new BadCredentialsException("Token JWT inválido ou expirado");
         }
 

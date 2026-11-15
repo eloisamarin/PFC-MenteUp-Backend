@@ -17,6 +17,9 @@ import java.util.Date;
 @Component
 public class JwtService {
 
+    // Versão da sessão gravada no token: se a conta mudar de versão, o token deixa de valer
+    private static final String VERSAO_SESSAO = "sv";
+
     private Duration expiration = Duration.ofMinutes(60);
 
     private final SecretKey signingKey;
@@ -70,14 +73,29 @@ public class JwtService {
 
     public boolean validateToken(String token, UserDetails userDetails) {
         Claims claims = extractAllClaims(token);
-        return claims.getSubject().equals(userDetails.getUsername()) &&
-                claims.getExpiration().after(new Date());
+        return claims.getSubject().equals(userDetails.getUsername())
+                && claims.getExpiration().after(new Date())
+                && mesmaVersaoDeSessao(claims, userDetails);
+    }
+
+    // Token sem versão (gerado antes desta regra) conta como versão 0
+    private static boolean mesmaVersaoDeSessao(Claims claims, UserDetails userDetails) {
+        if (!(userDetails instanceof UserDetailsImpl usuario)) {
+            return true;
+        }
+        Integer versao = claims.get(VERSAO_SESSAO, Integer.class);
+        return (versao == null ? 0 : versao) == usuario.getVersaoSessao();
     }
 
     public String generateToken(String username) {
+        return generateToken(username, 0);
+    }
+
+    public String generateToken(String username, int versaoSessao) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .subject(username)
+                .claim(VERSAO_SESSAO, versaoSessao)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plus(expiration)))
                 .signWith(getSigningKey())

@@ -120,6 +120,8 @@ public class PerfilService {
         }
 
         usuario.setSenha(passwordEncoder.encode(novaSenha));
+        // Quem estiver logado com a senha antiga (inclusive em outro aparelho) precisa entrar de novo
+        usuario.encerrarSessoes();
 
         logSistemaService.registrarSucesso(usuario, AcaoLog.ALTERAR_SENHA, EntidadeLog.USUARIO, usuario.getId(),
                 "Usuário #" + usuario.getId() + " trocou a senha pelo perfil.", null);
@@ -191,6 +193,20 @@ public class PerfilService {
         );
     }
 
+    // Descarte pela rotina de retenção (pedido rejeitado ou convite vencido): mesma anonimização da exclusão
+    // Devolve false quando a conta já tinha sido excluída antes
+    @Transactional
+    public boolean anonimizarPorRetencao(Usuario usuario) {
+        if (ehContaExcluida(usuario)) {
+            return false;
+        }
+        anonimizar(usuario);
+        // Sai das buscas da rotina, para não ser encontrada de novo nos próximos dias
+        usuario.setStatusAlteradoEm(null);
+        usuario.setPrimeiroAcessoPendente(false);
+        return true;
+    }
+
     ///Apaga o que identifica a pessoa, mas mantém o usuário e o histórico
     private void anonimizar(Usuario usuario) {
         String emailOriginal = usuario.getUsuario();
@@ -208,6 +224,7 @@ public class PerfilService {
         usuario.setUsuario(EMAIL_REMOVIDO_PREFIXO + usuario.getId() + EMAIL_REMOVIDO_DOMINIO);
         usuario.setSenha(passwordEncoder.encode(UUID.randomUUID().toString()));
         usuario.setFcmToken(null);
+        usuario.encerrarSessoes();
 
         codigo2FARepository.deleteByUsuario(emailOriginal);
     }
@@ -215,4 +232,4 @@ public class PerfilService {
     private static boolean ehContaExcluida(Usuario usuario) {
         return usuario.getUsuario() != null && usuario.getUsuario().endsWith(EMAIL_REMOVIDO_DOMINIO);
     }
-}
+}

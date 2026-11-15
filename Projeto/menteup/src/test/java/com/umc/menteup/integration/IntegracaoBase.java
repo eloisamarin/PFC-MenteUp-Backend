@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -169,10 +170,14 @@ abstract class IntegracaoBase {
         return (String) validacao.getBody().get("token");
     }
 
+    // O banco guarda só o hash: o código é lido do último e-mail enviado para a pessoa
     protected String codigo2FAPendente(String email) {
-        return codigo2FARepository.findTopByUsuarioAndUtilizadoFalseOrderByIdDesc(email)
-                .orElseThrow()
-                .getCodigo();
+        return Mockito.mockingDetails(emailService).getInvocations().stream()
+                .filter(chamada -> chamada.getMethod().getName().equals("enviarCodigo2FA"))
+                .filter(chamada -> email.equals(chamada.getArgument(0)))
+                .reduce((primeira, segunda) -> segunda)
+                .map(chamada -> (String) chamada.getArgument(1))
+                .orElseThrow();
     }
 
     protected Sessao novaSessao(String tipo) {

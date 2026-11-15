@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface LogSistemaRepository  extends JpaRepository<LogSistema, Long> {
@@ -37,4 +38,9 @@ public interface LogSistemaRepository  extends JpaRepository<LogSistema, Long> {
 
     // Exportação dos dados: registros feitos pela própria pessoa
     List<LogSistema> findAllByUsuario_IdOrderByDataHoraDesc(Long usuarioId);
+
+    // Descarte: registros mais antigos que a data limite
+    @Modifying
+    @Query("delete from LogSistema l where l.dataHora < :limite")
+    int apagarAntesDe(@Param("limite") LocalDateTime limite);
 }
