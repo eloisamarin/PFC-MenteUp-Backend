@@ -23,6 +23,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.umc.menteup.model.Usuario;
+import com.umc.menteup.model.StatusCadastro;
 import com.umc.menteup.repository.Codigo2FARepository;
 import com.umc.menteup.repository.UsuarioRepository;
 import com.umc.menteup.service.EmailService;
@@ -128,7 +129,15 @@ abstract class IntegracaoBase {
                 .toEntity(JSON);
 
         assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        return id(resposta.getBody());
+        Long id = id(resposta.getBody());
+
+        ///Professor do teste já sai aprovado para conseguir entrar
+        if ("PROFESSOR".equals(tipo)) {
+            Usuario professor = usuarioRepositoryBase.findById(id).orElseThrow();
+            professor.setStatusCadastro(StatusCadastro.APROVADA);
+            usuarioRepositoryBase.save(professor);
+        }
+        return id;
     }
 
     protected Long criarAdministradorNoBanco(String email) {
