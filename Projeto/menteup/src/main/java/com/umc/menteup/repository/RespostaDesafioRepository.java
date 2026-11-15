@@ -46,4 +46,23 @@ public interface RespostaDesafioRepository extends JpaRepository<RespostaDesafio
             group by r.usuario.id
             """)
     List<TotalPorAluno> somarPorAluno();
+
+    // Mesma soma, só com os desafios de uma turma (ranking da turma)
+    @Query("""
+            select new com.umc.menteup.dto.TotalPorAluno(r.usuario.id, sum(r.pontos), count(r.id))
+            from RespostaDesafio r
+            where r.pergunta.desafio.turma.id = :turmaId
+            group by r.usuario.id
+            """)
+    List<TotalPorAluno> somarPorAlunoNaTurma(@Param("turmaId") Long turmaId);
+
+    // Exportação dos dados: respostas da pessoa nos desafios, já com a pergunta e o desafio
+    @Query("""
+            select r from RespostaDesafio r
+            join fetch r.pergunta p
+            join fetch p.desafio
+            where r.usuario.id = :usuarioId
+            order by r.respondidaEm
+            """)
+    List<RespostaDesafio> buscarDoUsuarioComDesafio(@Param("usuarioId") Long usuarioId);
 }

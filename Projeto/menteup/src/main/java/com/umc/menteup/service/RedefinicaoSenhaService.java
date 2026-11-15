@@ -2,6 +2,8 @@ package com.umc.menteup.service;
 
 import com.umc.menteup.security.RegraSenha;
 import com.umc.menteup.exception.ApiException;
+import com.umc.menteup.model.AcaoLog;
+import com.umc.menteup.model.EntidadeLog;
 import com.umc.menteup.model.TokenRedefinicaoSenha;
 import com.umc.menteup.model.Usuario;
 import com.umc.menteup.repository.TokenRedefinicaoSenhaRepository;
@@ -38,6 +40,8 @@ public class RedefinicaoSenhaService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final Clock clock;
+    private final LogSistemaService logSistemaService;
+    private final DocumentoLegalService documentoLegalService;
     private final String frontendUrl;
     private final SecureRandom random = new SecureRandom();
 
@@ -47,12 +51,16 @@ public class RedefinicaoSenhaService {
             PasswordEncoder passwordEncoder,
             EmailService emailService,
             Clock clock,
+            LogSistemaService logSistemaService,
+            DocumentoLegalService documentoLegalService,
             @Value("${app.frontend.url:http://localhost:5173}") String frontendUrl) {
         this.usuarioRepository = usuarioRepository;
         this.tokenRepository = tokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.clock = clock;
+        this.logSistemaService = logSistemaService;
+        this.documentoLegalService = documentoLegalService;
         this.frontendUrl = frontendUrl;
     }
 
@@ -85,12 +93,14 @@ public class RedefinicaoSenhaService {
 
     // POST /usuarios/senha/primeiro-acesso: cria a senha e registra o aceite do termo
     @Transactional
-    public void concluirPrimeiroAcesso(String token, String novaSenha, boolean aceitouTermos) {
+    public void concluirPrimeiroAcesso(String token, String novaSenha, boolean aceitouTermos,
+                                       String termoVersao, String politicaVersao) {
         RegraSenha.validarNovaSenha(novaSenha);
         if (!aceitouTermos) {
             throw ApiException.requisicaoInvalida("TERMO_NAO_ACEITO",
                     "Para usar o MenteUp, é preciso aceitar o Termo de Aceite e a Política de Privacidade.");
         }
+        documentoLegalService.conferirVersoesInformadas(termoVersao, politicaVersao);
 
         TokenRedefinicaoSenha registro = tokenValido(token, true);
         Usuario usuario = registro.getUsuario();
@@ -104,6 +114,11 @@ public class RedefinicaoSenhaService {
 
         registro.setUtilizado(true);
         tokenRepository.save(registro);
+
+        documentoLegalService.registrarAceiteDasVigentes(usuario, usuario.getTermoAceitoEm());
+
+        logSistemaService.registrarSucesso(usuario, AcaoLog.ACEITAR_TERMO, EntidadeLog.USUARIO, usuario.getId(),
+                "Usuário #" + usuario.getId() + " criou a senha e aceitou o Termo e a Política.", null);
     }
 
     // Gera o token (só o hash vai para o banco) e invalida os links anteriores da pessoa
@@ -156,6 +171,9 @@ public class RedefinicaoSenhaService {
 
         registro.setUtilizado(true);
         tokenRepository.save(registro);
+
+        logSistemaService.registrarSucesso(usuario, AcaoLog.REDEFINIR_SENHA, EntidadeLog.USUARIO, usuario.getId(),
+                "Usuário #" + usuario.getId() + " criou uma nova senha pelo link do e-mail.", null);
     }
 
     // 32 bytes aleatórios em Base64 (seguro para URL): impossível de adivinhar

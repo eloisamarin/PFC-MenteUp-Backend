@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/usuarios/senha")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 
 @Tag(name = "Usuários e login", description = "Cadastro, login com código de 2 etapas e gestão de usuários")
 public class RedefinicaoSenhaController {
@@ -44,6 +43,7 @@ public class RedefinicaoSenhaController {
     @PostMapping("/primeiro-acesso")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void primeiroAcesso(@Valid @RequestBody PrimeiroAcessoRequest request) {
-        redefinicaoSenhaService.concluirPrimeiroAcesso(request.token(), request.novaSenha(), request.aceitouTermos());
+        redefinicaoSenhaService.concluirPrimeiroAcesso(request.token(), request.novaSenha(), request.aceitouTermos(),
+                request.termoVersao(), request.politicaVersao());
     }
 }

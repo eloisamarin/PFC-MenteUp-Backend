@@ -1,6 +1,7 @@
 package com.umc.menteup.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -16,6 +17,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import com.umc.menteup.service.DocumentoLegalService;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -47,6 +50,14 @@ public class SecurityConfig {
     @Autowired
     private DashboardTokenFilter dashboardTokenFilter;
 
+    @Autowired
+    private DocumentoLegalService documentoLegalService;
+
+    // true: quem não aceitou a versão atual do Termo ou da Política recebe 428 nas demais rotas
+    // Ligue no Render (EXIGIR_ACEITE=true) só depois que o front souber mostrar a tela de aceite
+    @Value("${menteup.documentos.exigir-aceite}")
+    private boolean exigirAceite;
+
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(10);
@@ -57,14 +68,15 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
+    // Endereços do front que podem chamar a API, separados por vírgula (variável CORS_ORIGENS)
+    // Aceita curinga, ex.: https://menteup-*-meutime.vercel.app para as prévias do Vercel
+    @Value("${menteup.cors.origens}")
+    private List<String> origensPermitidas;
+
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        /// Site no Vercel (produção e previews) e o front rodando no computador
-        config.setAllowedOriginPatterns(List.of(
-                "https://*.vercel.app",
-                "http://localhost:5173"
-        ));
+        config.setAllowedOriginPatterns(origensPermitidas);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         /// Guarda a liberação por 1 hora para o navegador não perguntar toda vez
@@ -84,6 +96,8 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                        // Texto do Termo e da Política: lido antes do cadastro e pelo rodapé, sem login
+                        .requestMatchers(HttpMethod.GET, "/documentos/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS).permitAll()
                         .requestMatchers("/alunos/me/**").hasRole("ALUNO")
                         .requestMatchers("/logs/**").hasRole("ADMINISTRADOR")
@@ -104,6 +118,9 @@ public class SecurityConfig {
                         .requestMatchers("/atividades/*/questionario").hasAnyRole("PROFESSOR", "ADMINISTRADOR")
                         // Criar, editar e excluir atividade: só professor e administrador.
                         // O aluno continua podendo ver (GET) e salvar o progresso (PUT /atividades/{id}/progresso).
+                        // Listagem completa traz as respostas certas: aluno usa /alunos/me/atividades
+                        .requestMatchers(HttpMethod.GET, "/atividades", "/atividades/titulo/**")
+                        .hasAnyRole("PROFESSOR", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.POST, "/atividades").hasAnyRole("PROFESSOR", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/atividades").hasAnyRole("PROFESSOR", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/atividades/*").hasAnyRole("PROFESSOR", "ADMINISTRADOR")
@@ -119,6 +136,9 @@ public class SecurityConfig {
 
                 .addFilterBefore(dashboardTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                // Depois do token: já sabe quem é a pessoa para conferir o aceite
+                .addFilterAfter(new AceitePendenteFilter(documentoLegalService, exigirAceite),
+                        UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 

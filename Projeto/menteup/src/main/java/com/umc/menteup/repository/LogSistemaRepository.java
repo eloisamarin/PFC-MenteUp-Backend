@@ -7,8 +7,11 @@ import com.umc.menteup.model.ResultadoLog;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import java.util.List;
 
 public interface LogSistemaRepository  extends JpaRepository<LogSistema, Long> {
     @Query("""
@@ -25,4 +28,13 @@ public interface LogSistemaRepository  extends JpaRepository<LogSistema, Long> {
             @Param ("resultado")ResultadoLog resultado,
             Pageable pageable
             );
+
+    // Troca o nome da pessoa nos textos de log antigos (usado quando a conta é excluída)
+    @Modifying
+    @Query(value = "UPDATE log_sistema SET descricao = REPLACE(descricao, :nome, :substituto) "
+            + "WHERE descricao LIKE CONCAT('%', :nome, '%')", nativeQuery = true)
+    int substituirNasDescricoes(@Param("nome") String nome, @Param("substituto") String substituto);
+
+    // Exportação dos dados: registros feitos pela própria pessoa
+    List<LogSistema> findAllByUsuario_IdOrderByDataHoraDesc(Long usuarioId);
 }

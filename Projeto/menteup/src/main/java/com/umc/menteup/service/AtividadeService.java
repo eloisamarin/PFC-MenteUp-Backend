@@ -19,6 +19,8 @@ import com.umc.menteup.repository.ResultadoAtividadeRepository;
 import com.umc.menteup.repository.TurmaRepository;
 import com.umc.menteup.repository.UsuarioRepository;
 import com.umc.menteup.template.TemplateResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.umc.menteup.model.Usuario;
@@ -38,6 +40,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class AtividadeService {
+
+    private static final Logger log = LoggerFactory.getLogger(AtividadeService.class);
 
     @Autowired
     private AtividadeRepository atividadeRepository;
@@ -74,6 +78,29 @@ public class AtividadeService {
     public List<Atividade> buscarPorTitulo(String titulo) {
         return atividadeRepository
                 .findAllByTituloContainingIgnoreCase(titulo);
+    }
+
+    // Lista completa (com questões e respostas certas) só para quem cria atividades
+    // Administrador vê todas e professor só as das turmas dele. Título nulo traz todas
+    @Transactional(readOnly = true)
+    public List<Atividade> listarParaGestao(String username, String titulo) {
+        Usuario usuario = carregarUsuario(username);
+
+        if (TipoUsuario.ehAdministrador(usuario)) {
+            return titulo == null
+                    ? atividadeRepository.findAll()
+                    : atividadeRepository.findAllByTituloContainingIgnoreCase(titulo);
+        }
+
+        if (TipoUsuario.ehProfessor(usuario)) {
+            return titulo == null
+                    ? atividadeRepository.findDoProfessor(usuario.getId())
+                    : atividadeRepository.findDoProfessorPorTitulo(usuario.getId(), titulo);
+        }
+
+        // O aluno tem a lista própria em /alunos/me/atividades, sem as respostas certas
+        throw ApiException.proibido("SOMENTE_PROFESSOR_OU_ADMINISTRADOR",
+                "Esta listagem é exclusiva para professores e administradores.");
     }
 
     @Transactional
@@ -167,48 +194,26 @@ public class AtividadeService {
         avisarAlunos(novaAtividade, alunos);
     }
 
-    ///Manda a notificação para cada aluno que tem o celular cadastrado
+    // Manda a notificação para cada aluno que tem o celular cadastrado
+    // O log não mostra e-mail nem token: só o id do aluno, quando algo dá errado
     private void avisarAlunos(Atividade novaAtividade, Collection<Usuario> alunos) {
-
-        System.out.println(
-                "QUANTIDADE DE ALUNOS: "
-                        + alunos.size()
-        );
+        int enviadas = 0;
 
         for (Usuario aluno : alunos) {
+            if (aluno.getFcmToken() == null || aluno.getFcmToken().isBlank()) {
+                continue;
+            }
 
-            System.out.println(
-                    "ALUNO: "
-                            + aluno.getUsuario()
-            );
-
-            if (aluno.getFcmToken() != null &&
-                    !aluno.getFcmToken().isBlank()) {
-
-                System.out.println(
-                        "Enviando notificação para o aluno..."
-                );
-
-                ///Se a notificação falhar, a atividade continua salva
-                try {
-                    notificacaoService.notificarNovaAtividade(
-                            novaAtividade,
-                            aluno.getFcmToken()
-                    );
-                } catch (Exception e) {
-                    System.err.println(
-                            "Falha ao notificar o aluno "
-                                    + aluno.getUsuario() + ": " + e.getMessage()
-                    );
-                }
-
-            } else {
-
-                System.out.println(
-                        "Aluno sem FCM Token."
-                );
+            // Se a notificação falhar, a atividade continua salva
+            try {
+                notificacaoService.notificarNovaAtividade(novaAtividade, aluno.getFcmToken());
+                enviadas++;
+            } catch (Exception e) {
+                log.warn("Falha ao notificar o aluno {}: {}", aluno.getId(), e.getClass().getSimpleName());
             }
         }
+
+        log.debug("Atividade {}: {} de {} aluno(s) notificado(s)", novaAtividade.getId(), enviadas, alunos.size());
     }
 
     public Optional<Atividade> atualizarAtividade(

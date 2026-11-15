@@ -134,7 +134,7 @@ public class ProgressoAtividadeService {
                     AcaoLog.INICIAR_ATIVIDADE,
                     EntidadeLog.ATIVIDADE,
                     atividade.getId(),
-                    "Aluno \"" + usuario.getNomeUsuario() + "\" iniciou a atividade \"" + atividade.getTitulo() + "\".",
+                    "Aluno #" + usuario.getId() + " iniciou a atividade \"" + atividade.getTitulo() + "\".",
                     Map.of("atividadeId", atividade.getId())
             );
         }

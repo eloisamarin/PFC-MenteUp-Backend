@@ -3,6 +3,8 @@ package com.umc.menteup.security;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 
@@ -14,6 +16,8 @@ import java.io.IOException;
 // Desativado nos testes (firebase.enabled=false em src/test/resources/application.properties)
 @ConditionalOnProperty(name = "firebase.enabled", havingValue = "true", matchIfMissing = true)
 public class FirebaseConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(FirebaseConfig.class);
 
     @PostConstruct
     public void inicializarFirebase() {
@@ -33,9 +37,7 @@ public class FirebaseConfig {
 
             FirebaseApp.initializeApp(options);
 
-            System.out.println(
-                    "Firebase Admin SDK inicializado com sucesso!"
-            );
+            log.info("Firebase Admin SDK inicializado");
 
         } catch (IOException e) {
 

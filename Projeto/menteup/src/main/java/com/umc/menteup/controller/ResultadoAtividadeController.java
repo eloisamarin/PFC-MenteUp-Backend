@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/atividades")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 @Tag(name = "Atividades", description = "Criação, questionário, progresso, respostas e exclusão de atividades")
 public class ResultadoAtividadeController {
     private final ResultadoAtividadeService resultadoAtividadeService;

@@ -33,6 +33,16 @@ public interface ResultadoAtividadeRepository extends JpaRepository<ResultadoAti
         """)
     List<TotalPorAluno> somarPorAluno();
 
+    // Mesma soma, só com as atividades de uma turma (ranking da turma)
+    @Query("""
+        SELECT new com.umc.menteup.dto.TotalPorAluno(r.usuario.id, SUM(r.pontuacao), COUNT(r.id))
+        FROM ResultadoAtividade r
+        JOIN r.atividade.turmas t
+        WHERE t.id = :turmaId
+        GROUP BY r.usuario.id
+        """)
+    List<TotalPorAluno> somarPorAlunoNaTurma(@Param("turmaId") Long turmaId);
+
     ///Impede que as questões sejam trocadas depois do envio de algum aluno
     boolean existsByAtividade_Id(Long atividadeId);
 
@@ -65,4 +75,12 @@ public interface ResultadoAtividadeRepository extends JpaRepository<ResultadoAti
     @Query("SELECT COALESCE(SUM(r.pontuacao), 0L) FROM ResultadoAtividade r WHERE r.usuario.id = :usuarioId")
     long somarPontuacaoDoUsuario(@Param("usuarioId") Long usuarioId);
 
+    // Exportação dos dados: resultados da pessoa, já com a atividade
+    @Query("""
+        SELECT r FROM ResultadoAtividade r
+        JOIN FETCH r.atividade
+        WHERE r.usuario.id = :usuarioId
+        ORDER BY r.id
+        """)
+    List<ResultadoAtividade> buscarDoUsuarioComAtividade(@Param("usuarioId") Long usuarioId);
 }

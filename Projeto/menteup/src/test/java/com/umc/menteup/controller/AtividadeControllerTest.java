@@ -74,9 +74,9 @@ class AtividadeControllerTest {
     class Listagem {
 
         @Test
-        @DisplayName("lista todas as atividades")
+        @DisplayName("lista as atividades que o service libera para o usuário do token")
         void listaTodas() throws Exception {
-            when(atividadeRepository.findAll()).thenReturn(List.of(
+            when(atividadeService.listarParaGestao(USERNAME, null)).thenReturn(List.of(
                     atividadeSalva(1L, "Fracoes basicas", StatusAtividade.EM_ANDAMENTO),
                     atividadeSalva(2L, "Geometria plana", StatusAtividade.PENDENTE)
             ));
@@ -89,9 +89,9 @@ class AtividadeControllerTest {
         }
 
         @Test
-        @DisplayName("busca por título delega ao repository (ignorando maiúsculas)")
+        @DisplayName("busca por título delega ao service, com o usuário do token")
         void buscaPorTitulo() throws Exception {
-            when(atividadeRepository.findAllByTituloContainingIgnoreCase("frac")).thenReturn(List.of(
+            when(atividadeService.listarParaGestao(USERNAME, "frac")).thenReturn(List.of(
                     atividadeSalva(1L, "Fracoes basicas", StatusAtividade.EM_ANDAMENTO)
             ));
 
@@ -104,7 +104,7 @@ class AtividadeControllerTest {
         @Test
         @DisplayName("busca por título sem resultado devolve lista vazia (200)")
         void buscaPorTituloSemResultado() throws Exception {
-            when(atividadeRepository.findAllByTituloContainingIgnoreCase("xyz")).thenReturn(List.of());
+            when(atividadeService.listarParaGestao(USERNAME, "xyz")).thenReturn(List.of());
 
             mockMvc.perform(get("/atividades/titulo/xyz").principal(autenticado))
                     .andExpect(status().isOk())

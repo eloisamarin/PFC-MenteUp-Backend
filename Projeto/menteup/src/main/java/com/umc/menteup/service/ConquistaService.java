@@ -162,9 +162,9 @@ public class ConquistaService {
         );
     }
 
-    ///Posição no ranking (a mesma da tela de ranking)
+    // Posição no ranking geral de todos os alunos (não sai em nenhuma tela)
     private Integer buscarPosicaoNoRanking(Long usuarioId) {
-        List<RankingResponse> ranking = rankingService.buscarRanking();
+        List<RankingResponse> ranking = rankingService.buscarRankingGeral();
         for (int i = 0; i < ranking.size(); i++) {
             if (ranking.get(i).usuarioId().equals(usuarioId)) {
                 return i + 1;
@@ -197,7 +197,7 @@ public class ConquistaService {
                 AcaoLog.DESBLOQUEAR_CONQUISTA,
                 EntidadeLog.CONQUISTA,
                 uc.getConquista().getId(),
-                "Aluno \"" + usuario.getNomeUsuario() + "\" desbloqueou a conquista \""
+                "Aluno #" + usuario.getId() + " desbloqueou a conquista \""
                         + uc.getConquista().getNome() + "\".",
                 Map.of(
                         "codigo", uc.getConquista().getCodigo(),

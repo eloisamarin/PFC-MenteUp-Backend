@@ -1,5 +1,7 @@
 package com.umc.menteup.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -11,6 +13,8 @@ import com.umc.menteup.model.Atividade;
 @Service
 public class NotificacaoService {
 
+    private static final Logger log = LoggerFactory.getLogger(NotificacaoService.class);
+
     public void enviarNotificacao(
             String token,
             String titulo,
@@ -18,9 +22,7 @@ public class NotificacaoService {
             String atividadeId) {
 
         if (token == null || token.isBlank()) {
-            System.out.println(
-                    "Notificação não enviada: token Firebase vazio."
-            );
+            log.debug("Notificação não enviada: token do celular vazio");
             return;
         }
 
@@ -44,20 +46,13 @@ public class NotificacaoService {
 
         try {
 
-            String resposta =
-                    FirebaseMessaging.getInstance().send(message);
-
-            System.out.println(
-                    "Notificação Firebase enviada com sucesso: "
-                            + resposta
-            );
+            FirebaseMessaging.getInstance().send(message);
+            log.debug("Notificação da atividade {} enviada", atividadeId);
 
         } catch (FirebaseMessagingException e) {
 
-            System.err.println(
-                    "Erro ao enviar notificação Firebase: "
-                            + e.getMessage()
-            );
+            // Só o código do erro: a mensagem do Firebase pode repetir o token do celular
+            log.warn("Erro ao enviar notificação da atividade {}: {}", atividadeId, e.getMessagingErrorCode());
         }
     }
 
@@ -66,9 +61,7 @@ public class NotificacaoService {
             String token) {
 
         if (atividade == null) {
-            System.out.println(
-                    "Não foi possível enviar a notificação: atividade nula."
-            );
+            log.warn("Não foi possível enviar a notificação: atividade nula");
             return;
         }
 

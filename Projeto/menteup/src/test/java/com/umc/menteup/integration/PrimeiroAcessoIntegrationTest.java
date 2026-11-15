@@ -19,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import com.umc.menteup.model.Usuario;
+import com.umc.menteup.repository.AceiteDocumentoRepository;
 import com.umc.menteup.repository.UsuarioRepository;
 
 /*
@@ -32,6 +33,9 @@ class PrimeiroAcessoIntegrationTest extends IntegracaoBase {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private AceiteDocumentoRepository aceiteRepository;
 
     @Test
     void criarPeloAdministrador_deveEnviarConviteEDeixarAContaSemAcesso() {
@@ -66,6 +70,8 @@ class PrimeiroAcessoIntegrationTest extends IntegracaoBase {
         Usuario usuario = usuarioRepository.findById(id).orElseThrow();
         assertThat(usuario.getTermoAceitoEm()).isNotNull();
         assertThat(usuario.isPrimeiroAcessoPendente()).isFalse();
+        // Aceite registrado com a versão vigente do Termo e da Política
+        assertThat(aceiteRepository.buscarDoUsuario(id)).hasSize(2);
     }
 
     @Test

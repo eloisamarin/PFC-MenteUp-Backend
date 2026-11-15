@@ -44,10 +44,10 @@ public class AtividadeController {
     @Autowired
     private LogSistemaService logSistemaService;
 
-    @Operation(summary = "Lista todas as atividades")
+    @Operation(summary = "Lista as atividades (administrador: todas; professor: as das turmas dele)")
     @GetMapping
-    public ResponseEntity<List<Atividade>> getAll() {
-        return ResponseEntity.ok(atividadeRepository.findAll());
+    public ResponseEntity<List<Atividade>> getAll(Authentication authentication) {
+        return ResponseEntity.ok(atividadeService.listarParaGestao(authentication.getName(), null));
     }
 
     @Operation(summary = "Busca a atividade com as perguntas")
@@ -64,13 +64,14 @@ public class AtividadeController {
         );
     }
 
-    @Operation(summary = "Busca atividades pelo título")
+    @Operation(summary = "Busca atividades pelo título (mesma regra de acesso da listagem)")
     @GetMapping("/titulo/{titulo}")
     public ResponseEntity<List<Atividade>> getByTitulo(
-            @PathVariable String titulo) {
+            @PathVariable String titulo,
+            Authentication authentication) {
 
         return ResponseEntity.ok(
-                atividadeRepository.findAllByTituloContainingIgnoreCase(titulo)
+                atividadeService.listarParaGestao(authentication.getName(), titulo)
         );
     }
 
@@ -160,6 +161,10 @@ public class AtividadeController {
         atividade.setTurmas(novasTurmas);
 
         StatusAtividade statusAnterior = existente.getStatus();
+        // Guarda os valores antigos antes de salvar (o save copia os novos para o mesmo objeto)
+        // A pontuação vale nota, então o log mostra a antiga e a nova
+        String tituloAnterior = existente.getTitulo();
+        Integer pontuacaoAnterior = existente.getPontuacao();
 
         atividade.setPerguntas(existente.getPerguntas());
         // O autor não muda na edição
@@ -200,10 +205,12 @@ public class AtividadeController {
                     ResultadoLog.SUCESSO,
                     "Atividade \"" + salva.getTitulo() + "\" editada.",
                     Map.of(
-                            "tituloAnterior", existente.getTitulo(),
+                            "tituloAnterior", tituloAnterior,
                             "tituloNovo", salva.getTitulo(),
                             "statusAnterior", statusAnterior.name(),
-                            "statusNovo", salva.getStatus().name()
+                            "statusNovo", salva.getStatus().name(),
+                            "pontuacaoAnterior", pontuacaoAnterior,
+                            "pontuacaoNova", salva.getPontuacao()
                     )
             );
         }

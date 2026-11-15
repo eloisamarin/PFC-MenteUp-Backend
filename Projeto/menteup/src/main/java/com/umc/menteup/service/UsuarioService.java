@@ -11,9 +11,11 @@ import com.umc.menteup.model.EntidadeLog;
 import com.umc.menteup.model.ResultadoLog;
 import com.umc.menteup.model.StatusCadastro;
 import com.umc.menteup.model.TipoUsuario;
+import com.umc.menteup.model.Turma;
 import com.umc.menteup.model.Usuario;
 import com.umc.menteup.model.UsuarioLogin;
 import com.umc.menteup.repository.Codigo2FARepository;
+import com.umc.menteup.repository.TurmaRepository;
 import com.umc.menteup.repository.UsuarioRepository;
 import com.umc.menteup.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import org.slf4j.Logger;
@@ -30,9 +33,11 @@ import org.slf4j.LoggerFactory;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class UsuarioService {
@@ -48,6 +53,9 @@ public class UsuarioService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private TurmaRepository turmaRepository;
 
     @Autowired
     private JwtService jwtService;
@@ -73,6 +81,9 @@ public class UsuarioService {
     @Autowired
     private RedefinicaoSenhaService redefinicaoSenhaService;
 
+    @Autowired
+    private DocumentoLegalService documentoLegalService;
+
     private static final Logger log = LoggerFactory.getLogger(UsuarioService.class);
 
     // Senhas erradas seguidas até bloquear a conta
@@ -91,11 +102,18 @@ public class UsuarioService {
     // LGPD (minimização):
     // - administrador: tudo o que a tela de usuários precisa, inclusive o e-mail;
     // - professor: o e-mail só dos alunos, para escolher o aluno certo ao adicioná-lo na turma;
-    // - aluno: só id, nome e tipo de todos.
+    // - aluno: só id, nome e tipo dos colegas e professores das turmas dele
+    @Transactional(readOnly = true)
     public List<UsuarioListagemResponse> listar(String username) {
         Usuario logado = carregarLogado(username);
         boolean administrador = TipoUsuario.ehAdministrador(logado);
         boolean professor = TipoUsuario.ehProfessor(logado);
+
+        if (!administrador && !professor) {
+            return usuarioRepository.findAllById(pessoasDasTurmasDoAluno(logado)).stream()
+                    .map(UsuarioListagemResponse::resumido)
+                    .toList();
+        }
 
         return usuarioRepository.findAll().stream()
                 .map(usuario -> {
@@ -108,6 +126,21 @@ public class UsuarioService {
                     return UsuarioListagemResponse.resumido(usuario);
                 })
                 .toList();
+    }
+
+    // O próprio aluno, os colegas e os professores das turmas em que ele está
+    private Set<Long> pessoasDasTurmasDoAluno(Usuario aluno) {
+        Set<Long> ids = new LinkedHashSet<>();
+        ids.add(aluno.getId());
+
+        for (Turma turma : turmaRepository.findAllByAlunos_Id(aluno.getId())) {
+            turma.getAlunos().forEach(colega -> ids.add(colega.getId()));
+            if (turma.getProfessor() != null) {
+                ids.add(turma.getProfessor().getId());
+            }
+        }
+
+        return ids;
     }
 
     // Só o próprio usuário ou o administrador consultam os dados de uma pessoa
@@ -145,6 +178,9 @@ public class UsuarioService {
                     "Para criar a conta, é preciso aceitar o Termo de Aceite e a Política de Privacidade.");
         }
 
+        // A versão lida precisa ser a que está valendo (senão a pessoa aceitaria um texto antigo)
+        documentoLegalService.conferirVersoesInformadas(usuario.getTermoVersao(), usuario.getPoliticaVersao());
+
         // RF01, RF03 a RF06 e RF09: senha forte, sem espaço nas pontas
         RegraSenha.validarNovaSenha(usuario.getSenha());
 
@@ -163,6 +199,7 @@ public class UsuarioService {
         ///Professor só entra depois que o administrador aprovar
         usuario.setStatusCadastro(TipoUsuario.PROFESSOR.equals(tipo) ? StatusCadastro.PENDENTE : null);
         Usuario salvo = reenvio ? reenviarPedido(existente.get(), usuario) : salvarNovo(usuario);
+        documentoLegalService.registrarAceiteDasVigentes(salvo, salvo.getTermoAceitoEm());
 
         logSistemaService.registrarSucesso(
                 salvo,
@@ -170,8 +207,8 @@ public class UsuarioService {
                 EntidadeLog.USUARIO,
                 salvo.getId(),
                 salvo.getStatusCadastro() == StatusCadastro.PENDENTE
-                        ? "Pedido de cadastro de professor de \"" + salvo.getNomeUsuario() + "\" enviado."
-                        : "Usuário \"" + salvo.getNomeUsuario() + "\" cadastrado.",
+                        ? "Pedido de cadastro de professor do usuário #" + salvo.getId() + " enviado."
+                        : "Usuário #" + salvo.getId() + " cadastrado.",
                 Map.of("tipo", String.valueOf(salvo.getTipoUsuario()))
         );
 
@@ -213,7 +250,7 @@ public class UsuarioService {
                 AcaoLog.CADASTRAR_USUARIO,
                 EntidadeLog.USUARIO,
                 salvo.getId(),
-                "Usuário \"" + salvo.getNomeUsuario() + "\" (" + tipo + ") criado pelo administrador;"
+                "Usuário #" + salvo.getId() + " (" + tipo + ") criado pelo administrador;"
                         + " convite enviado por e-mail.",
                 Map.of("tipo", tipo)
         );
@@ -267,7 +304,7 @@ public class UsuarioService {
                 AcaoLog.ALTERACAO_PERMISSAO,
                 EntidadeLog.USUARIO,
                 salvo.getId(),
-                "Pedido de professor de \"" + salvo.getNomeUsuario() + "\" "
+                "Pedido de professor do usuário #" + salvo.getId() + " "
                         + (aprovar ? "aprovado." : "rejeitado."),
                 Map.of("statusCadastro", salvo.getStatusCadastro().name())
         );
@@ -359,9 +396,9 @@ public class UsuarioService {
                 EntidadeLog.USUARIO,
                 salvo.getId(),
                 mudouPerfil
-                        ? "Perfil do usuário \"" + salvo.getNomeUsuario() + "\" alterado de " + tipoAnterior
+                        ? "Perfil do usuário #" + salvo.getId() + " alterado de " + tipoAnterior
                                 + " para " + salvo.getTipoUsuario() + "."
-                        : "Usuário \"" + salvo.getNomeUsuario() + "\" atualizado.",
+                        : "Usuário #" + salvo.getId() + " atualizado.",
                 Map.of(
                         "tipoAnterior", String.valueOf(tipoAnterior),
                         "tipoNovo", String.valueOf(salvo.getTipoUsuario())
@@ -464,7 +501,7 @@ public class UsuarioService {
                             AcaoLog.LOGIN,
                             EntidadeLog.USUARIO,
                             u.getId(),
-                            "Usuário \"" + u.getNomeUsuario() + "\" entrou no sistema.",
+                            "Usuário #" + u.getId() + " entrou no sistema.",
                             null
                     );
                     registrarAcessoIntensivao(u);
@@ -601,6 +638,9 @@ public class UsuarioService {
         usuarioLogin.setAvatar(usuario.getAvatar() == null ? null : usuario.getAvatar().name());
 
         usuarioLogin.setToken(gerarToken(usuario.getUsuario()));
+        usuarioLogin.setAceitesPendentes(documentoLegalService.pendentes(usuario.getId()).stream()
+                .map(documento -> documento.getTipo().name())
+                .toList());
 
         return usuarioLogin;
     }

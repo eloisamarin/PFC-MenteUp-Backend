@@ -1,5 +1,7 @@
 package com.umc.menteup.model;
 
+import java.util.List;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
@@ -19,6 +21,10 @@ public class UsuarioLogin {
     private String token;
     private String tipoUsuario;
     private String avatar;
+
+    // Só na resposta do login: documentos com versão nova que a pessoa ainda precisa aceitar
+    // (TERMO e/ou POLITICA). Vazio quando está tudo em dia
+    private List<String> aceitesPendentes;
 
     public Long getId() {
         return id;
@@ -74,5 +80,13 @@ public class UsuarioLogin {
 
     public void setAvatar(String avatar) {
         this.avatar = avatar;
+    }
+
+    public List<String> getAceitesPendentes() {
+        return aceitesPendentes;
+    }
+
+    public void setAceitesPendentes(List<String> aceitesPendentes) {
+        this.aceitesPendentes = aceitesPendentes;
     }
 }
