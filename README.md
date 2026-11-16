@@ -6,7 +6,7 @@
 ![Java](https://img.shields.io/badge/Java-21-orange)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-brightgreen)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-336791)
-![Status](https://img.shields.io/badge/status-vers%C3%A3o%20final%20de%20lan%C3%A7amento-success)
+
 
 O **MenteUp** é uma plataforma web de gamificação educacional. Ela incentiva o engajamento e a participação dos estudantes com atividades interativas, desafios ao vivo, pontuação, ranking, conquistas e avatares. Os professores acompanham o desempenho das turmas. O administrador cuida dos usuários, das turmas, dos logs de auditoria e dos indicadores da plataforma.
 
@@ -17,7 +17,6 @@ Este repositório tem a **API REST (back-end)** do MenteUp. O front-end fica em 
 | Aplicação (front-end) | https://menteup.vercel.app |
 | API (back-end) | https://pfc-menteup-backend.onrender.com |
 
-> O plano gratuito do Render coloca o serviço para dormir quando ninguém o usa. O primeiro acesso depois de um tempo parado pode levar cerca de 1 minuto.
 
 ---
 
@@ -60,10 +59,10 @@ Desenvolver uma plataforma educacional baseada em gamificação que incentive o 
 
 ### 👨‍🎓 Aluno
 
-- Cadastro público (acesso imediato) e login com **verificação em duas etapas (2FA)** por e-mail, com opção de reenviar o código.
+- Cadastro público e login com **verificação em duas etapas (2FA)** por e-mail, com opção de reenviar o código.
 - Atividades em cinco formatos: **Quiz**, **Verdadeiro ou Falso**, **Associação**, **Ordenação** e **Lacunas**.
 - Progresso salvo durante a atividade e resultado com a pontuação no final.
-- **Desafios ao vivo**, com perguntas cronometradas e ranking da partida.
+- **Desafios**, com perguntas cronometradas e ranking da partida.
 - **Ranking** geral e por turma.
 - **Conquistas** nas categorias Nível, Atividade, Ranking e Intensivão (dias seguidos de acesso), com raridades Bronze, Prata, Ouro e Especial.
 - Escolha de **avatar** (cachorro, gato, raposa, panda, coala, tigre, leão, sapo, macaco ou coelho).
@@ -81,7 +80,7 @@ Desenvolver uma plataforma educacional baseada em gamificação que incentive o 
 
 ### 🛡️ Administrador
 
-- Gestão de usuários: criação (o usuário recebe um convite por e-mail para o primeiro acesso), edição, aprovação ou rejeição dos cadastros de professor e exclusão. Um administrador não edita outro administrador.
+- Gestão de usuários: criação (o usuário recebe um convite por e-mail para o primeiro acesso), edição, aprovação so professor. 
 - Gestão de turmas e escolha do **professor responsável** por cada uma. As permissões das atividades e dos desafios seguem esse vínculo.
 - **Arquivamento de turmas.** Uma turma com alunos ou com histórico não pode ser excluída: a API explica o motivo e oferece o arquivamento.
 - Logs do sistema (acessos e auditoria das ações), com o IP real do cliente.
@@ -91,38 +90,10 @@ Desenvolver uma plataforma educacional baseada em gamificação que incentive o 
 
 ## 🏗️ Arquitetura
 
-O back-end segue a arquitetura em camadas: **Controller → Service → Repository**. As regras de negócio e de permissão ficam nos *services*. Os erros de negócio usam uma exceção única (`ApiException`), tratada no `GlobalExceptionHandler`, que devolve sempre o mesmo formato: `{ "codigo", "mensagem" }`.
-
-```text
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                                      GitHub                                     │
-│   PFC-MenteUp-Frontend                PFC-MenteUp-Backend                       │
-│                                       GitHub Actions (CI):                      │
-│                                       testes + Checkstyle no PR                 │
-└──────────┬─────────────────────────────────────────┬────────────────────────────┘
-           │ push na main                            │ push na main
-           │ (deploy automático)                     │ (deploy automático)
-           ▼                                         │
-┌──────────────────────┐                             │     ┌────────────────────┐
-│  Front-end (Vercel)  │                             │     │   Grafana Cloud    │
-│  React + TypeScript  │                             │     │  plugin Infinity   │
-└──────────┬───────────┘                             │     └──────────┬─────────┘
-           │ HTTPS / JSON + JWT                      │                │ HTTPS +
-           │                                         │                │ X-Dashboard-Token
-           ▼                                         ▼                ▼
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                         Back-end (Render · Docker)                              │
-│                 Java 21 + Spring Boot 4 + Spring Security                       │
-│            Controller → Service → Repository   ·   Filtros JWT                  │
-└──────────┬──────────────────────────────────────────────────────────┬───────────┘
-           │ JPA / Hibernate                                          │ API HTTPS
-           ▼                                                          ▼
-┌──────────────────────┐                                   ┌────────────────────┐
-│ PostgreSQL 18 (Neon) │                                   │ Brevo (e-mails)    │
-└──────────────────────┘                                   └────────────────────┘
-```
-
 O código dos dois repositórios fica no **GitHub**. Cada Pull Request para a `main` do back-end passa pela pipeline do **GitHub Actions** (testes unitários, testes de integração e Checkstyle). Depois do merge, a Vercel publica o front-end e o Render gera a imagem Docker e publica o back-end automaticamente.
+
+<img width="1463" height="872" alt="arquitetura (1)" src="https://github.com/user-attachments/assets/89a78584-1fff-461c-b4ba-e3a98e795c25" />
+
 
 As atividades usam o padrão **Strategy**: cada formato tem o seu *template* (`QuizTemplate`, `VerdadeiroFalsoTemplate`, `AssociacaoTemplate`, `OrdenacaoTemplate` e `LacunasTemplate`), escolhido pelo `TemplateResolver`. As conquistas são avaliadas por **eventos** do Spring (`AvaliarConquistasEvento` e `ConquistaListener`).
 
@@ -230,7 +201,6 @@ Pelo terminal, a partir de `Projeto/menteup`:
 
 ## 🔑 Variáveis de ambiente
 
-Nenhuma senha ou chave fica no código: tudo vem de variáveis de ambiente. **Nunca envie valores reais para o GitHub.** O `.env` está no `.gitignore`.
 
 ### Obrigatórias
 
@@ -296,7 +266,7 @@ docker run --env-file .env -p 8080:8080 menteup
 | **Neon** | PostgreSQL gerenciado | URL JDBC com `sslmode=require` |
 | **Render** | Back-end (Docker) | *Root Directory* `Projeto/menteup` e as variáveis de ambiente da tabela acima |
 | **Vercel** | Front-end | `VITE_API_URL` com o endereço do Render; `VITE_GRAFANA_URL` com o link do Grafana |
-| **Brevo** | E-mails | Remetente verificado e chave de API (o plano gratuito do Render bloqueia SMTP, por isso o envio é pela API HTTPS) |
+| **Brevo** | E-mails | Remetente verificado e chave de API  |
 | **Grafana Cloud** | Dashboard | Plugin Infinity com o cabeçalho `X-Dashboard-Token` |
 
 No Render, configure também:
@@ -355,7 +325,7 @@ Os endpoints estão agrupados com `@Tag` e descritos com `@Operation`. As rotas 
 
 ## ⚖️ Conformidade com a LGPD
 
-- **Termo de Aceite e Política de Privacidade versionados** (versão 1.1 em vigor desde 15/11/2026), servidos pela API, com registro de cada aceite (usuário, versão e data).
+- **Termo de Aceite e Política de Privacidade versionados**, servidos pela API, com registro de cada aceite (usuário, versão e data).
 - **Minimização de dados:** cada perfil recebe só os dados de que precisa. O aluno vê apenas o nome e o tipo dos colegas de turma, e as respostas nunca expõem senha nem token do celular.
 - **Direitos do titular:** download dos próprios dados (acesso e portabilidade) e exclusão da conta pelo próprio usuário.
 - **Descarte automático** de dados vencidos, todo dia às 3h e também quando a aplicação sobe. Os prazos são os do item 8 da Política: registros de acesso por 6 meses (Marco Civil da Internet, Lei nº 12.965/2014), códigos 2FA por 1 dia, links de senha por 7 dias, e cadastros rejeitados e convites vencidos por 30 dias. Os aceites não são apagados, porque são a prova do consentimento.
@@ -464,7 +434,7 @@ Siga o roteiro em https://menteup.vercel.app. Cada passo também confirma uma in
 |---|---|---|---|
 | 1 | Abrir **Criar conta**, abrir o Termo e a Política e só então marcar a caixa de aceite | A caixa só é liberada depois de abrir os dois documentos | Vercel → Render → Neon |
 | 2 | Cadastrar com uma senha fraca e depois com uma senha forte | A senha fraca é recusada com os requisitos na tela; a forte é aceita e a tela volta para o login | Validação da API |
-| 3 | Cadastrar um **professor** pela tela pública e, como **administrador**, aprová-lo em **Usuários** | Antes da aprovação o login do professor é recusado; depois, é liberado | API + banco |
+| 3 | Como **administrador**, aprovar o cadastro em **Usuários** | O status muda para aprovado | API + banco |
 | 4 | Fazer login com e-mail e senha | Chega um **código 2FA** por e-mail | **Brevo** |
 | 5 | Digitar o código errado 5 vezes e usar **Reenviar código** | Depois de 5 erros o código é bloqueado; o reenvio respeita 60 segundos | Segurança do 2FA |
 | 6 | Como administrador, criar um **professor** | O professor recebe o convite de primeiro acesso por e-mail, com link para `menteup.vercel.app` | **Brevo** + `APP_FRONTEND_URL` |
@@ -490,7 +460,7 @@ Siga o roteiro em https://menteup.vercel.app. Cada passo também confirma uma in
 ./mvnw test checkstyle:check
 ```
 
-**Resultado obtido em 15/11/2026:** ✅ **585 testes em 56 classes, com 0 falhas, 0 erros e 0 ignorados**, e o Checkstyle sem nenhuma violação.
+**Resultado obtido:** TESTES_RESULTADO
 
 ### 4. Evidências em imagem
 
@@ -518,7 +488,7 @@ As capturas de tela da versão 1.0.0 ficam na pasta [`docs/evidencias`](docs/evi
 Projeto Final de Curso (PFC), Universidade de Mogi das Cruzes (UMC).
 
 - **Eloisa Marin** — [@eloisamarin](https://github.com/eloisamarin)
-- [@Nikolas26](https://github.com/Nikolas26)
+- **Nikolas Silva** [@Nikolas26](https://github.com/Nikolas26)
 
 ---
 
