@@ -706,7 +706,8 @@ public class DadosDemonstracaoSeeder implements ApplicationRunner {
                     }
                     if (aleatorio.nextDouble() < aluno.perfil().engajamento) {
                         planejarConclusao(criada, aluno, dificuldade);
-                    } else if (criada.maisRecente() && aluno.perfil() != Perfil.INATIVO && aleatorio.nextDouble() < 0.3) {
+                    } else if (criada.maisRecente() && aluno.perfil() != Perfil.INATIVO
+                            && aleatorio.nextDouble() < 0.3) {
                         planejarEmAndamento(criada, aluno);
                     }
                 }
@@ -961,7 +962,8 @@ public class DadosDemonstracaoSeeder implements ApplicationRunner {
             Desafio desafio = montarDesafio(modelo, professor, turma, StatusDesafio.AGUARDANDO);
             aguardando++;
             LocalDateTime criadoEm = agora.minusHours(10L + aleatorio.nextInt(30));
-            datasDosDesafios.add(new Object[]{Timestamp.valueOf(criadoEm), Timestamp.valueOf(criadoEm), desafio.getId()});
+            datasDosDesafios.add(
+                    new Object[]{Timestamp.valueOf(criadoEm), Timestamp.valueOf(criadoEm), desafio.getId()});
             registrarLogin(professor, criadoEm.minusMinutes(3));
             registrar(professor, AcaoLog.CRIAR_DESAFIO, EntidadeLog.DESAFIO, desafio.getId(), criadoEm,
                     ResultadoLog.SUCESSO, "Desafio criado: \"" + desafio.getTitulo() + "\".",
@@ -1013,7 +1015,8 @@ public class DadosDemonstracaoSeeder implements ApplicationRunner {
 
             MapSqlParameterSource alunos = new MapSqlParameterSource("ids", alunoPorId.keySet());
             Map<String, Long> progressoPorChave = new HashMap<>();
-            jdbcComNomes.query("SELECT id, usuario_id, atividade_id FROM progresso_atividade WHERE usuario_id IN (:ids)",
+            jdbcComNomes.query(
+                    "SELECT id, usuario_id, atividade_id FROM progresso_atividade WHERE usuario_id IN (:ids)",
                     alunos, (RowCallbackHandler) rs -> {
                         progressoPorChave.put(rs.getLong(2) + ":" + rs.getLong(3), rs.getLong(1));
                     });
@@ -1027,7 +1030,7 @@ public class DadosDemonstracaoSeeder implements ApplicationRunner {
                 }
             }
             jdbc.batchUpdate("INSERT INTO resposta_atividade (progresso_id, pergunta_id, alternativa_id, correta) "
-                    + "VALUES (?, ?, ?, ?)", linhasResposta,
+                            + "VALUES (?, ?, ?, ?)", linhasResposta,
                     new int[]{Types.BIGINT, Types.BIGINT, Types.BIGINT, Types.BOOLEAN});
 
             Map<String, Long> respostaPorChave = new HashMap<>();

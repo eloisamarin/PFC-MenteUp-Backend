@@ -64,7 +64,8 @@ public class LimpezaDemonstracao implements ApplicationRunner {
         String contas = "SELECT id FROM tb_usuarios WHERE " + emails.condicao("usuario");
         String turmas = "SELECT id FROM tb_turma WHERE professor_id IN (" + contas + ")";
         String atividades = "SELECT id FROM tb_atividade WHERE usuario_id IN (" + contas + ")";
-        String desafios = "SELECT id FROM tb_desafio WHERE turma_id IN (" + turmas + ") OR usuario_id IN (" + contas + ")";
+        String desafios =
+                "SELECT id FROM tb_desafio WHERE turma_id IN (" + turmas + ") OR usuario_id IN (" + contas + ")";
         String perguntasDesafio = "SELECT id FROM tb_pergunta_desafio WHERE desafio_id IN (" + desafios + ")";
         String progressos = "SELECT id FROM progresso_atividade WHERE usuario_id IN (" + contas + ")"
                 + " OR atividade_id IN (" + atividades + ")";
