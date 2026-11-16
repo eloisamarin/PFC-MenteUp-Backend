@@ -1,336 +1,113 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
-                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
-                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
-                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
-                  id="Definicoes_03-atividade-desempenho-e-conquistas" targetNamespace="https://menteup.umc.br/bpmn"
-                  exporter="MenteUp" exporterVersion="1.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definicoes_03-atividade-desempenho-e-conquistas" targetNamespace="https://menteup.umc.br/bpmn" exporter="MenteUp" exporterVersion="1.0">
   <bpmn:collaboration id="Colaboracao_03-atividade-desempenho-e-conquistas">
     <bpmn:participant id="Participante_03-atividade-desempenho-e-conquistas" name="MenteUp — Atividade, desempenho e conquistas" processRef="Processo_03-atividade-desempenho-e-conquistas" />
   </bpmn:collaboration>
   <bpmn:process id="Processo_03-atividade-desempenho-e-conquistas" isExecutable="false">
     <bpmn:laneSet id="Raias_03-atividade-desempenho-e-conquistas">
-      <bpmn:lane id="R_Professor" name="Professor">
-        <bpmn:flowNodeRef>Inicio</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Criar</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Questoes</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Publicar</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Analisar</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>G_Comentar</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Comentar</bpmn:flowNodeRef>
-      </bpmn:lane>
-      <bpmn:lane id="R_Sistema" name="Sistema MenteUp">
-        <bpmn:flowNodeRef>Notificar</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Salvar</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Corrigir</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Conquistas</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>G_Conquista</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Ranking</bpmn:flowNodeRef>
-      </bpmn:lane>
-      <bpmn:lane id="R_Aluno" name="Aluno">
-        <bpmn:flowNodeRef>Responder</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>G_Todas</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Enviar</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Comemorar</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>VerComentario</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Fim</bpmn:flowNodeRef>
-      </bpmn:lane>
+      <bpmn:lane id="R_Professor_03" name="Professor (ou Administrador)"><bpmn:flowNodeRef>Inicio_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Criar_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Negado_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Questoes_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Publicar_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Analisar_03</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Comentar_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Comentar_03</bpmn:flowNodeRef></bpmn:lane>
+      <bpmn:lane id="R_Sistema_03" name="Sistema MenteUp"><bpmn:flowNodeRef>G_Posse_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Negar_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Notificar_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Salvar_03</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Todas_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Corrigir_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Conquistas_03</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Conquista_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Ranking_03</bpmn:flowNodeRef></bpmn:lane>
+      <bpmn:lane id="R_Aluno_03" name="Aluno"><bpmn:flowNodeRef>Responder_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Comemorar_03</bpmn:flowNodeRef><bpmn:flowNodeRef>VerComentario_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_03</bpmn:flowNodeRef></bpmn:lane>
     </bpmn:laneSet>
-    <bpmn:startEvent id="Inicio" name="Planejar atividade">
-      <bpmn:outgoing>Fluxo_1</bpmn:outgoing>
-    </bpmn:startEvent>
-    <bpmn:userTask id="Criar" name="Criar atividade e escolher o template">
-      <bpmn:incoming>Fluxo_1</bpmn:incoming>
-      <bpmn:outgoing>Fluxo_2</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:userTask id="Questoes" name="Cadastrar as questões e o gabarito">
-      <bpmn:incoming>Fluxo_2</bpmn:incoming>
-      <bpmn:outgoing>Fluxo_3</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:userTask id="Publicar" name="Publicar para a turma">
-      <bpmn:incoming>Fluxo_3</bpmn:incoming>
-      <bpmn:outgoing>Fluxo_4</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:sendTask id="Notificar" name="Notificar os alunos da turma (Firebase)">
-      <bpmn:incoming>Fluxo_4</bpmn:incoming>
-      <bpmn:outgoing>Fluxo_5</bpmn:outgoing>
-    </bpmn:sendTask>
-    <bpmn:userTask id="Responder" name="Responder as questões">
-      <bpmn:incoming>Fluxo_5</bpmn:incoming>
-      <bpmn:incoming>Fluxo_8</bpmn:incoming>
-      <bpmn:outgoing>Fluxo_6</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:serviceTask id="Salvar" name="Salvar o progresso de cada resposta">
-      <bpmn:incoming>Fluxo_6</bpmn:incoming>
-      <bpmn:outgoing>Fluxo_7</bpmn:outgoing>
-    </bpmn:serviceTask>
-    <bpmn:exclusiveGateway id="G_Todas" name="Respondeu todas?">
-      <bpmn:incoming>Fluxo_7</bpmn:incoming>
-      <bpmn:outgoing>Fluxo_8</bpmn:outgoing>
-      <bpmn:outgoing>Fluxo_9</bpmn:outgoing>
-    </bpmn:exclusiveGateway>
-    <bpmn:userTask id="Enviar" name="Enviar a atividade">
-      <bpmn:incoming>Fluxo_9</bpmn:incoming>
-      <bpmn:outgoing>Fluxo_10</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:serviceTask id="Corrigir" name="Corrigir, calcular acertos e pontuação">
-      <bpmn:incoming>Fluxo_10</bpmn:incoming>
-      <bpmn:outgoing>Fluxo_11</bpmn:outgoing>
-    </bpmn:serviceTask>
-    <bpmn:serviceTask id="Conquistas" name="Avaliar conquistas e XP">
-      <bpmn:incoming>Fluxo_11</bpmn:incoming>
-      <bpmn:outgoing>Fluxo_12</bpmn:outgoing>
-    </bpmn:serviceTask>
-    <bpmn:exclusiveGateway id="G_Conquista" name="Nova conquista?">
-      <bpmn:incoming>Fluxo_12</bpmn:incoming>
-      <bpmn:outgoing>Fluxo_13</bpmn:outgoing>
-      <bpmn:outgoing>Fluxo_14</bpmn:outgoing>
-    </bpmn:exclusiveGateway>
-    <bpmn:userTask id="Comemorar" name="Ver a comemoração da conquista">
-      <bpmn:incoming>Fluxo_13</bpmn:incoming>
-      <bpmn:outgoing>Fluxo_15</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:serviceTask id="Ranking" name="Atualizar ranking e desempenho">
-      <bpmn:incoming>Fluxo_14</bpmn:incoming>
-      <bpmn:incoming>Fluxo_15</bpmn:incoming>
-      <bpmn:outgoing>Fluxo_16</bpmn:outgoing>
-    </bpmn:serviceTask>
-    <bpmn:userTask id="Analisar" name="Analisar desempenho da turma e de cada aluno">
-      <bpmn:incoming>Fluxo_16</bpmn:incoming>
-      <bpmn:outgoing>Fluxo_17</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:exclusiveGateway id="G_Comentar" name="Deseja comentar?">
-      <bpmn:incoming>Fluxo_17</bpmn:incoming>
-      <bpmn:outgoing>Fluxo_18</bpmn:outgoing>
-      <bpmn:outgoing>Fluxo_19</bpmn:outgoing>
-    </bpmn:exclusiveGateway>
-    <bpmn:userTask id="Comentar" name="Escrever comentário no resultado do aluno">
-      <bpmn:incoming>Fluxo_18</bpmn:incoming>
-      <bpmn:outgoing>Fluxo_20</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:userTask id="VerComentario" name="Ver resultado e comentário do professor">
-      <bpmn:incoming>Fluxo_19</bpmn:incoming>
-      <bpmn:incoming>Fluxo_20</bpmn:incoming>
-      <bpmn:outgoing>Fluxo_21</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:endEvent id="Fim" name="Ciclo da atividade concluído">
-      <bpmn:incoming>Fluxo_21</bpmn:incoming>
-    </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Fluxo_1" sourceRef="Inicio" targetRef="Criar" />
-    <bpmn:sequenceFlow id="Fluxo_2" sourceRef="Criar" targetRef="Questoes" />
-    <bpmn:sequenceFlow id="Fluxo_3" sourceRef="Questoes" targetRef="Publicar" />
-    <bpmn:sequenceFlow id="Fluxo_4" sourceRef="Publicar" targetRef="Notificar" />
-    <bpmn:sequenceFlow id="Fluxo_5" sourceRef="Notificar" targetRef="Responder" />
-    <bpmn:sequenceFlow id="Fluxo_6" sourceRef="Responder" targetRef="Salvar" />
-    <bpmn:sequenceFlow id="Fluxo_7" sourceRef="Salvar" targetRef="G_Todas" />
-    <bpmn:sequenceFlow id="Fluxo_8" name="Não" sourceRef="G_Todas" targetRef="Responder" />
-    <bpmn:sequenceFlow id="Fluxo_9" name="Sim" sourceRef="G_Todas" targetRef="Enviar" />
-    <bpmn:sequenceFlow id="Fluxo_10" sourceRef="Enviar" targetRef="Corrigir" />
-    <bpmn:sequenceFlow id="Fluxo_11" sourceRef="Corrigir" targetRef="Conquistas" />
-    <bpmn:sequenceFlow id="Fluxo_12" sourceRef="Conquistas" targetRef="G_Conquista" />
-    <bpmn:sequenceFlow id="Fluxo_13" name="Sim" sourceRef="G_Conquista" targetRef="Comemorar" />
-    <bpmn:sequenceFlow id="Fluxo_14" name="Não" sourceRef="G_Conquista" targetRef="Ranking" />
-    <bpmn:sequenceFlow id="Fluxo_15" sourceRef="Comemorar" targetRef="Ranking" />
-    <bpmn:sequenceFlow id="Fluxo_16" sourceRef="Ranking" targetRef="Analisar" />
-    <bpmn:sequenceFlow id="Fluxo_17" sourceRef="Analisar" targetRef="G_Comentar" />
-    <bpmn:sequenceFlow id="Fluxo_18" name="Sim" sourceRef="G_Comentar" targetRef="Comentar" />
-    <bpmn:sequenceFlow id="Fluxo_19" name="Não" sourceRef="G_Comentar" targetRef="VerComentario" />
-    <bpmn:sequenceFlow id="Fluxo_20" sourceRef="Comentar" targetRef="VerComentario" />
-    <bpmn:sequenceFlow id="Fluxo_21" sourceRef="VerComentario" targetRef="Fim" />
-    <bpmn:textAnnotation id="Nota_1"><bpmn:text>Templates: Quiz, Verdadeiro ou falso, Associação, Ordenação e Lacunas.</bpmn:text></bpmn:textAnnotation>
+    <bpmn:startEvent id="Inicio_03" name="Planejar atividade"><bpmn:outgoing>Fluxo_1_03</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:userTask id="Criar_03" name="Criar a atividade, escolher o template e a(s) turma(s)"><bpmn:incoming>Fluxo_1_03</bpmn:incoming><bpmn:outgoing>Fluxo_2_03</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Posse_03" name="As turmas são do professor (ou é admin)?"><bpmn:incoming>Fluxo_2_03</bpmn:incoming><bpmn:outgoing>Fluxo_3_03</bpmn:outgoing><bpmn:outgoing>Fluxo_4_03</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Negar_03" name="Recusar (403) e registrar ACESSO_NEGADO"><bpmn:incoming>Fluxo_4_03</bpmn:incoming><bpmn:outgoing>Fluxo_5_03</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Negado_03" name="Atividade não criada"><bpmn:incoming>Fluxo_5_03</bpmn:incoming></bpmn:endEvent>
+    <bpmn:userTask id="Questoes_03" name="Cadastrar as questões e o gabarito"><bpmn:incoming>Fluxo_3_03</bpmn:incoming><bpmn:outgoing>Fluxo_6_03</bpmn:outgoing></bpmn:userTask>
+    <bpmn:userTask id="Publicar_03" name="Publicar para as turmas"><bpmn:incoming>Fluxo_6_03</bpmn:incoming><bpmn:outgoing>Fluxo_7_03</bpmn:outgoing></bpmn:userTask>
+    <bpmn:sendTask id="Notificar_03" name="Notificar os alunos (Firebase, quando ligado)"><bpmn:incoming>Fluxo_7_03</bpmn:incoming><bpmn:outgoing>Fluxo_8_03</bpmn:outgoing></bpmn:sendTask>
+    <bpmn:userTask id="Responder_03" name="Responder as questões"><bpmn:incoming>Fluxo_8_03</bpmn:incoming><bpmn:incoming>Fluxo_11_03</bpmn:incoming><bpmn:outgoing>Fluxo_9_03</bpmn:outgoing></bpmn:userTask>
+    <bpmn:serviceTask id="Salvar_03" name="Salvar o progresso de cada resposta"><bpmn:incoming>Fluxo_9_03</bpmn:incoming><bpmn:outgoing>Fluxo_10_03</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="G_Todas_03" name="Respondeu todas?"><bpmn:incoming>Fluxo_10_03</bpmn:incoming><bpmn:outgoing>Fluxo_11_03</bpmn:outgoing><bpmn:outgoing>Fluxo_12_03</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Corrigir_03" name="Corrigir, calcular acertos e pontuação"><bpmn:incoming>Fluxo_12_03</bpmn:incoming><bpmn:outgoing>Fluxo_13_03</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:serviceTask id="Conquistas_03" name="Avaliar conquistas, XP e Intensivão"><bpmn:incoming>Fluxo_13_03</bpmn:incoming><bpmn:outgoing>Fluxo_14_03</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="G_Conquista_03" name="Nova conquista?"><bpmn:incoming>Fluxo_14_03</bpmn:incoming><bpmn:outgoing>Fluxo_15_03</bpmn:outgoing><bpmn:outgoing>Fluxo_16_03</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:userTask id="Comemorar_03" name="Ver a comemoração da conquista"><bpmn:incoming>Fluxo_15_03</bpmn:incoming><bpmn:outgoing>Fluxo_17_03</bpmn:outgoing></bpmn:userTask>
+    <bpmn:serviceTask id="Ranking_03" name="Atualizar ranking, desempenho e painel"><bpmn:incoming>Fluxo_16_03</bpmn:incoming><bpmn:incoming>Fluxo_17_03</bpmn:incoming><bpmn:outgoing>Fluxo_18_03</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:userTask id="Analisar_03" name="Analisar o desempenho da turma e de cada aluno"><bpmn:incoming>Fluxo_18_03</bpmn:incoming><bpmn:outgoing>Fluxo_19_03</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Comentar_03" name="Deseja comentar?"><bpmn:incoming>Fluxo_19_03</bpmn:incoming><bpmn:outgoing>Fluxo_20_03</bpmn:outgoing><bpmn:outgoing>Fluxo_21_03</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:userTask id="Comentar_03" name="Escrever comentário no resultado do aluno"><bpmn:incoming>Fluxo_20_03</bpmn:incoming><bpmn:outgoing>Fluxo_22_03</bpmn:outgoing></bpmn:userTask>
+    <bpmn:userTask id="VerComentario_03" name="Ver o resultado e o comentário"><bpmn:incoming>Fluxo_21_03</bpmn:incoming><bpmn:incoming>Fluxo_22_03</bpmn:incoming><bpmn:outgoing>Fluxo_23_03</bpmn:outgoing></bpmn:userTask>
+    <bpmn:endEvent id="Fim_03" name="Ciclo da atividade concluído"><bpmn:incoming>Fluxo_23_03</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="Fluxo_1_03" sourceRef="Inicio_03" targetRef="Criar_03" />
+    <bpmn:sequenceFlow id="Fluxo_2_03" sourceRef="Criar_03" targetRef="G_Posse_03" />
+    <bpmn:sequenceFlow id="Fluxo_3_03" name="Sim" sourceRef="G_Posse_03" targetRef="Questoes_03" />
+    <bpmn:sequenceFlow id="Fluxo_4_03" name="Não" sourceRef="G_Posse_03" targetRef="Negar_03" />
+    <bpmn:sequenceFlow id="Fluxo_5_03" sourceRef="Negar_03" targetRef="Fim_Negado_03" />
+    <bpmn:sequenceFlow id="Fluxo_6_03" sourceRef="Questoes_03" targetRef="Publicar_03" />
+    <bpmn:sequenceFlow id="Fluxo_7_03" sourceRef="Publicar_03" targetRef="Notificar_03" />
+    <bpmn:sequenceFlow id="Fluxo_8_03" sourceRef="Notificar_03" targetRef="Responder_03" />
+    <bpmn:sequenceFlow id="Fluxo_9_03" sourceRef="Responder_03" targetRef="Salvar_03" />
+    <bpmn:sequenceFlow id="Fluxo_10_03" sourceRef="Salvar_03" targetRef="G_Todas_03" />
+    <bpmn:sequenceFlow id="Fluxo_11_03" name="Não" sourceRef="G_Todas_03" targetRef="Responder_03" />
+    <bpmn:sequenceFlow id="Fluxo_12_03" name="Sim" sourceRef="G_Todas_03" targetRef="Corrigir_03" />
+    <bpmn:sequenceFlow id="Fluxo_13_03" sourceRef="Corrigir_03" targetRef="Conquistas_03" />
+    <bpmn:sequenceFlow id="Fluxo_14_03" sourceRef="Conquistas_03" targetRef="G_Conquista_03" />
+    <bpmn:sequenceFlow id="Fluxo_15_03" name="Sim" sourceRef="G_Conquista_03" targetRef="Comemorar_03" />
+    <bpmn:sequenceFlow id="Fluxo_16_03" name="Não" sourceRef="G_Conquista_03" targetRef="Ranking_03" />
+    <bpmn:sequenceFlow id="Fluxo_17_03" sourceRef="Comemorar_03" targetRef="Ranking_03" />
+    <bpmn:sequenceFlow id="Fluxo_18_03" sourceRef="Ranking_03" targetRef="Analisar_03" />
+    <bpmn:sequenceFlow id="Fluxo_19_03" sourceRef="Analisar_03" targetRef="G_Comentar_03" />
+    <bpmn:sequenceFlow id="Fluxo_20_03" name="Sim" sourceRef="G_Comentar_03" targetRef="Comentar_03" />
+    <bpmn:sequenceFlow id="Fluxo_21_03" name="Não" sourceRef="G_Comentar_03" targetRef="VerComentario_03" />
+    <bpmn:sequenceFlow id="Fluxo_22_03" sourceRef="Comentar_03" targetRef="VerComentario_03" />
+    <bpmn:sequenceFlow id="Fluxo_23_03" sourceRef="VerComentario_03" targetRef="Fim_03" />
+    <bpmn:textAnnotation id="Nota_1_03"><bpmn:text>Templates: Quiz, Verdadeiro ou Falso, Associação, Ordenação e Lacunas.</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Nota_1_03" sourceRef="Criar_03" targetRef="Nota_1_03" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="Diagrama_03-atividade-desempenho-e-conquistas">
     <bpmndi:BPMNPlane id="Plano_03-atividade-desempenho-e-conquistas" bpmnElement="Colaboracao_03-atividade-desempenho-e-conquistas">
-      <bpmndi:BPMNShape id="Participante_03-atividade-desempenho-e-conquistas_di" bpmnElement="Participante_03-atividade-desempenho-e-conquistas" isHorizontal="true">
-        <dc:Bounds x="120" y="80" width="3420" height="690" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="R_Professor_di" bpmnElement="R_Professor" isHorizontal="true">
-        <dc:Bounds x="150" y="80" width="3390" height="230" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="R_Sistema_di" bpmnElement="R_Sistema" isHorizontal="true">
-        <dc:Bounds x="150" y="310" width="3390" height="230" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="R_Aluno_di" bpmnElement="R_Aluno" isHorizontal="true">
-        <dc:Bounds x="150" y="540" width="3390" height="230" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Inicio_di" bpmnElement="Inicio">
-        <dc:Bounds x="232" y="177" width="36" height="36" />
-        <bpmndi:BPMNLabel><dc:Bounds x="195" y="219" width="110" height="27" /></bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Criar_di" bpmnElement="Criar">
-        <dc:Bounds x="355" y="159" width="140" height="72" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Questoes_di" bpmnElement="Questoes">
-        <dc:Bounds x="530" y="159" width="140" height="72" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Publicar_di" bpmnElement="Publicar">
-        <dc:Bounds x="705" y="159" width="140" height="72" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Notificar_di" bpmnElement="Notificar">
-        <dc:Bounds x="880" y="389" width="140" height="72" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Responder_di" bpmnElement="Responder">
-        <dc:Bounds x="1055" y="619" width="140" height="72" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Salvar_di" bpmnElement="Salvar">
-        <dc:Bounds x="1230" y="419" width="140" height="72" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="G_Todas_di" bpmnElement="G_Todas" isMarkerVisible="true">
-        <dc:Bounds x="1450" y="630" width="50" height="50" />
-        <bpmndi:BPMNLabel><dc:Bounds x="1357" y="605" width="105" height="27" /></bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Enviar_di" bpmnElement="Enviar">
-        <dc:Bounds x="1580" y="619" width="140" height="72" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Corrigir_di" bpmnElement="Corrigir">
-        <dc:Bounds x="1755" y="389" width="140" height="72" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Conquistas_di" bpmnElement="Conquistas">
-        <dc:Bounds x="1930" y="389" width="140" height="72" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="G_Conquista_di" bpmnElement="G_Conquista" isMarkerVisible="true">
-        <dc:Bounds x="2150" y="400" width="50" height="50" />
-        <bpmndi:BPMNLabel><dc:Bounds x="2057" y="375" width="105" height="27" /></bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Comemorar_di" bpmnElement="Comemorar">
-        <dc:Bounds x="2280" y="619" width="140" height="72" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Ranking_di" bpmnElement="Ranking">
-        <dc:Bounds x="2455" y="389" width="140" height="72" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Analisar_di" bpmnElement="Analisar">
-        <dc:Bounds x="2630" y="159" width="140" height="72" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="G_Comentar_di" bpmnElement="G_Comentar" isMarkerVisible="true">
-        <dc:Bounds x="2850" y="170" width="50" height="50" />
-        <bpmndi:BPMNLabel><dc:Bounds x="2757" y="145" width="105" height="27" /></bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Comentar_di" bpmnElement="Comentar">
-        <dc:Bounds x="2980" y="219" width="140" height="72" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="VerComentario_di" bpmnElement="VerComentario">
-        <dc:Bounds x="3155" y="619" width="140" height="72" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Fim_di" bpmnElement="Fim">
-        <dc:Bounds x="3382" y="637" width="36" height="36" />
-        <bpmndi:BPMNLabel><dc:Bounds x="3426" y="641" width="100" height="27" /></bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="Fluxo_1_di" bpmnElement="Fluxo_1">
-        <di:waypoint x="268" y="195" />
-        <di:waypoint x="355" y="195" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Fluxo_2_di" bpmnElement="Fluxo_2">
-        <di:waypoint x="495" y="195" />
-        <di:waypoint x="530" y="195" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Fluxo_3_di" bpmnElement="Fluxo_3">
-        <di:waypoint x="670" y="195" />
-        <di:waypoint x="705" y="195" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Fluxo_4_di" bpmnElement="Fluxo_4">
-        <di:waypoint x="845" y="195" />
-        <di:waypoint x="862" y="195" />
-        <di:waypoint x="862" y="425" />
-        <di:waypoint x="880" y="425" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Fluxo_5_di" bpmnElement="Fluxo_5">
-        <di:waypoint x="1020" y="425" />
-        <di:waypoint x="1038" y="425" />
-        <di:waypoint x="1038" y="655" />
-        <di:waypoint x="1055" y="655" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Fluxo_6_di" bpmnElement="Fluxo_6">
-        <di:waypoint x="1195" y="655" />
-        <di:waypoint x="1212" y="655" />
-        <di:waypoint x="1212" y="455" />
-        <di:waypoint x="1230" y="455" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Fluxo_7_di" bpmnElement="Fluxo_7">
-        <di:waypoint x="1370" y="455" />
-        <di:waypoint x="1410" y="455" />
-        <di:waypoint x="1410" y="655" />
-        <di:waypoint x="1450" y="655" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Fluxo_8_di" bpmnElement="Fluxo_8">
-        <di:waypoint x="1475" y="680" />
-        <di:waypoint x="1475" y="758" />
-        <di:waypoint x="1125" y="758" />
-        <di:waypoint x="1125" y="691" />
-        <bpmndi:BPMNLabel><dc:Bounds x="1481" y="711" width="34" height="14" /></bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Fluxo_9_di" bpmnElement="Fluxo_9">
-        <di:waypoint x="1500" y="655" />
-        <di:waypoint x="1580" y="655" />
-        <bpmndi:BPMNLabel><dc:Bounds x="1525" y="635" width="34" height="14" /></bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Fluxo_10_di" bpmnElement="Fluxo_10">
-        <di:waypoint x="1720" y="655" />
-        <di:waypoint x="1738" y="655" />
-        <di:waypoint x="1738" y="425" />
-        <di:waypoint x="1755" y="425" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Fluxo_11_di" bpmnElement="Fluxo_11">
-        <di:waypoint x="1895" y="425" />
-        <di:waypoint x="1930" y="425" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Fluxo_12_di" bpmnElement="Fluxo_12">
-        <di:waypoint x="2070" y="425" />
-        <di:waypoint x="2150" y="425" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Fluxo_13_di" bpmnElement="Fluxo_13">
-        <di:waypoint x="2175" y="450" />
-        <di:waypoint x="2175" y="655" />
-        <di:waypoint x="2280" y="655" />
-        <bpmndi:BPMNLabel><dc:Bounds x="2181" y="544" width="34" height="14" /></bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Fluxo_14_di" bpmnElement="Fluxo_14">
-        <di:waypoint x="2200" y="425" />
-        <di:waypoint x="2455" y="425" />
-        <bpmndi:BPMNLabel><dc:Bounds x="2312" y="405" width="34" height="14" /></bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Fluxo_15_di" bpmnElement="Fluxo_15">
-        <di:waypoint x="2420" y="655" />
-        <di:waypoint x="2438" y="655" />
-        <di:waypoint x="2438" y="425" />
-        <di:waypoint x="2455" y="425" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Fluxo_16_di" bpmnElement="Fluxo_16">
-        <di:waypoint x="2595" y="425" />
-        <di:waypoint x="2612" y="425" />
-        <di:waypoint x="2612" y="195" />
-        <di:waypoint x="2630" y="195" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Fluxo_17_di" bpmnElement="Fluxo_17">
-        <di:waypoint x="2770" y="195" />
-        <di:waypoint x="2850" y="195" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Fluxo_18_di" bpmnElement="Fluxo_18">
-        <di:waypoint x="2900" y="195" />
-        <di:waypoint x="2905" y="195" />
-        <di:waypoint x="2905" y="255" />
-        <di:waypoint x="2980" y="255" />
-        <bpmndi:BPMNLabel><dc:Bounds x="2888" y="175" width="34" height="14" /></bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Fluxo_19_di" bpmnElement="Fluxo_19">
-        <di:waypoint x="2875" y="220" />
-        <di:waypoint x="2875" y="522" />
-        <di:waypoint x="3225" y="522" />
-        <di:waypoint x="3225" y="619" />
-        <bpmndi:BPMNLabel><dc:Bounds x="2881" y="363" width="34" height="14" /></bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Fluxo_20_di" bpmnElement="Fluxo_20">
-        <di:waypoint x="3120" y="255" />
-        <di:waypoint x="3138" y="255" />
-        <di:waypoint x="3138" y="655" />
-        <di:waypoint x="3155" y="655" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Fluxo_21_di" bpmnElement="Fluxo_21">
-        <di:waypoint x="3295" y="655" />
-        <di:waypoint x="3382" y="655" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="Nota_1_di" bpmnElement="Nota_1">
-        <dc:Bounds x="180" y="85" width="210" height="60" />
-      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Participante_03-atividade-desempenho-e-conquistas_di" bpmnElement="Participante_03-atividade-desempenho-e-conquistas" isHorizontal="true"><dc:Bounds x="120" y="80" width="3060" height="675" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Professor_03_di" bpmnElement="R_Professor_03" isHorizontal="true"><dc:Bounds x="150" y="80" width="3030" height="270" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Sistema_03_di" bpmnElement="R_Sistema_03" isHorizontal="true"><dc:Bounds x="150" y="350" width="3030" height="270" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Aluno_03_di" bpmnElement="R_Aluno_03" isHorizontal="true"><dc:Bounds x="150" y="620" width="3030" height="135" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_03_di" bpmnElement="Inicio_03"><dc:Bounds x="232" y="129" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="190" y="169" width="120" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Criar_03_di" bpmnElement="Criar_03"><dc:Bounds x="365" y="107" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Posse_03_di" bpmnElement="G_Posse_03" isMarkerVisible="true"><dc:Bounds x="595" y="392" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="477" y="350" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Negar_03_di" bpmnElement="Negar_03"><dc:Bounds x="550" y="512" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Negado_03_di" bpmnElement="Fim_Negado_03"><dc:Bounds x="787" y="264" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="829" y="262" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Questoes_03_di" bpmnElement="Questoes_03"><dc:Bounds x="735" y="107" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Publicar_03_di" bpmnElement="Publicar_03"><dc:Bounds x="920" y="107" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Notificar_03_di" bpmnElement="Notificar_03"><dc:Bounds x="1105" y="377" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Responder_03_di" bpmnElement="Responder_03"><dc:Bounds x="1290" y="647" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Salvar_03_di" bpmnElement="Salvar_03"><dc:Bounds x="1290" y="512" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Todas_03_di" bpmnElement="G_Todas_03" isMarkerVisible="true"><dc:Bounds x="1520" y="527" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1402" y="485" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Corrigir_03_di" bpmnElement="Corrigir_03"><dc:Bounds x="1660" y="377" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Conquistas_03_di" bpmnElement="Conquistas_03"><dc:Bounds x="1845" y="377" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Conquista_03_di" bpmnElement="G_Conquista_03" isMarkerVisible="true"><dc:Bounds x="2075" y="392" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1957" y="350" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Comemorar_03_di" bpmnElement="Comemorar_03"><dc:Bounds x="2030" y="647" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Ranking_03_di" bpmnElement="Ranking_03"><dc:Bounds x="2215" y="377" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Analisar_03_di" bpmnElement="Analisar_03"><dc:Bounds x="2400" y="107" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Comentar_03_di" bpmnElement="G_Comentar_03" isMarkerVisible="true"><dc:Bounds x="2630" y="122" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="2512" y="80" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Comentar_03_di" bpmnElement="Comentar_03"><dc:Bounds x="2585" y="242" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="VerComentario_03_di" bpmnElement="VerComentario_03"><dc:Bounds x="2770" y="647" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_03_di" bpmnElement="Fim_03"><dc:Bounds x="3007" y="669" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="3049" y="667" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Fluxo_1_03_di" bpmnElement="Fluxo_1_03"><di:waypoint x="268" y="147" /><di:waypoint x="365" y="147" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_2_03_di" bpmnElement="Fluxo_2_03"><di:waypoint x="505" y="147" /><di:waypoint x="550" y="147" /><di:waypoint x="550" y="417" /><di:waypoint x="595" y="417" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_3_03_di" bpmnElement="Fluxo_3_03"><di:waypoint x="620" y="392" /><di:waypoint x="620" y="147" /><di:waypoint x="735" y="147" /><bpmndi:BPMNLabel><dc:Bounds x="628" y="129" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_4_03_di" bpmnElement="Fluxo_4_03"><di:waypoint x="620" y="442" /><di:waypoint x="620" y="512" /><bpmndi:BPMNLabel><dc:Bounds x="626" y="470" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_5_03_di" bpmnElement="Fluxo_5_03"><di:waypoint x="690" y="552" /><di:waypoint x="738" y="552" /><di:waypoint x="738" y="282" /><di:waypoint x="787" y="282" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_6_03_di" bpmnElement="Fluxo_6_03"><di:waypoint x="875" y="147" /><di:waypoint x="920" y="147" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_7_03_di" bpmnElement="Fluxo_7_03"><di:waypoint x="1060" y="147" /><di:waypoint x="1082" y="147" /><di:waypoint x="1082" y="417" /><di:waypoint x="1105" y="417" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_8_03_di" bpmnElement="Fluxo_8_03"><di:waypoint x="1245" y="417" /><di:waypoint x="1268" y="417" /><di:waypoint x="1268" y="687" /><di:waypoint x="1290" y="687" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_9_03_di" bpmnElement="Fluxo_9_03"><di:waypoint x="1360" y="647" /><di:waypoint x="1360" y="592" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_10_03_di" bpmnElement="Fluxo_10_03"><di:waypoint x="1430" y="552" /><di:waypoint x="1520" y="552" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_11_03_di" bpmnElement="Fluxo_11_03"><di:waypoint x="1545" y="577" /><di:waypoint x="1545" y="687" /><di:waypoint x="1430" y="687" /><bpmndi:BPMNLabel><dc:Bounds x="1553" y="669" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_12_03_di" bpmnElement="Fluxo_12_03"><di:waypoint x="1545" y="527" /><di:waypoint x="1545" y="417" /><di:waypoint x="1660" y="417" /><bpmndi:BPMNLabel><dc:Bounds x="1553" y="399" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_13_03_di" bpmnElement="Fluxo_13_03"><di:waypoint x="1800" y="417" /><di:waypoint x="1845" y="417" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_14_03_di" bpmnElement="Fluxo_14_03"><di:waypoint x="1985" y="417" /><di:waypoint x="2075" y="417" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_15_03_di" bpmnElement="Fluxo_15_03"><di:waypoint x="2100" y="442" /><di:waypoint x="2100" y="647" /><bpmndi:BPMNLabel><dc:Bounds x="2106" y="538" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_16_03_di" bpmnElement="Fluxo_16_03"><di:waypoint x="2125" y="417" /><di:waypoint x="2215" y="417" /><bpmndi:BPMNLabel><dc:Bounds x="2150" y="399" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_17_03_di" bpmnElement="Fluxo_17_03"><di:waypoint x="2170" y="687" /><di:waypoint x="2192" y="687" /><di:waypoint x="2192" y="417" /><di:waypoint x="2215" y="417" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_18_03_di" bpmnElement="Fluxo_18_03"><di:waypoint x="2355" y="417" /><di:waypoint x="2378" y="417" /><di:waypoint x="2378" y="147" /><di:waypoint x="2400" y="147" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_19_03_di" bpmnElement="Fluxo_19_03"><di:waypoint x="2540" y="147" /><di:waypoint x="2630" y="147" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_20_03_di" bpmnElement="Fluxo_20_03"><di:waypoint x="2655" y="172" /><di:waypoint x="2655" y="242" /><bpmndi:BPMNLabel><dc:Bounds x="2661" y="200" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_21_03_di" bpmnElement="Fluxo_21_03"><di:waypoint x="2680" y="147" /><di:waypoint x="2840" y="147" /><di:waypoint x="2840" y="647" /><bpmndi:BPMNLabel><dc:Bounds x="2846" y="151" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_22_03_di" bpmnElement="Fluxo_22_03"><di:waypoint x="2725" y="282" /><di:waypoint x="2748" y="282" /><di:waypoint x="2748" y="687" /><di:waypoint x="2770" y="687" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_23_03_di" bpmnElement="Fluxo_23_03"><di:waypoint x="2910" y="687" /><di:waypoint x="3007" y="687" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Nota_1_03_di" bpmnElement="Nota_1_03"><dc:Bounds x="520" y="45" width="210" height="52" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Assoc_Nota_1_03_di" bpmnElement="Assoc_Nota_1_03"><di:waypoint x="435" y="107" /><di:waypoint x="520" y="71" /></bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>

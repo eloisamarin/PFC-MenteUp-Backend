@@ -93,13 +93,15 @@ public class UsuarioController {
 
     @Operation(summary = "Administrador aprova o pedido de cadastro de professor")
     @PutMapping("/{id}/aprovar")
-    public ResponseEntity<UsuarioListagemResponse> aprovarProfessor(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<UsuarioListagemResponse> aprovarProfessor(@PathVariable Long id,
+                                                                    Authentication authentication) {
         return ResponseEntity.ok(usuarioService.aprovarProfessor(id, authentication.getName()));
     }
 
     @Operation(summary = "Administrador rejeita o pedido de cadastro de professor")
     @PutMapping("/{id}/rejeitar")
-    public ResponseEntity<UsuarioListagemResponse> rejeitarProfessor(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<UsuarioListagemResponse> rejeitarProfessor(@PathVariable Long id,
+                                                                     Authentication authentication) {
         return ResponseEntity.ok(usuarioService.rejeitarProfessor(id, authentication.getName()));
     }
 

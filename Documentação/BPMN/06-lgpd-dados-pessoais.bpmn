@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definicoes_06-lgpd-dados-pessoais" targetNamespace="https://menteup.umc.br/bpmn" exporter="MenteUp" exporterVersion="1.0">
+  <bpmn:collaboration id="Colaboracao_06-lgpd-dados-pessoais">
+    <bpmn:participant id="Participante_06-lgpd-dados-pessoais" name="MenteUp — LGPD: cópia dos dados, exclusão da conta e descarte automático" processRef="Processo_06-lgpd-dados-pessoais" />
+  </bpmn:collaboration>
+  <bpmn:process id="Processo_06-lgpd-dados-pessoais" isExecutable="false">
+    <bpmn:laneSet id="Raias_06-lgpd-dados-pessoais">
+      <bpmn:lane id="R_Usuario_06" name="Usuário (titular dos dados)"><bpmn:flowNodeRef>Inicio_06</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Pedido_06</bpmn:flowNodeRef><bpmn:flowNodeRef>Baixar_06</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Copia_06</bpmn:flowNodeRef><bpmn:flowNodeRef>Confirmar_06</bpmn:flowNodeRef><bpmn:flowNodeRef>AvisoSenha_06</bpmn:flowNodeRef></bpmn:lane>
+      <bpmn:lane id="R_Sistema_06" name="Sistema MenteUp"><bpmn:flowNodeRef>Exportar_06</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Senha_06</bpmn:flowNodeRef><bpmn:flowNodeRef>Anonimizar_06</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Excluida_06</bpmn:flowNodeRef><bpmn:flowNodeRef>Inicio_Tempo_06</bpmn:flowNodeRef><bpmn:flowNodeRef>Descartar_06</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Algo_06</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Nada_06</bpmn:flowNodeRef><bpmn:flowNodeRef>LogDescarte_06</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Descarte_06</bpmn:flowNodeRef></bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Inicio_06" name="Abrir &quot;Meus dados&quot;"><bpmn:outgoing>Fluxo_1_06</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:exclusiveGateway id="G_Pedido_06" name="O que deseja?"><bpmn:incoming>Fluxo_1_06</bpmn:incoming><bpmn:outgoing>Fluxo_2_06</bpmn:outgoing><bpmn:outgoing>Fluxo_3_06</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Exportar_06" name="Montar o arquivo com os dados da pessoa e registrar EXPORTAR_DADOS"><bpmn:incoming>Fluxo_2_06</bpmn:incoming><bpmn:outgoing>Fluxo_4_06</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:userTask id="Baixar_06" name="Baixar a cópia dos dados"><bpmn:incoming>Fluxo_4_06</bpmn:incoming><bpmn:outgoing>Fluxo_5_06</bpmn:outgoing></bpmn:userTask>
+    <bpmn:endEvent id="Fim_Copia_06" name="Cópia entregue"><bpmn:incoming>Fluxo_5_06</bpmn:incoming></bpmn:endEvent>
+    <bpmn:userTask id="Confirmar_06" name="Confirmar a exclusão com a senha"><bpmn:incoming>Fluxo_3_06</bpmn:incoming><bpmn:incoming>Fluxo_9_06</bpmn:incoming><bpmn:outgoing>Fluxo_6_06</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Senha_06" name="Senha correta?"><bpmn:incoming>Fluxo_6_06</bpmn:incoming><bpmn:outgoing>Fluxo_7_06</bpmn:outgoing><bpmn:outgoing>Fluxo_8_06</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="AvisoSenha_06" name="Avisar a senha incorreta"><bpmn:incoming>Fluxo_8_06</bpmn:incoming><bpmn:outgoing>Fluxo_9_06</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:serviceTask id="Anonimizar_06" name="Anonimizar a conta, encerrar as sessões e registrar EXCLUIR_PROPRIA_CONTA"><bpmn:incoming>Fluxo_7_06</bpmn:incoming><bpmn:outgoing>Fluxo_10_06</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Excluida_06" name="Conta excluída"><bpmn:incoming>Fluxo_10_06</bpmn:incoming></bpmn:endEvent>
+    <bpmn:startEvent id="Inicio_Tempo_06" name="Todo dia às 3h e ao iniciar a aplicação"><bpmn:outgoing>Fluxo_11_06</bpmn:outgoing><bpmn:timerEventDefinition id="Timer_Inicio_Tempo_06" /></bpmn:startEvent>
+    <bpmn:serviceTask id="Descartar_06" name="Descartar os dados vencidos (prazos do item 8 da Política)"><bpmn:incoming>Fluxo_11_06</bpmn:incoming><bpmn:outgoing>Fluxo_12_06</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="G_Algo_06" name="Algo foi descartado?"><bpmn:incoming>Fluxo_12_06</bpmn:incoming><bpmn:outgoing>Fluxo_13_06</bpmn:outgoing><bpmn:outgoing>Fluxo_14_06</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Fim_Nada_06" name="Nada a descartar"><bpmn:incoming>Fluxo_14_06</bpmn:incoming></bpmn:endEvent>
+    <bpmn:serviceTask id="LogDescarte_06" name="Registrar DESCARTAR_DADOS no log"><bpmn:incoming>Fluxo_13_06</bpmn:incoming><bpmn:outgoing>Fluxo_15_06</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Descarte_06" name="Descarte concluído"><bpmn:incoming>Fluxo_15_06</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="Fluxo_1_06" sourceRef="Inicio_06" targetRef="G_Pedido_06" />
+    <bpmn:sequenceFlow id="Fluxo_2_06" name="Copiar" sourceRef="G_Pedido_06" targetRef="Exportar_06" />
+    <bpmn:sequenceFlow id="Fluxo_3_06" name="Excluir" sourceRef="G_Pedido_06" targetRef="Confirmar_06" />
+    <bpmn:sequenceFlow id="Fluxo_4_06" sourceRef="Exportar_06" targetRef="Baixar_06" />
+    <bpmn:sequenceFlow id="Fluxo_5_06" sourceRef="Baixar_06" targetRef="Fim_Copia_06" />
+    <bpmn:sequenceFlow id="Fluxo_6_06" sourceRef="Confirmar_06" targetRef="G_Senha_06" />
+    <bpmn:sequenceFlow id="Fluxo_7_06" name="Sim" sourceRef="G_Senha_06" targetRef="Anonimizar_06" />
+    <bpmn:sequenceFlow id="Fluxo_8_06" name="Não" sourceRef="G_Senha_06" targetRef="AvisoSenha_06" />
+    <bpmn:sequenceFlow id="Fluxo_9_06" sourceRef="AvisoSenha_06" targetRef="Confirmar_06" />
+    <bpmn:sequenceFlow id="Fluxo_10_06" sourceRef="Anonimizar_06" targetRef="Fim_Excluida_06" />
+    <bpmn:sequenceFlow id="Fluxo_11_06" sourceRef="Inicio_Tempo_06" targetRef="Descartar_06" />
+    <bpmn:sequenceFlow id="Fluxo_12_06" sourceRef="Descartar_06" targetRef="G_Algo_06" />
+    <bpmn:sequenceFlow id="Fluxo_13_06" name="Sim" sourceRef="G_Algo_06" targetRef="LogDescarte_06" />
+    <bpmn:sequenceFlow id="Fluxo_14_06" name="Não" sourceRef="G_Algo_06" targetRef="Fim_Nada_06" />
+    <bpmn:sequenceFlow id="Fluxo_15_06" sourceRef="LogDescarte_06" targetRef="Fim_Descarte_06" />
+    <bpmn:textAnnotation id="Nota_1_06"><bpmn:text>Logs de acesso: 6 meses (Marco Civil). Códigos 2FA: 1 dia. Links: 7 dias. Cadastros rejeitados e convites vencidos: 30 dias. Os aceites não são apagados.</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Nota_1_06" sourceRef="Descartar_06" targetRef="Nota_1_06" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagrama_06-lgpd-dados-pessoais">
+    <bpmndi:BPMNPlane id="Plano_06-lgpd-dados-pessoais" bpmnElement="Colaboracao_06-lgpd-dados-pessoais">
+      <bpmndi:BPMNShape id="Participante_06-lgpd-dados-pessoais_di" bpmnElement="Participante_06-lgpd-dados-pessoais" isHorizontal="true"><dc:Bounds x="120" y="80" width="2320" height="540" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Usuario_06_di" bpmnElement="R_Usuario_06" isHorizontal="true"><dc:Bounds x="150" y="80" width="2290" height="270" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Sistema_06_di" bpmnElement="R_Sistema_06" isHorizontal="true"><dc:Bounds x="150" y="350" width="2290" height="270" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_06_di" bpmnElement="Inicio_06"><dc:Bounds x="232" y="129" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="190" y="169" width="120" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Pedido_06_di" bpmnElement="G_Pedido_06" isMarkerVisible="true"><dc:Bounds x="410" y="122" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="292" y="80" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Exportar_06_di" bpmnElement="Exportar_06"><dc:Bounds x="550" y="377" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Baixar_06_di" bpmnElement="Baixar_06"><dc:Bounds x="735" y="107" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Copia_06_di" bpmnElement="Fim_Copia_06"><dc:Bounds x="972" y="129" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1014" y="127" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Confirmar_06_di" bpmnElement="Confirmar_06"><dc:Bounds x="735" y="242" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Senha_06_di" bpmnElement="G_Senha_06" isMarkerVisible="true"><dc:Bounds x="965" y="527" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="847" y="485" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AvisoSenha_06_di" bpmnElement="AvisoSenha_06"><dc:Bounds x="1105" y="242" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Anonimizar_06_di" bpmnElement="Anonimizar_06"><dc:Bounds x="1105" y="512" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Excluida_06_di" bpmnElement="Fim_Excluida_06"><dc:Bounds x="1342" y="534" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1384" y="532" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_Tempo_06_di" bpmnElement="Inicio_Tempo_06"><dc:Bounds x="1527" y="399" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1485" y="439" width="120" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Descartar_06_di" bpmnElement="Descartar_06"><dc:Bounds x="1660" y="377" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Algo_06_di" bpmnElement="G_Algo_06" isMarkerVisible="true"><dc:Bounds x="1890" y="392" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1772" y="350" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Nada_06_di" bpmnElement="Fim_Nada_06"><dc:Bounds x="1897" y="534" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1939" y="532" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LogDescarte_06_di" bpmnElement="LogDescarte_06"><dc:Bounds x="2030" y="377" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Descarte_06_di" bpmnElement="Fim_Descarte_06"><dc:Bounds x="2267" y="399" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="2309" y="397" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Fluxo_1_06_di" bpmnElement="Fluxo_1_06"><di:waypoint x="268" y="147" /><di:waypoint x="410" y="147" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_2_06_di" bpmnElement="Fluxo_2_06"><di:waypoint x="435" y="172" /><di:waypoint x="435" y="417" /><di:waypoint x="550" y="417" /><bpmndi:BPMNLabel><dc:Bounds x="443" y="399" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_3_06_di" bpmnElement="Fluxo_3_06"><di:waypoint x="435" y="172" /><di:waypoint x="435" y="282" /><di:waypoint x="735" y="282" /><bpmndi:BPMNLabel><dc:Bounds x="443" y="264" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_4_06_di" bpmnElement="Fluxo_4_06"><di:waypoint x="690" y="417" /><di:waypoint x="712" y="417" /><di:waypoint x="712" y="147" /><di:waypoint x="735" y="147" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_5_06_di" bpmnElement="Fluxo_5_06"><di:waypoint x="875" y="147" /><di:waypoint x="972" y="147" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_6_06_di" bpmnElement="Fluxo_6_06"><di:waypoint x="875" y="282" /><di:waypoint x="920" y="282" /><di:waypoint x="920" y="552" /><di:waypoint x="965" y="552" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_7_06_di" bpmnElement="Fluxo_7_06"><di:waypoint x="1015" y="552" /><di:waypoint x="1105" y="552" /><bpmndi:BPMNLabel><dc:Bounds x="1040" y="534" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_8_06_di" bpmnElement="Fluxo_8_06"><di:waypoint x="990" y="527" /><di:waypoint x="990" y="282" /><di:waypoint x="1105" y="282" /><bpmndi:BPMNLabel><dc:Bounds x="998" y="264" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_9_06_di" bpmnElement="Fluxo_9_06"><di:waypoint x="1175" y="242" /><di:waypoint x="1175" y="220" /><di:waypoint x="805" y="220" /><di:waypoint x="805" y="242" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_10_06_di" bpmnElement="Fluxo_10_06"><di:waypoint x="1245" y="552" /><di:waypoint x="1342" y="552" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_11_06_di" bpmnElement="Fluxo_11_06"><di:waypoint x="1563" y="417" /><di:waypoint x="1660" y="417" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_12_06_di" bpmnElement="Fluxo_12_06"><di:waypoint x="1800" y="417" /><di:waypoint x="1890" y="417" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_13_06_di" bpmnElement="Fluxo_13_06"><di:waypoint x="1940" y="417" /><di:waypoint x="2030" y="417" /><bpmndi:BPMNLabel><dc:Bounds x="1965" y="399" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_14_06_di" bpmnElement="Fluxo_14_06"><di:waypoint x="1915" y="442" /><di:waypoint x="1915" y="534" /><bpmndi:BPMNLabel><dc:Bounds x="1921" y="481" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_15_06_di" bpmnElement="Fluxo_15_06"><di:waypoint x="2170" y="417" /><di:waypoint x="2267" y="417" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Nota_1_06_di" bpmnElement="Nota_1_06"><dc:Bounds x="1660" y="479" width="210" height="52" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Assoc_Nota_1_06_di" bpmnElement="Assoc_Nota_1_06"><di:waypoint x="1730" y="457" /><di:waypoint x="1680" y="479" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
