@@ -8,6 +8,7 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-336791)
 
 
+
 O **MenteUp** é uma plataforma web de gamificação educacional. Ela incentiva o engajamento e a participação dos estudantes com atividades interativas, desafios ao vivo, pontuação, ranking, conquistas e avatares. Os professores acompanham o desempenho das turmas. O administrador cuida dos usuários, das turmas, dos logs de auditoria e dos indicadores da plataforma.
 
 Este repositório tem a **API REST (back-end)** do MenteUp. O front-end fica em um repositório separado ([PFC-MenteUp-Frontend](https://github.com/eloisamarin/PFC-MenteUp-Frontend)).
@@ -17,6 +18,8 @@ Este repositório tem a **API REST (back-end)** do MenteUp. O front-end fica em 
 | Aplicação (front-end) | https://menteup.vercel.app |
 | API (back-end) | https://pfc-menteup-backend.onrender.com |
 
+## Vídeo de demonstração
+Vídeo Menteup: https://img.shields.io/badge/Google%20Drive-Assistir%20ao%20v%C3%ADdeo-blue?logo=googledrive
 
 ---
 
@@ -480,6 +483,11 @@ As capturas de tela da versão 1.0.0 ficam na pasta [`docs/evidencias`](docs/evi
 | `10-grafana.png` | Dashboard no Grafana Cloud |
 | `11-render.png` | Serviço em execução no Render |
 | `12-github-actions.png` | Pipeline do GitHub Actions aprovada |
+
+### 5. Vídeo de demonstração
+
+O vídeo mostra o uso da plataforma na versão 1.0.0, do cadastro ao painel do administrador: [assistir no Google Drive](https://drive.google.com/file/d/1mA2XsdNKIGsaFj6UkQUOCrodvDmc4DFc/view?usp=sharing).
+
 
 ---
 
