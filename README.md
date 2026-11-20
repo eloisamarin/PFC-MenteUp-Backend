@@ -16,6 +16,7 @@ Este repositório tem a **API REST (back-end)** do MenteUp. O front-end fica em 
 |---|---|
 | Aplicação (front-end) | https://menteup.vercel.app |
 | API (back-end) | https://pfc-menteup-backend.onrender.com |
+| Vídeo de demonstração | [Assistir no Google Drive](https://drive.google.com/file/d/1mA2XsdNKIGsaFj6UkQUOCrodvDmc4DFc/view?usp=sharing) |
 
 
 ---
@@ -480,6 +481,21 @@ As capturas de tela da versão 1.0.0 ficam na pasta [`docs/evidencias`](docs/evi
 | `10-grafana.png` | Dashboard no Grafana Cloud |
 | `11-render.png` | Serviço em execução no Render |
 | `12-github-actions.png` | Pipeline do GitHub Actions aprovada |
+
+### 5. Vídeo de demonstração
+
+O vídeo mostra o uso da plataforma na versão 1.0.0, do cadastro ao painel do administrador (22 minutos, sem áudio): [assistir no Google Drive](https://drive.google.com/file/d/1mA2XsdNKIGsaFj6UkQUOCrodvDmc4DFc/view?usp=sharing).
+
+| Início | O que mostra |
+|---|---|
+| 00:00 | Página inicial, cadastro, login e recuperação de senha |
+| 02:01 | Criação de turma (professor) |
+| 03:23 | Criação de atividade (professor) e resposta (aluno) |
+| 15:03 | Ranking, conquistas e painel do aluno |
+| 16:42 | Desafio ao vivo |
+| 19:44 | Desempenho da turma (professor) |
+| 20:00 | Meu perfil |
+| 20:33 | Painel do administrador e logs do sistema |
 
 ---
 
