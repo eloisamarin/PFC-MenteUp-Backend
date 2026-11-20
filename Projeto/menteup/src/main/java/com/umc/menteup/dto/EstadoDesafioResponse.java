@@ -1,11 +1,15 @@
 package com.umc.menteup.dto;
 
+import java.util.List;
+
 import com.umc.menteup.model.StatusDesafio;
 
 /**
  * Foto do jogo neste instante; o front consulta este estado a cada segundo.
  * "pergunta" só vem preenchida com o desafio em andamento, e o gabarito
  * (alternativaCorretaId, meusPontos) só depois que a pergunta encerra.
+ * "alunosNaSala" (quem está com o desafio aberto) só vai para o professor e o administrador;
+ * para o aluno vem nulo.
  */
 public record EstadoDesafioResponse(
         Long desafioId,
@@ -19,6 +23,7 @@ public record EstadoDesafioResponse(
         Long respostasRecebidas,
         Long minhaAlternativaId,
         Long alternativaCorretaId,
-        Integer meusPontos
+        Integer meusPontos,
+        List<AlunoNaSalaResponse> alunosNaSala
 ) {
 }

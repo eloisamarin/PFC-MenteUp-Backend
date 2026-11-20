@@ -25,6 +25,7 @@ public class DesempenhoService {
     private final ProgressoAtividadeRepository progressoAtividadeRepository;
     private final RespostaDesafioRepository respostaDesafioRepository;
     private final LogSistemaService logSistemaService;
+    private final NotificacaoService notificacaoService;
 
     public DesempenhoService(
             TurmaRepository turmaRepository,
@@ -33,9 +34,11 @@ public class DesempenhoService {
             ResultadoAtividadeRepository resultadoAtividadeRepository,
             RespostaDesafioRepository respostaDesafioRepository,
             ProgressoAtividadeRepository progressoAtividadeRepository,
-            LogSistemaService logSistemaService
+            LogSistemaService logSistemaService,
+            NotificacaoService notificacaoService
     ) {
         this.logSistemaService = logSistemaService;
+        this.notificacaoService = notificacaoService;
         this.turmaRepository = turmaRepository;
         this.usuarioRepository = usuarioRepository;
         this.atividadeRepository = atividadeRepository;
@@ -196,6 +199,12 @@ public class DesempenhoService {
                 "Comentário feito na atividade \"" + resultado.getAtividade().getTitulo() + "\".",
                 Map.of("resultadoId", resultado.getId(), "turmaId", turmaId)
         );
+
+        ///Avisa o aluno que o professor comentou o resultado dele
+        notificacaoService.notificarComentario(
+                resultado.getAtividade().getId(),
+                resultado.getAtividade().getTitulo(),
+                resultado.getUsuario().getFcmToken());
 
         return new ComentarioResponse(
                 resultado.getId(),

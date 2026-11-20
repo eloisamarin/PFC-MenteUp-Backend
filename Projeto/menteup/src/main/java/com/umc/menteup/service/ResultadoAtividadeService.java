@@ -1,6 +1,7 @@
 package com.umc.menteup.service;
 
 import com.umc.menteup.dto.ResultadoAtividadeResponse;
+import com.umc.menteup.dto.RevisaoDtos;
 import com.umc.menteup.exception.ApiException;
 import com.umc.menteup.mapper.QuestionarioMapper;
 import com.umc.menteup.model.*;
@@ -251,4 +252,51 @@ public class ResultadoAtividadeService {
                     "ATIVIDADE_JA_RESPONDIDA",
                     "Você já concluiu esta atividade.");
         }
+
+    /// Revisão das perguntas depois de enviar: o que o aluno respondeu e se acertou.
+    /// A resposta certa só aparece quando o professor encerra a atividade, para o gabarito não circular
+    /// entre os colegas que ainda estão respondendo.
+    @Transactional
+    public RevisaoDtos.RevisaoAtividade revisar(Long atividadeId, String username) {
+        Usuario usuario = usuarioRepository.findByUsuario(username)
+                .orElseThrow(() -> ApiException.naoAutenticado(
+                        "USUARIO_NAO_ENCONTRADO", "Usuário não encontrado."));
+
+        if (!TipoUsuario.ehAluno(usuario)) {
+            throw ApiException.proibido("SOMENTE_ALUNO", "A revisão das respostas é exclusiva para alunos.");
+        }
+
+        Atividade atividade = atividadeRepository.findById(atividadeId)
+                .orElseThrow(() -> ApiException.naoEncontrado(
+                        "ATIVIDADE_NAO_ENCONTRADA", "Atividade não encontrada."));
+
+        // Só depois de enviar (e quem enviou já tinha acesso à atividade pela turma)
+        if (resultadoAtividadeRepository.findByUsuario_IdAndAtividade_Id(usuario.getId(), atividadeId).isEmpty()) {
+            throw ApiException.conflito(
+                    "ATIVIDADE_NAO_ENVIADA", "Envie a atividade para revisar as suas respostas.");
+        }
+
+        Map<Long, RespostaAtividade> respostaPorPergunta = new HashMap<>();
+        progressoRepository.findByUsuario_IdAndAtividade_Id(usuario.getId(), atividadeId)
+                .ifPresent(progresso -> progresso.getRespostas()
+                        .forEach(resposta -> respostaPorPergunta.put(resposta.getPergunta().getId(), resposta)));
+
+        TemplateAtividade template = templateResolver.resolver(atividade);
+        boolean gabaritoLiberado = atividade.getStatus() == StatusAtividade.CONCLUIDO;
+
+        List<RevisaoDtos.QuestaoAtividade> questoes = atividade.getPerguntas().stream()
+                .map(pergunta -> {
+                    RespostaAtividade resposta = respostaPorPergunta.get(pergunta.getId());
+                    return new RevisaoDtos.QuestaoAtividade(
+                            pergunta.getId(),
+                            pergunta.getEnunciado(),
+                            resposta == null ? List.of() : template.respostaDoAluno(pergunta, resposta),
+                            resposta == null ? null : resposta.getCorreta(),
+                            gabaritoLiberado ? template.respostaCorreta(pergunta) : null);
+                })
+                .toList();
+
+        return new RevisaoDtos.RevisaoAtividade(
+                atividade.getId(), atividade.getTitulo(), atividade.getTipo(), gabaritoLiberado, questoes);
+    }
     }

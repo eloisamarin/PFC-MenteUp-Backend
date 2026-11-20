@@ -84,6 +84,7 @@ class DesafioServiceTest {
     private DesafioRepository desafioRepository;
     private RespostaDesafioRepository respostaRepository;
     private MatriculaService matriculaService;
+    private NotificacaoService notificacaoService;
     private DesafioService service;
 
     private Usuario aluno;
@@ -95,6 +96,7 @@ class DesafioServiceTest {
         respostaRepository = mock(RespostaDesafioRepository.class);
         matriculaService = mock(MatriculaService.class);
         UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
+        notificacaoService = mock(NotificacaoService.class);
 
         service = new DesafioService(
                 desafioRepository,
@@ -104,7 +106,9 @@ class DesafioServiceTest {
                 matriculaService,
                 relogio,
                 mock(ApplicationEventPublisher.class),
-                mock(LogSistemaService.class)
+                mock(LogSistemaService.class),
+                notificacaoService,
+                new PresencaDesafio(relogio)
         );
 
         aluno = usuario(ALUNO_ID, EMAIL_ALUNO, "ALUNO");
@@ -143,6 +147,40 @@ class DesafioServiceTest {
     }
 
     @Test
+    @DisplayName("sala de espera: o professor vê o aluno que abriu o desafio, e o aluno não vê a lista")
+    void deveMostrarAoProfessorOsAlunosNaSala() {
+        EstadoDesafioResponse doAluno = service.buscarEstado(DESAFIO_ID, EMAIL_ALUNO);
+
+        EstadoDesafioResponse doProfessor = service.buscarEstado(DESAFIO_ID, EMAIL_PROFESSOR);
+
+        assertNull(doAluno.alunosNaSala());
+        assertEquals(1, doProfessor.alunosNaSala().size());
+        assertEquals(ALUNO_ID, doProfessor.alunosNaSala().get(0).id());
+        assertEquals(aluno.getNomeUsuario(), doProfessor.alunosNaSala().get(0).nome());
+    }
+
+    @Test
+    @DisplayName("sala de espera: o aluno sai da lista depois de 10 segundos sem dar sinal")
+    void deveTirarDaSalaQuemParouDeDarSinal() {
+        service.buscarEstado(DESAFIO_ID, EMAIL_ALUNO);
+
+        relogio.avancarMilissegundos(10_001);
+
+        assertTrue(service.buscarEstado(DESAFIO_ID, EMAIL_PROFESSOR).alunosNaSala().isEmpty());
+    }
+
+    @Test
+    @DisplayName("iniciar avisa os alunos da turma que o desafio começou")
+    void deveNotificarOsAlunosAoIniciar() {
+        aluno.setFcmToken("token-do-aluno");
+
+        service.iniciar(DESAFIO_ID, EMAIL_PROFESSOR);
+
+        verify(notificacaoService).notificarDesafioIniciado(
+                DESAFIO_ID, "Desafio de soma", java.util.Arrays.asList("token-do-aluno", null));
+    }
+
+    @Test
     @DisplayName("aluno não pode iniciar o desafio")
     void deveLancarExcecaoQuandoAlunoTentaIniciar() {
         ApiException ex = assertThrows(ApiException.class, () -> service.iniciar(DESAFIO_ID, EMAIL_ALUNO));
@@ -150,6 +188,7 @@ class DesafioServiceTest {
         assertEquals(HttpStatus.FORBIDDEN, ex.getStatus());
         assertEquals("Esta operação é exclusiva para professores e administradores.", ex.getMessage());
         assertEquals(StatusDesafio.AGUARDANDO, desafio.getStatus());
+        verify(notificacaoService, never()).notificarDesafioIniciado(any(), any(), any());
     }
 
     @Test

@@ -124,7 +124,11 @@ public final class QuestionarioMapper {
                 resultado.getAtividade().getTitulo(),
                 totalQuestoes,
                 resultado.getAcertos(),
-                resultado.getPontuacao()
+                resultado.getPontuacao(),
+                resultado.getComentarioProfessor(),
+                // Só o nome de quem comentou (LGPD: sem e-mail)
+                resultado.getComentadoPor() == null ? null : resultado.getComentadoPor().getNomeUsuario(),
+                resultado.getComentadoEm()
         );
     }
 

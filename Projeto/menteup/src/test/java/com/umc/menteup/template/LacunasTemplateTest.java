@@ -111,6 +111,13 @@ class LacunasTemplateTest {
         assertTrue(template.estaCorreta(repetida, resposta(dois2.getId(), dois1.getId())));
     }
 
+    @Test
+    @DisplayName("revisão: mostra as palavras do aluno e a correta de cada lacuna, sem os distratores")
+    void revisao() {
+        assertEquals(List.of("Roma", "Paris"), template.respostaDoAluno(pergunta, resposta(13L, 12L)));
+        assertEquals(List.of("Brasília", "Paris"), template.respostaCorreta(pergunta));
+    }
+
     private void palavra(Long id, String texto, boolean correta, Integer ordem) {
         Alternativa alternativa = palavraEm(pergunta, id, texto, ordem);
         alternativa.setCorreta(correta);

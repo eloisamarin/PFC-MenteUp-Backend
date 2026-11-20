@@ -392,7 +392,8 @@ public class AtividadeService {
                     StatusAlunoAtividade.CONCLUIDA,
                     resultado.getAcertos(),
                     resultado.getPontuacao(),
-                    100
+                    100,
+                    resultado.getComentarioProfessor()
             );
         }
 
@@ -408,7 +409,8 @@ public class AtividadeService {
                     StatusAlunoAtividade.EM_ANDAMENTO,
                     null,
                     null,
-                    percentual
+                    percentual,
+                    null
             );
         }
 
@@ -417,7 +419,8 @@ public class AtividadeService {
                 StatusAlunoAtividade.PENDENTE,
                 null,
                 null,
-                0
+                0,
+                null
         );
     }
 
