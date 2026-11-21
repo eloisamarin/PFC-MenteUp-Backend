@@ -469,6 +469,86 @@ class TurmaControllerIntegrationTest extends IntegracaoBase {
         assertThat(turmaRepository.findById(turmaId).orElseThrow().getNome()).isEqualTo(nomeOriginal);
     }
 
+    // ------------------------------------------------------------- Nome repetido
+
+    @Test
+    void criar_comNomeRepetidoDoMesmoProfessor_deveRetornar409MesmoComMaiusculasEEspacos() {
+        // Arrange
+        Sessao professor = novaSessao("PROFESSOR");
+        String nome = nomeUnico("9º B");
+        assertThat(criar(professor, nome).getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        // Act: o mesmo nome em minúsculas e com espaços sobrando
+        ResponseEntity<Map<String, Object>> resposta = criar(professor, "  " + nome.toLowerCase() + "  ");
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(resposta.getBody()).containsEntry("codigo", "TURMA_NOME_REPETIDO");
+        assertThat(turmaRepository.findAllByProfessor_Id(professor.id())).hasSize(1);
+    }
+
+    @Test
+    void criar_comOMesmoNomeEmProfessoresDiferentes_devePermitir() {
+        Sessao professor = novaSessao("PROFESSOR");
+        Sessao outroProfessor = novaSessao("PROFESSOR");
+        String nome = nomeUnico("9º B");
+
+        assertThat(criar(professor, nome).getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(criar(outroProfessor, nome).getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    }
+
+    @Test
+    void criar_comNomeDeTurmaArquivadaDoProfessor_deveRetornar409() {
+        // Arrange: a turma com esse nome está arquivada
+        Sessao professor = novaSessao("PROFESSOR");
+        String nome = nomeUnico("Turma Antiga");
+        Long arquivadaId = id(criar(professor, nome).getBody());
+        client.put().uri(BASE_PATH + "/{id}/arquivar", arquivadaId)
+                .header(HttpHeaders.AUTHORIZATION, professor.token())
+                .retrieve()
+                .toBodilessEntity();
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta = criar(professor, nome);
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(resposta.getBody()).containsEntry("codigo", "TURMA_NOME_REPETIDO");
+    }
+
+    @Test
+    void atualizar_paraONomeDeOutraTurmaDoProfessor_deveRetornar409ENaoAlterar() {
+        // Arrange
+        Sessao professor = novaSessao("PROFESSOR");
+        String nomeExistente = nomeUnico("9º A");
+        criar(professor, nomeExistente);
+        Long turmaId = criarTurma(professor);
+        String nomeOriginal = turmaRepository.findById(turmaId).orElseThrow().getNome();
+
+        // Act
+        ResponseEntity<Map<String, Object>> resposta = atualizar(professor, turmaId, nomeExistente);
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(resposta.getBody()).containsEntry("codigo", "TURMA_NOME_REPETIDO");
+        assertThat(turmaRepository.findById(turmaId).orElseThrow().getNome()).isEqualTo(nomeOriginal);
+    }
+
+    @Test
+    void atualizar_mantendoOProprioNome_devePermitirEJuntarEspacosRepetidos() {
+        // Arrange
+        Sessao professor = novaSessao("PROFESSOR");
+        String nome = nomeUnico("9º C");
+        Long turmaId = id(criar(professor, nome).getBody());
+
+        // Act: o mesmo nome, com espaços sobrando
+        ResponseEntity<Map<String, Object>> resposta = atualizar(professor, turmaId, " " + nome + "   ");
+
+        // Assert
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(turmaRepository.findById(turmaId).orElseThrow().getNome()).isEqualTo(nome);
+    }
+
     @Test
     void excluir_comoAdministrador_deveRetornar204ETurmaDeixaDeExistir() {
         // Arrange
