@@ -1,5 +1,7 @@
 package com.umc.menteup.dto;
 
+import java.time.LocalDate;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -17,6 +19,8 @@ public record PrimeiroAcessoRequest(
 
         // Versões que a pessoa leu (opcionais enquanto o front novo não é publicado)
         @Size(max = 20, message = "Versão do Termo inválida") String termoVersao,
-        @Size(max = 20, message = "Versão da Política inválida") String politicaVersao
+        @Size(max = 20, message = "Versão da Política inválida") String politicaVersao,
+        // Obrigatória para aluno (idade mínima de 12 anos); não é guardada
+        LocalDate dataNascimento
 ) {
 }

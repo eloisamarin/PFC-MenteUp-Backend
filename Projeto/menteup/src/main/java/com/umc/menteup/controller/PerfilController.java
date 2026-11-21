@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.umc.menteup.dto.AlterarAvatarRequest;
 import com.umc.menteup.dto.AlterarSenhaRequest;
+import com.umc.menteup.dto.ConfirmarIdadeRequest;
 import com.umc.menteup.dto.DocumentoLegalDtos;
 import com.umc.menteup.dto.ExcluirContaRequest;
 import com.umc.menteup.dto.MeusDadosResponse;
@@ -21,6 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/usuarios/me")
@@ -100,6 +102,22 @@ public class PerfilController {
 
         perfilService.excluirConta(authentication.getName(), request.senha());
     }
+    // POST /usuarios/me/idade: aluno de conta antiga informa a data de nascimento
+    // 204 = confirmado; 403 IDADE_MINIMA = menos de 12 anos, e a conta foi excluída
+    @Operation(summary = "Aluno confirma ter a idade mínima de 12 anos")
+    @PostMapping("/idade")
+    public ResponseEntity<Map<String, String>> confirmarIdade(
+            @RequestBody ConfirmarIdadeRequest request,
+            Authentication authentication) {
+
+        if (perfilService.confirmarIdade(authentication.getName(), request.dataNascimento())) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                "codigo", "IDADE_MINIMA",
+                "mensagem", "O MenteUp é para pessoas com 12 anos ou mais. A sua conta foi excluída."));
+    }
+
     // PUT /usuarios/me/avatar: escolhe a foto de perfil
     @Operation(summary = "Escolhe o avatar")
     @PutMapping("/avatar")

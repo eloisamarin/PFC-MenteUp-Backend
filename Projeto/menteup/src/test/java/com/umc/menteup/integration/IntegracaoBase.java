@@ -50,6 +50,9 @@ abstract class IntegracaoBase {
     // Atende às regras de senha forte (maiúscula, minúscula, número e caractere especial)
     protected static final String SENHA = "Aa1!" + UUID.randomUUID();
 
+    // 15 anos atrás: sempre acima da idade mínima de 12 anos
+    protected static final String DATA_NASCIMENTO_VALIDA = java.time.LocalDate.now().minusYears(15).toString();
+
     protected static final ParameterizedTypeReference<Map<String, Object>> JSON =
             new ParameterizedTypeReference<>() {
             };
@@ -113,6 +116,8 @@ abstract class IntegracaoBase {
         usuario.put("senha", SENHA);
         usuario.put("tipoUsuario", tipo);
         usuario.put("aceitouTermos", true);
+        // Aluno precisa ter 12 anos ou mais (o professor ignora este campo)
+        usuario.put("dataNascimento", DATA_NASCIMENTO_VALIDA);
         return usuario;
     }
 

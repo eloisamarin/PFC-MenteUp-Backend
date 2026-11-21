@@ -1,9 +1,11 @@
 package com.umc.menteup.service;
 
+import com.umc.menteup.security.RegraIdade;
 import com.umc.menteup.security.RegraSenha;
 import com.umc.menteup.exception.ApiException;
 import com.umc.menteup.model.AcaoLog;
 import com.umc.menteup.model.EntidadeLog;
+import com.umc.menteup.model.TipoUsuario;
 import com.umc.menteup.model.TokenRedefinicaoSenha;
 import com.umc.menteup.model.Usuario;
 import com.umc.menteup.repository.TokenRedefinicaoSenhaRepository;
@@ -22,6 +24,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HexFormat;
@@ -115,7 +118,7 @@ public class RedefinicaoSenhaService {
     // POST /usuarios/senha/primeiro-acesso: cria a senha e registra o aceite do termo
     @Transactional
     public void concluirPrimeiroAcesso(String token, String novaSenha, boolean aceitouTermos,
-                                       String termoVersao, String politicaVersao) {
+                                       String termoVersao, String politicaVersao, LocalDate dataNascimento) {
         RegraSenha.validarNovaSenha(novaSenha);
         if (!aceitouTermos) {
             throw ApiException.requisicaoInvalida("TERMO_NAO_ACEITO",
@@ -125,6 +128,12 @@ public class RedefinicaoSenhaService {
 
         TokenRedefinicaoSenha registro = tokenValido(token, true);
         Usuario usuario = registro.getUsuario();
+
+        // Aluno convidado também precisa ter 12 anos ou mais (a data não é guardada)
+        if (TipoUsuario.ehAluno(usuario)) {
+            RegraIdade.exigirIdadeMinima(dataNascimento, LocalDate.now(clock));
+            usuario.setIdadeMinimaConfirmadaEm(LocalDateTime.now(clock));
+        }
 
         usuario.setSenha(passwordEncoder.encode(novaSenha));
         usuario.setTermoAceitoEm(LocalDateTime.now(clock));

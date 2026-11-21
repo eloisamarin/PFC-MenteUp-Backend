@@ -42,6 +42,7 @@ class AceitePendenteFilterTest {
         aluno.setUsuario(EMAIL);
         aluno.setSenha("hash");
         aluno.setTipoUsuario("ALUNO");
+        aluno.setIdadeMinimaConfirmadaEm(java.time.LocalDateTime.now());
         UserDetailsImpl usuario = new UserDetailsImpl(aluno);
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(usuario, null, usuario.getAuthorities()));
@@ -91,6 +92,26 @@ class AceitePendenteFilterTest {
 
         // Trocar a senha pelo perfil não é liberado: primeiro a pessoa aceita
         assertThat(executar(true, "PUT", "/usuarios/me/senha").getStatus()).isEqualTo(428);
+    }
+
+    @Test
+    @DisplayName("aluno que ainda não confirmou a idade recebe 428, mas pode informar a data")
+    void idadePendente_bloqueiaComStatus428() throws Exception {
+        Usuario contaAntiga = new Usuario();
+        contaAntiga.setId(2L);
+        contaAntiga.setUsuario("antigo@teste.com");
+        contaAntiga.setSenha("hash");
+        contaAntiga.setTipoUsuario("ALUNO");
+        UserDetailsImpl usuario = new UserDetailsImpl(contaAntiga);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(usuario, null, usuario.getAuthorities()));
+        when(documentoLegalService.pendentesPorUsername("antigo@teste.com")).thenReturn(List.of());
+
+        MockHttpServletResponse bloqueada = executar(true, "GET", "/turmas/all");
+        assertThat(bloqueada.getStatus()).isEqualTo(428);
+        assertThat(bloqueada.getContentAsString()).contains("\"codigo\":\"IDADE_PENDENTE\"");
+
+        assertThat(executar(true, "POST", "/usuarios/me/idade").getStatus()).isEqualTo(200);
     }
 
     @Test

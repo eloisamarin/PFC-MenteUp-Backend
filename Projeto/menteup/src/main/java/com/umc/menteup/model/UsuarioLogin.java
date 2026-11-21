@@ -26,6 +26,10 @@ public class UsuarioLogin {
     // (TERMO e/ou POLITICA). Vazio quando está tudo em dia
     private List<String> aceitesPendentes;
 
+    // Só na resposta do login: true quando o aluno ainda precisa informar a data de nascimento
+    // (contas criadas antes da regra da idade mínima)
+    private Boolean idadePendente;
+
     public Long getId() {
         return id;
     }
@@ -89,4 +93,12 @@ public class UsuarioLogin {
     public void setAceitesPendentes(List<String> aceitesPendentes) {
         this.aceitesPendentes = aceitesPendentes;
     }
-}
+
+    public Boolean getIdadePendente() {
+        return idadePendente;
+    }
+
+    public void setIdadePendente(Boolean idadePendente) {
+        this.idadePendente = idadePendente;
+    }
+}

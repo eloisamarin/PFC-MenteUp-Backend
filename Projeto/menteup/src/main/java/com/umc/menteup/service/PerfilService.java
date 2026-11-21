@@ -1,6 +1,7 @@
 package com.umc.menteup.service;
 
 import com.umc.menteup.security.MascaraDados;
+import com.umc.menteup.security.RegraIdade;
 import com.umc.menteup.security.RegraSenha;
 import com.umc.menteup.dto.PerfilResponse;
 import com.umc.menteup.dto.TurmaResponse;
@@ -19,6 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.umc.menteup.model.AvatarAnimal;
 
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -38,9 +42,13 @@ public class PerfilService {
     private final LogSistemaService logSistemaService;
     private final LogSistemaRepository logSistemaRepository;
 
+    private final Clock clock;
+
     public PerfilService(UsuarioRepository usuarioRepository, TurmaRepository turmaRepository,
                          PasswordEncoder passwordEncoder, Codigo2FARepository codigo2FARepository,
-                         LogSistemaService logSistemaService, LogSistemaRepository logSistemaRepository) {
+                         LogSistemaService logSistemaService, LogSistemaRepository logSistemaRepository,
+                         Clock clock) {
+        this.clock = clock;
         this.usuarioRepository = usuarioRepository;
         this.turmaRepository = turmaRepository;
         this.passwordEncoder = passwordEncoder;
@@ -142,6 +150,32 @@ public class PerfilService {
                 Map.of("tipoUsuario", usuario.getTipoUsuario()));
 
         anonimizar(usuario);
+    }
+
+    // POST /usuarios/me/idade: aluno com conta antiga informa a data de nascimento
+    // 12 anos ou mais: a confirmação fica gravada (a data não). Menos de 12: a conta é excluída,
+    // como diz o Termo, e o método devolve false
+    @Transactional
+    public boolean confirmarIdade(String username, LocalDate dataNascimento) {
+        Usuario usuario = carregarUsuario(username);
+        LocalDate hoje = LocalDate.now(clock);
+        RegraIdade.exigirDataValida(dataNascimento, hoje);
+
+        if (!RegraIdade.precisaConfirmar(usuario)) {
+            return true;
+        }
+
+        if (RegraIdade.temIdadeMinima(dataNascimento, hoje)) {
+            usuario.setIdadeMinimaConfirmadaEm(LocalDateTime.now(clock));
+            logSistemaService.registrarSucesso(usuario, AcaoLog.CONFIRMAR_IDADE, EntidadeLog.USUARIO,
+                    usuario.getId(), "Usuário #" + usuario.getId() + " confirmou a idade mínima.", null);
+            return true;
+        }
+
+        logSistemaService.registrarSucesso(usuario, AcaoLog.EXCLUIR_POR_IDADE_MINIMA, EntidadeLog.USUARIO,
+                usuario.getId(), "Conta #" + usuario.getId() + " excluída por não ter a idade mínima.", null);
+        anonimizar(usuario);
+        return false;
     }
 
     ///Administrador exclui um aluno ou professor do mesmo jeito que o próprio usuário faria
