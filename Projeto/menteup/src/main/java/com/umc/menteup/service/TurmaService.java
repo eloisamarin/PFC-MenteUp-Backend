@@ -132,6 +132,9 @@ public class TurmaService {
             turma.setProfessor(carregarProfessor(turma.getProfessorIdInformado()));
         }
 
+        turma.setNome(normalizarNome(turma.getNome()));
+        exigirNomeDisponivel(turma.getNome(), turma.getProfessor(), null);
+
         Turma salva = turmaRepository.save(turma);
 
         logSistemaService.registrarSucesso(
@@ -247,7 +250,10 @@ public class TurmaService {
         // Atualiza só o nome. Salvar o objeto recebido do cliente por inteiro
         // apagaria os alunos vinculados (a lista chega nula no JSON).
         String nomeAnterior = existente.getNome();
-        existente.setNome(dados.getNome());
+        existente.setNome(normalizarNome(dados.getNome()));
+
+        // Vale para o novo nome e também quando o administrador troca o professor da turma
+        exigirNomeDisponivel(existente.getNome(), existente.getProfessor(), existente.getId());
 
         Turma salva = turmaRepository.save(existente);
 
@@ -371,6 +377,24 @@ public class TurmaService {
             return partes.get(0);
         }
         return String.join(", ", partes.subList(0, partes.size() - 1)) + " e " + partes.get(partes.size() - 1);
+    }
+
+    // Tira os espaços das pontas e junta os espaços repetidos: "  9º   B " vira "9º B"
+    private static String normalizarNome(String nome) {
+        return nome == null ? null : nome.trim().replaceAll("\\s+", " ");
+    }
+
+    // O mesmo professor não pode ter duas turmas com o mesmo nome (as arquivadas também contam,
+    // para não existirem duas "9º B" quando uma delas for desarquivada). Professores diferentes podem.
+    private void exigirNomeDisponivel(String nome, Usuario professor, Long ignorarTurmaId) {
+        Long professorId = professor == null ? null : professor.getId();
+
+        if (turmaRepository.contarComMesmoNome(nome, professorId, ignorarTurmaId) > 0) {
+            String dono = professor == null ? "sem professor responsável" : "deste professor";
+            throw ApiException.conflito("TURMA_NOME_REPETIDO",
+                    "Já existe uma turma \"" + nome + "\" " + dono
+                            + " (confira também as turmas arquivadas). Escolha outro nome.");
+        }
     }
 
     private Turma carregarTurma(Long turmaId) {
