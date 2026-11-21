@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -98,6 +99,16 @@ public class Usuario {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Size(max = 20, message = "Versão da Política inválida.")
     private String politicaVersao;
+
+    // Só chega no cadastro do aluno, para conferir a idade mínima: não vai para o banco
+    @Transient
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private LocalDate dataNascimento;
+
+    // Quando o aluno confirmou ter a idade mínima (vazio nas contas criadas antes desta regra)
+    @JsonIgnore
+    @Column(name = "idade_minima_confirmada_em")
+    private LocalDateTime idadeMinimaConfirmadaEm;
 
     // Quando a conta foi criada: base para descartar convites que nunca foram aceitos
     @JsonIgnore
@@ -253,6 +264,22 @@ public class Usuario {
 
     public StatusCadastro getStatusCadastro() {
         return statusCadastro;
+    }
+
+    public LocalDate getDataNascimento() {
+        return dataNascimento;
+    }
+
+    public void setDataNascimento(LocalDate dataNascimento) {
+        this.dataNascimento = dataNascimento;
+    }
+
+    public LocalDateTime getIdadeMinimaConfirmadaEm() {
+        return idadeMinimaConfirmadaEm;
+    }
+
+    public void setIdadeMinimaConfirmadaEm(LocalDateTime idadeMinimaConfirmadaEm) {
+        this.idadeMinimaConfirmadaEm = idadeMinimaConfirmadaEm;
     }
 
     public LocalDateTime getCriadoEm() {

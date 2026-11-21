@@ -68,7 +68,8 @@ public class ExportacaoDadosService {
                         usuario.getTipoUsuario(),
                         usuario.getAvatar() == null ? null : usuario.getAvatar().name(),
                         usuario.getStatusCadastro() == null ? null : usuario.getStatusCadastro().name(),
-                        usuario.getTermoAceitoEm()),
+                        usuario.getTermoAceitoEm(),
+                        usuario.getIdadeMinimaConfirmadaEm()),
                 documentoLegalService.aceitesDo(id).stream()
                         .map(DocumentoLegalDtos.Aceite::de)
                         .toList(),

@@ -18,6 +18,7 @@ import com.umc.menteup.repository.Codigo2FARepository;
 import com.umc.menteup.repository.TurmaRepository;
 import com.umc.menteup.repository.UsuarioRepository;
 import com.umc.menteup.security.JwtService;
+import com.umc.menteup.security.RegraIdade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -35,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -238,6 +240,12 @@ public class UsuarioService {
 
         // A versão lida precisa ser a que está valendo (senão a pessoa aceitaria um texto antigo)
         documentoLegalService.conferirVersoesInformadas(usuario.getTermoVersao(), usuario.getPoliticaVersao());
+
+        // Aluno precisa ter 12 anos ou mais: a data de nascimento só é conferida, não é guardada
+        if (TipoUsuario.ALUNO.equals(tipo)) {
+            RegraIdade.exigirIdadeMinima(usuario.getDataNascimento(), LocalDate.now(clock));
+            usuario.setIdadeMinimaConfirmadaEm(LocalDateTime.now(clock));
+        }
 
         // RF01, RF03 a RF06 e RF09: senha forte, sem espaço nas pontas
         RegraSenha.validarNovaSenha(usuario.getSenha());
@@ -722,6 +730,7 @@ public class UsuarioService {
         usuarioLogin.setAceitesPendentes(documentoLegalService.pendentes(usuario.getId()).stream()
                 .map(documento -> documento.getTipo().name())
                 .toList());
+        usuarioLogin.setIdadePendente(RegraIdade.precisaConfirmar(usuario));
 
         return usuarioLogin;
     }

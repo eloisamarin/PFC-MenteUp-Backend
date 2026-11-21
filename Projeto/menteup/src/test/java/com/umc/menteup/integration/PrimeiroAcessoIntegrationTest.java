@@ -184,7 +184,8 @@ class PrimeiroAcessoIntegrationTest extends IntegracaoBase {
     private ResponseEntity<Map<String, Object>> concluir(String token, boolean aceitouTermos) {
         return client.post().uri("/usuarios/senha/primeiro-acesso")
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(Map.of("token", token, "novaSenha", NOVA_SENHA, "aceitouTermos", aceitouTermos))
+                .body(Map.of("token", token, "novaSenha", NOVA_SENHA, "aceitouTermos", aceitouTermos,
+                        "dataNascimento", DATA_NASCIMENTO_VALIDA))
                 .retrieve()
                 .toEntity(JSON);
     }
