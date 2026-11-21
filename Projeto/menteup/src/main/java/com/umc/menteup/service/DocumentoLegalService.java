@@ -12,6 +12,8 @@ import com.umc.menteup.repository.DocumentoLegalRepository;
 import com.umc.menteup.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -23,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 // Versões do Termo de Aceite e da Política de Privacidade e os aceites de cada pessoa
 @Service
@@ -31,13 +34,20 @@ public class DocumentoLegalService {
     private static final Comparator<DocumentoLegal> POR_VERSAO =
             (a, b) -> DocumentoLegal.compararVersoes(a.getVersao(), b.getVersao());
 
+    // Etiquetas HTML (<script>, <img>, <!-- -->...) não entram no texto: o front mostra só Markdown
+    private static final Pattern ETIQUETA_HTML = Pattern.compile("<\\s*/?\\s*[a-zA-Z!][^>]*>");
+
+    public static final String AGENDADA = "AGENDADA";
+    public static final String VIGENTE = "VIGENTE";
+    public static final String ANTERIOR = "ANTERIOR";
+
     private final DocumentoLegalRepository documentoRepository;
     private final AceiteDocumentoRepository aceiteRepository;
     private final UsuarioRepository usuarioRepository;
     private final LogSistemaService logSistemaService;
     private final Clock clock;
 
-    // As versões só mudam quando a aplicação sobe (o seeder grava e chama recarregar),
+    // As versões só mudam quando a aplicação sobe ou quando o administrador publica ou cancela uma,
     // então ficam guardadas aqui para o filtro de aceite não consultar o banco a cada requisição
     private volatile Map<TipoDocumento, List<DocumentoLegal>> versoesPorTipo;
 
@@ -161,6 +171,125 @@ public class DocumentoLegalService {
         });
 
         return pendentes(usuario.getId());
+    }
+
+    // Gestão pelo administrador
+
+    // Todas as versões, inclusive a agendada, da mais nova para a mais antiga
+    @Transactional(readOnly = true)
+    public List<DocumentoLegal> todasAsVersoes(TipoDocumento tipo) {
+        return documentoRepository.findAllByTipo(tipo.name()).stream().sorted(POR_VERSAO.reversed()).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public DocumentoLegal versaoParaGestao(TipoDocumento tipo, String versao) {
+        return documentoRepository.findByTipoAndVersao(tipo.name(), versao)
+                .orElseThrow(() -> ApiException.naoEncontrado(
+                        "VERSAO_NAO_ENCONTRADA", "Esta versão do documento não existe."));
+    }
+
+    public String situacao(DocumentoLegal documento) {
+        if (documento.getVigenteDesde().isAfter(LocalDate.now(clock))) {
+            return AGENDADA;
+        }
+        return buscarVigente(documento.getTipo())
+                .filter(vigente -> vigente.getVersao().equals(documento.getVersao()))
+                .map(vigente -> VIGENTE)
+                .orElse(ANTERIOR);
+    }
+
+    // Publica uma versão nova com o próximo número
+    // Uma vez valendo, nunca é alterada: para mudar o texto, publica-se outra versão
+    @Transactional
+    public DocumentoLegal publicar(TipoDocumento tipo, String conteudo, String resumo, LocalDate vigenteDesde,
+                                   Boolean exigeNovoAceite, String username) {
+        Usuario autor = carregarAutor(username);
+        LocalDate hoje = LocalDate.now(clock);
+
+        if (vigenteDesde.isBefore(hoje)) {
+            throw ApiException.requisicaoInvalida("VIGENCIA_INVALIDA",
+                    "A data de vigência precisa ser hoje ou uma data futura.");
+        }
+
+        String texto = DocumentoLegal.normalizarConteudo(conteudo);
+        if (ETIQUETA_HTML.matcher(texto).find()) {
+            throw ApiException.requisicaoInvalida("CONTEUDO_COM_HTML",
+                    "O texto não pode ter HTML. Use apenas Markdown (para links, use [texto](endereço)).");
+        }
+
+        List<DocumentoLegal> existentes = documentoRepository.findAllByTipo(tipo.name());
+
+        // Uma versão agendada por vez: para trocar, o administrador cancela a que está esperando
+        Optional<DocumentoLegal> agendada = existentes.stream()
+                .filter(d -> d.getVigenteDesde().isAfter(hoje))
+                .findFirst();
+        if (agendada.isPresent()) {
+            throw ApiException.conflito("VERSAO_AGENDADA_EXISTENTE",
+                    "Já existe a versão " + agendada.get().getVersao() + " agendada para "
+                            + agendada.get().getVigenteDesde() + ". Cancele-a antes de publicar outra.");
+        }
+
+        String hash = DocumentoLegal.calcularHash(texto);
+        if (buscarVigente(tipo).map(DocumentoLegal::getHash).filter(hash::equals).isPresent()) {
+            throw ApiException.requisicaoInvalida("CONTEUDO_SEM_MUDANCA",
+                    "O texto é igual ao da versão que está valendo.");
+        }
+
+        String ultima = existentes.stream().max(POR_VERSAO).map(DocumentoLegal::getVersao).orElse(null);
+        DocumentoLegal nova = documentoRepository.save(new DocumentoLegal(tipo, DocumentoLegal.proximaVersao(ultima),
+                texto, hash, vigenteDesde, exigeNovoAceite == null || exigeNovoAceite, resumo.trim()));
+
+        logSistemaService.registrarSucesso(autor, AcaoLog.PUBLICAR_DOCUMENTO, null, null,
+                "Versão " + nova.getVersao() + " do documento " + tipo.name() + " publicada, vigente desde "
+                        + nova.getVigenteDesde() + ".",
+                Map.of("tipo", tipo.name(), "versao", nova.getVersao(),
+                        "vigenteDesde", nova.getVigenteDesde().toString(),
+                        "exigeNovoAceite", String.valueOf(nova.isExigeNovoAceite())));
+
+        recarregarDepoisDeGravar();
+        return nova;
+    }
+
+    // Cancela uma versão que ainda não começou a valer (ninguém aceitou)
+    @Transactional
+    public void cancelar(TipoDocumento tipo, String versao, String username) {
+        Usuario autor = carregarAutor(username);
+        DocumentoLegal documento = versaoParaGestao(tipo, versao);
+
+        if (!documento.getVigenteDesde().isAfter(LocalDate.now(clock))
+                || aceiteRepository.existsByDocumento_Id(documento.getId())) {
+            throw ApiException.conflito("VERSAO_JA_VIGENTE",
+                    "Esta versão já está valendo ou já foi aceita e não pode ser cancelada. "
+                            + "Para mudar o texto, publique uma versão nova.");
+        }
+
+        documentoRepository.delete(documento);
+
+        logSistemaService.registrarSucesso(autor, AcaoLog.CANCELAR_DOCUMENTO, null, null,
+                "Versão " + versao + " do documento " + tipo.name() + " cancelada antes de valer.",
+                Map.of("tipo", tipo.name(), "versao", versao));
+
+        recarregarDepoisDeGravar();
+    }
+
+    private Usuario carregarAutor(String username) {
+        return usuarioRepository.findByUsuario(username)
+                .orElseThrow(() -> ApiException.naoAutenticado(
+                        "USUARIO_NAO_ENCONTRADO", "Usuário não encontrado."));
+    }
+
+    // Atualiza a lista guardada em memória só depois que a gravação foi confirmada no banco
+    private void recarregarDepoisDeGravar() {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    recarregar();
+                }
+            });
+        } else {
+            recarregar();
+        }
     }
 
     // Usado pelo seeder e pela migração

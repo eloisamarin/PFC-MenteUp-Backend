@@ -17,7 +17,8 @@ public record AtualizarUsuarioRequest(
         @Size(max = 100, message = "O nome deve ter no máximo 100 caracteres.")
         String nomeUsuario,
 
-        @NotBlank(message = "O e-mail é obrigatório.")
+        // Opcional: sem valor, o e-mail continua o mesmo (o administrador não precisa revelar o e-mail
+        // de outra pessoa só para corrigir o nome)
         @Email(message = "E-mail inválido.")
         String usuario,
 

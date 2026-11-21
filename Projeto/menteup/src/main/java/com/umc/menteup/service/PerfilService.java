@@ -1,5 +1,6 @@
 package com.umc.menteup.service;
 
+import com.umc.menteup.security.MascaraDados;
 import com.umc.menteup.security.RegraSenha;
 import com.umc.menteup.dto.PerfilResponse;
 import com.umc.menteup.dto.TurmaResponse;
@@ -88,14 +89,7 @@ public class PerfilService {
 
     // Anonimização do e-mail (em***@gmail.com)
     static String anonimizarEmail(String email) {
-        int arroba = email == null ? -1 : email.indexOf('@');
-
-        if (arroba <= 0) {
-            return "***";
-        }
-
-        String visivel = email.substring(0, Math.min(2, arroba));
-        return visivel + "***" + email.substring(arroba);
+        return MascaraDados.email(email);
     }
 
     private Usuario carregarUsuario(String username) {

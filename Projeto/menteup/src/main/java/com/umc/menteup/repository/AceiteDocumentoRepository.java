@@ -21,4 +21,7 @@ public interface AceiteDocumentoRepository extends JpaRepository<AceiteDocumento
     boolean existsByUsuario_IdAndDocumento_Id(Long usuarioId, Long documentoId);
 
     boolean existsByUsuario_Id(Long usuarioId);
+
+    // Versão que alguém já aceitou não pode ser cancelada
+    boolean existsByDocumento_Id(Long documentoId);
 }

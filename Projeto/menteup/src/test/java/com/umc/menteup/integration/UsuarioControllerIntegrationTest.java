@@ -1,5 +1,6 @@
 package com.umc.menteup.integration;
 
+import com.umc.menteup.security.MascaraDados;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -183,8 +184,10 @@ class UsuarioControllerIntegrationTest extends IntegracaoBase {
 
         // Assert
         assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(resposta.getBody()).extracting(usuario -> usuario.get("usuario"))
-                .contains(sessao.email(), outroEmail);
+        // A própria conta do administrador aparece mascarada na lista também; o e-mail inteiro fica no perfil
+        assertThat(resposta.getBody()).extracting(usuario -> usuario.get("emailMascarado"))
+                .contains(MascaraDados.email(sessao.email()), MascaraDados.email(outroEmail));
+        assertThat(resposta.getBody()).allSatisfy(usuario -> assertThat(usuario).doesNotContainKey("usuario"));
     }
 
     @Test
