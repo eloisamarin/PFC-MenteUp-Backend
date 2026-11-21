@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 
@@ -15,6 +16,7 @@ import com.umc.menteup.model.UsuarioLogin;
 import com.umc.menteup.service.PerfilService;
 import com.umc.menteup.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -46,8 +48,8 @@ public class UsuarioController {
     @Autowired
     private PerfilService perfilService;
 
-    // Administrador: com e-mail. Professor e aluno: só id, nome e tipo (LGPD)
-    @Operation(summary = "Lista os usuários (e-mail só para administrador; professor vê o dos alunos)")
+    // Administrador: e-mail mascarado. Professor: e-mail mascarado só dos alunos. Aluno: só id, nome e tipo
+    @Operation(summary = "Lista os usuários (e-mail mascarado para administrador; professor vê o dos alunos)")
     @GetMapping("/all")
     public ResponseEntity<List<UsuarioListagemResponse>> getAll(Authentication authentication) {
         return ResponseEntity.ok(usuarioService.listar(authentication.getName()));
@@ -58,6 +60,15 @@ public class UsuarioController {
     @GetMapping("/{id}")
     public ResponseEntity<UsuarioListagemResponse> getById(@PathVariable Long id, Authentication authentication) {
         return ResponseEntity.ok(usuarioService.buscarPorId(id, authentication.getName()));
+    }
+
+    // Botão "mostrar e-mail" da tela de usuários: só administrador, e cada consulta fica no log
+    @Operation(summary = "Administrador vê o e-mail completo de um usuário (fica registrado no log)")
+    @GetMapping("/{id}/email")
+    public ResponseEntity<Map<String, String>> revelarEmail(@PathVariable Long id, Authentication authentication) {
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .body(Map.of("email", usuarioService.revelarEmail(id, authentication.getName())));
     }
 
     @Operation(summary = "Cadastro público de aluno ou professor")
@@ -80,13 +91,14 @@ public class UsuarioController {
                 .body(usuarioService.criarUsuarioPorAdministrador(pedido, authentication.getName()));
     }
 
+    // Sem "usuario" no corpo, o e-mail continua o mesmo
     @Operation(summary = "Atualiza nome, e-mail e tipo do usuário")
     @PutMapping("/atualizar")
-    public ResponseEntity<Usuario> put(
+    public ResponseEntity<UsuarioListagemResponse> put(
             @Valid @RequestBody AtualizarUsuarioRequest dados,
             Authentication authentication) {
 
-        return usuarioService.atualizarUsuario(dados, authentication.getName())
+        return usuarioService.atualizarComResposta(dados, authentication.getName())
                 .map(resposta -> ResponseEntity.status(HttpStatus.OK).body(resposta))
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }

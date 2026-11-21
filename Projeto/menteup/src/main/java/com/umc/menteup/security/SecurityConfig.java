@@ -96,6 +96,8 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                        // Publicar e cancelar versões do Termo e da Política: só administrador
+                        .requestMatchers("/documentos/gestao/**").hasRole("ADMINISTRADOR")
                         // Texto do Termo e da Política: lido antes do cadastro e pelo rodapé, sem login
                         .requestMatchers(HttpMethod.GET, "/documentos/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS).permitAll()
@@ -106,6 +108,8 @@ public class SecurityConfig {
                         ///Responder pedidos de professor: só administrador
                         .requestMatchers(HttpMethod.PUT, "/usuarios/*/aprovar", "/usuarios/*/rejeitar")
                         .hasRole("ADMINISTRADOR")
+                        // Ver o e-mail inteiro de outra pessoa: só administrador (fica registrado no log)
+                        .requestMatchers(HttpMethod.GET, "/usuarios/*/email").hasRole("ADMINISTRADOR")
                         ///Excluir usuário: só administrador
                         .requestMatchers(HttpMethod.DELETE, "/usuarios/*").hasRole("ADMINISTRADOR")
                         // Painel do sistema: todo usuário logado (o service recorta os dados por perfil).
@@ -142,4 +146,4 @@ public class SecurityConfig {
                 .build();
     }
 
-}
+}

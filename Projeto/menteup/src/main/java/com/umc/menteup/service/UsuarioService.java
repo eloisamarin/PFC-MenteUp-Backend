@@ -19,6 +19,7 @@ import com.umc.menteup.repository.TurmaRepository;
 import com.umc.menteup.repository.UsuarioRepository;
 import com.umc.menteup.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -32,6 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.SecureRandom;
+import java.time.Clock;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -84,6 +87,14 @@ public class UsuarioService {
     @Autowired
     private DocumentoLegalService documentoLegalService;
 
+    @Autowired
+    private Clock clock;
+
+    @Value("${menteup.email.revelar-por-hora:30}")
+    private int revelarEmailPorHora;
+
+    private volatile LimitadorDeTentativas limiteRevelarEmail;
+
     private static final Logger log = LoggerFactory.getLogger(UsuarioService.class);
 
     // Senhas erradas seguidas até bloquear a conta
@@ -100,8 +111,8 @@ public class UsuarioService {
     }
 
     // LGPD (minimização):
-    // - administrador: tudo o que a tela de usuários precisa, inclusive o e-mail;
-    // - professor: o e-mail só dos alunos, para escolher o aluno certo ao adicioná-lo na turma;
+    // - administrador: tudo o que a tela de usuários precisa, com o e-mail mascarado;
+    // - professor: o e-mail mascarado só dos alunos, para escolher o aluno certo ao adicioná-lo na turma;
     // - aluno: só id, nome e tipo dos colegas e professores das turmas dele
     @Transactional(readOnly = true)
     public List<UsuarioListagemResponse> listar(String username) {
@@ -121,7 +132,7 @@ public class UsuarioService {
                         return UsuarioListagemResponse.completo(usuario);
                     }
                     if (professor && TipoUsuario.ehAluno(usuario)) {
-                        return UsuarioListagemResponse.comEmail(usuario);
+                        return UsuarioListagemResponse.comEmailMascarado(usuario);
                     }
                     return UsuarioListagemResponse.resumido(usuario);
                 })
@@ -153,9 +164,56 @@ public class UsuarioService {
         }
 
         return usuarioRepository.findById(id)
-                .map(UsuarioListagemResponse::completo)
+                .map(usuario -> respostaPara(logado, usuario))
                 .orElseThrow(() -> ApiException.naoEncontrado(
                         "USUARIO_NAO_ENCONTRADO", "Usuário não encontrado."));
+    }
+
+    // A própria pessoa vê o e-mail inteiro; o administrador, olhando outra pessoa, vê mascarado
+    private static UsuarioListagemResponse respostaPara(Usuario logado, Usuario usuario) {
+        return logado.getId().equals(usuario.getId())
+                ? UsuarioListagemResponse.proprio(usuario)
+                : UsuarioListagemResponse.completo(usuario);
+    }
+
+    // GET /usuarios/{id}/email: o administrador revela o e-mail de uma pessoa (botão na tela de usuários)
+    // Cada consulta fica no log e há um limite por hora, para ninguém copiar todos os e-mails um por um
+    @Transactional(readOnly = true)
+    public String revelarEmail(Long id, String username) {
+        Usuario logado = carregarLogado(username);
+
+        if (!TipoUsuario.ehAdministrador(logado)) {
+            throw ApiException.proibido(
+                    "SOMENTE_ADMINISTRADOR", "Somente administradores podem ver o e-mail de outra pessoa.");
+        }
+
+        Usuario alvo = usuarioRepository.findById(id)
+                .orElseThrow(() -> ApiException.naoEncontrado(
+                        "USUARIO_NAO_ENCONTRADO", "Usuário não encontrado."));
+
+        if (!limiteRevelarEmail().tentar(String.valueOf(logado.getId()))) {
+            throw new ApiException(HttpStatus.TOO_MANY_REQUESTS, "MUITOS_PEDIDOS",
+                    "Você atingiu o limite de e-mails revelados por hora. Tente novamente mais tarde.");
+        }
+
+        logSistemaService.registrarSucesso(logado, AcaoLog.VISUALIZAR_EMAIL, EntidadeLog.USUARIO, alvo.getId(),
+                "Administrador #" + logado.getId() + " visualizou o e-mail do usuário #" + alvo.getId() + ".",
+                Map.of("usuarioId", String.valueOf(alvo.getId())));
+
+        return alvo.getUsuario();
+    }
+
+    private LimitadorDeTentativas limiteRevelarEmail() {
+        LimitadorDeTentativas atual = limiteRevelarEmail;
+        if (atual == null) {
+            synchronized (this) {
+                if (limiteRevelarEmail == null) {
+                    limiteRevelarEmail = new LimitadorDeTentativas(revelarEmailPorHora, Duration.ofHours(1), clock);
+                }
+                atual = limiteRevelarEmail;
+            }
+        }
+        return atual;
     }
 
     private Usuario carregarLogado(String username) {
@@ -382,7 +440,10 @@ public class UsuarioService {
                     "O tipo de uma conta de administrador não pode ser alterado.");
         }
 
-        String email = dados.usuario().trim();
+        // Sem e-mail no pedido, continua o mesmo
+        String email = dados.usuario() == null || dados.usuario().isBlank()
+                ? alvo.getUsuario()
+                : dados.usuario().trim();
         Optional<Usuario> usuarioExistente = usuarioRepository.findByUsuario(email);
 
         if (usuarioExistente.isPresent() && !usuarioExistente.get().getId().equals(alvo.getId())) {
@@ -416,6 +477,13 @@ public class UsuarioService {
         );
 
         return Optional.of(salvo);
+    }
+
+    // PUT /usuarios/atualizar: a mesma edição, já com a resposta que quem pediu pode ver
+    @Transactional
+    public Optional<UsuarioListagemResponse> atualizarComResposta(AtualizarUsuarioRequest dados, String username) {
+        Usuario logado = carregarLogado(username);
+        return atualizarUsuario(dados, username).map(salvo -> respostaPara(logado, salvo));
     }
 
     public Optional<UsuarioLogin> autenticarUsuario(Optional<UsuarioLogin> usuarioLogin) {

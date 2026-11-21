@@ -8,8 +8,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HexFormat;
 
 // Uma versão publicada do Termo de Aceite ou da Política de Privacidade
 // Depois de gravada, nunca é alterada: um texto novo vira uma versão nova
@@ -77,6 +81,33 @@ public class    DocumentoLegal {
             }
         }
         return 0;
+    }
+
+    // Próximo número depois da última versão: "1.1" vira "1.2", "1.9" vira "1.10" e, sem nenhuma, "1.0"
+    public static String proximaVersao(String ultima) {
+        if (ultima == null || ultima.isBlank()) {
+            return "1.0";
+        }
+        String[] partes = ultima.trim().split("\\.");
+        if (partes.length == 1) {
+            return numero(partes[0]) + ".1";
+        }
+        partes[partes.length - 1] = String.valueOf(numero(partes[partes.length - 1]) + 1);
+        return String.join(".", partes);
+    }
+
+    // Mesmo texto no Windows (CRLF) e no Linux (LF), sem espaços sobrando no começo e no fim
+    public static String normalizarConteudo(String texto) {
+        return texto.replace("\uFEFF", "").replace("\r\n", "\n").replace('\r', '\n').strip() + "\n";
+    }
+
+    public static String calcularHash(String conteudo) {
+        try {
+            byte[] resumo = MessageDigest.getInstance("SHA-256").digest(conteudo.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(resumo);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 indisponível", e);
+        }
     }
 
     private static int numero(String parte) {
