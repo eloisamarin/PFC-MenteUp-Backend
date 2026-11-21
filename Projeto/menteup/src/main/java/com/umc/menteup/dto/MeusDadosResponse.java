@@ -17,7 +17,8 @@ public record MeusDadosResponse(
 ) {
 
     public record Conta(Long id, String nome, String email, String tipo, String avatar,
-                        String situacaoCadastro, LocalDateTime termoAceitoEm) {
+                        String situacaoCadastro, LocalDateTime termoAceitoEm,
+                        LocalDateTime idadeMinimaConfirmadaEm) {
     }
 
     public record Turma(Long id, String nome) {

@@ -29,6 +29,8 @@ import java.util.Optional;
 // Cada arquivo é uma versão: documentos/termo/1.0.md, documentos/politica/1.1.md e assim por diante
 // No começo do arquivo, entre linhas com ---, ficam a data de vigência, se exige novo aceite e o resumo
 // Versão nova é gravada; versão que já existe nunca é alterada (se o texto mudou, só avisa no log)
+// As versões seguintes são publicadas pelo administrador, na tela de documentos: os arquivos daqui
+// servem para o banco novo começar com a primeira versão
 @Component
 @Order(2)
 public class DocumentoLegalSeeder implements ApplicationRunner {

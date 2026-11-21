@@ -20,6 +20,7 @@ public class UserDetailsImpl implements UserDetails {
     private String tipoUsuario;
     private int versaoSessao;
     private boolean bloqueado;
+    private boolean idadePendente;
 
     public UserDetailsImpl(Usuario user) {
         this.id = user.getId();
@@ -28,10 +29,15 @@ public class UserDetailsImpl implements UserDetails {
         this.tipoUsuario = user.getTipoUsuario();
         this.versaoSessao = user.getVersaoSessao();
         this.bloqueado = user.estaBloqueado();
+        this.idadePendente = RegraIdade.precisaConfirmar(user);
     }
 
     public int getVersaoSessao() {
         return versaoSessao;
+    }
+
+    public boolean isIdadePendente() {
+        return idadePendente;
     }
 
     @Override

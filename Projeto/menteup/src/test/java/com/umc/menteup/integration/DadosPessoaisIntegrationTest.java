@@ -1,5 +1,6 @@
 package com.umc.menteup.integration;
 
+import com.umc.menteup.security.MascaraDados;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
@@ -66,7 +67,7 @@ class DadosPessoaisIntegrationTest extends IntegracaoBase {
     }
 
     @Test
-    void listarUsuarios_comoProfessor_deveTrazerOEmailSoDosAlunos() {
+    void listarUsuarios_comoProfessor_deveTrazerOEmailMascaradoSoDosAlunos() {
         // Arrange
         Sessao professor = novaSessao("PROFESSOR");
         Sessao aluno = novaSessao("ALUNO");
@@ -76,18 +77,18 @@ class DadosPessoaisIntegrationTest extends IntegracaoBase {
         // Act
         List<Map<String, Object>> usuarios = listar(professor);
 
-        // Assert: e-mail do aluno (para adicioná-lo na turma); dos outros perfis, não
+        // Assert: e-mail mascarado do aluno (para adicioná-lo na turma); dos outros perfis, nenhum
         assertThat(usuarios).filteredOn(u -> aluno.id().equals(id(u))).singleElement()
-                .satisfies(u -> assertThat(u).containsEntry("usuario", aluno.email())
-                        .doesNotContainKeys("fcmToken", "aguardandoPrimeiroAcesso", "turma", "atividade"));
+                .satisfies(u -> assertThat(u).containsEntry("emailMascarado", MascaraDados.email(aluno.email()))
+                        .doesNotContainKeys("usuario", "fcmToken", "aguardandoPrimeiroAcesso", "turma", "atividade"));
         assertThat(usuarios).filteredOn(u -> outroProfessor.id().equals(id(u))).singleElement()
                 .satisfies(u -> assertThat(u.keySet()).containsOnlyElementsOf(CAMPOS_RESUMIDOS));
         assertThat(usuarios).filteredOn(u -> !"ALUNO".equals(u.get("tipoUsuario")))
-                .allSatisfy(u -> assertThat(u).doesNotContainKey("usuario"));
+                .allSatisfy(u -> assertThat(u).doesNotContainKeys("usuario", "emailMascarado"));
     }
 
     @Test
-    void listarUsuarios_comoAdministrador_deveTrazerOEmailMasNaoOToken() {
+    void listarUsuarios_comoAdministrador_deveTrazerOEmailMascaradoENaoOToken() {
         Sessao administrador = novaSessao("ADMINISTRADOR");
         Sessao aluno = novaSessao("ALUNO");
         gravarTokenDoCelular(aluno.id());
@@ -97,8 +98,8 @@ class DadosPessoaisIntegrationTest extends IntegracaoBase {
                 .findFirst()
                 .orElseThrow();
 
-        assertThat(doAluno).containsEntry("usuario", aluno.email())
-                .doesNotContainKeys("fcmToken", "senha", "turma", "atividade");
+        assertThat(doAluno).containsEntry("emailMascarado", MascaraDados.email(aluno.email()))
+                .doesNotContainKeys("usuario", "fcmToken", "senha", "turma", "atividade");
     }
 
     @Test
@@ -123,6 +124,9 @@ class DadosPessoaisIntegrationTest extends IntegracaoBase {
         assertThat(proprio.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(proprio.getBody()).containsEntry("usuario", aluno.email()).doesNotContainKey("fcmToken");
         assertThat(peloAdmin.getStatusCode()).isEqualTo(HttpStatus.OK);
+        // O administrador vê o e-mail mascarado; o inteiro só pelo botão de revelar
+        assertThat(peloAdmin.getBody()).containsEntry("emailMascarado", MascaraDados.email(aluno.email()))
+                .doesNotContainKey("usuario");
     }
 
     @Test

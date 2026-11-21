@@ -2,6 +2,8 @@ package com.umc.menteup.dto;
 
 import com.umc.menteup.model.AceiteDocumento;
 import com.umc.menteup.model.DocumentoLegal;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
@@ -39,6 +41,41 @@ public final class DocumentoLegalDtos {
         public static Versao de(DocumentoLegal d) {
             return new Versao(d.getTipo().name(), d.getVersao(), d.getVigenteDesde(), d.isExigeNovoAceite(),
                     d.getResumo());
+        }
+    }
+
+    // Administrador: nova versão do documento (o número é escolhido pelo sistema)
+    public record NovaVersao(
+            @NotBlank(message = "O texto do documento é obrigatório")
+            @Size(max = 100_000, message = "O texto pode ter no máximo 100 mil caracteres")
+            String conteudo,
+
+            @NotBlank(message = "O resumo da mudança é obrigatório")
+            @Size(max = 500, message = "O resumo pode ter no máximo 500 caracteres")
+            String resumo,
+
+            @NotNull(message = "A data de vigência é obrigatória")
+            LocalDate vigenteDesde,
+
+            // Sem valor, exige novo aceite
+            Boolean exigeNovoAceite
+    ) {
+    }
+
+    // Administrador: linha da lista de versões, inclusive as agendadas
+    // situacao: AGENDADA (ainda não começou a valer), VIGENTE (a que vale hoje) ou ANTERIOR
+    public record VersaoGestao(
+            String tipo,
+            String versao,
+            LocalDate vigenteDesde,
+            boolean exigeNovoAceite,
+            String resumo,
+            LocalDateTime publicadoEm,
+            String situacao
+    ) {
+        public static VersaoGestao de(DocumentoLegal d, String situacao) {
+            return new VersaoGestao(d.getTipo().name(), d.getVersao(), d.getVigenteDesde(), d.isExigeNovoAceite(),
+                    d.getResumo(), d.getPublicadoEm(), situacao);
         }
     }
 

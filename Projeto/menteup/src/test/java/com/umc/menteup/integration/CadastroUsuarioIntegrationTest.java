@@ -163,7 +163,8 @@ class CadastroUsuarioIntegrationTest extends IntegracaoBase {
         String convite = link.getValue().substring(link.getValue().indexOf("token=") + 6);
         ResponseEntity<Void> primeiroAcesso = client.post().uri("/usuarios/senha/primeiro-acesso")
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(Map.of("token", convite, "novaSenha", SENHA, "aceitouTermos", true))
+                .body(Map.of("token", convite, "novaSenha", SENHA, "aceitouTermos", true,
+                        "dataNascimento", DATA_NASCIMENTO_VALIDA))
                 .retrieve()
                 .toBodilessEntity();
         assertThat(primeiroAcesso.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);

@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 // Quem ainda não aceitou a versão atual do Termo ou da Política não usa o resto da plataforma:
 // qualquer rota responde 428 (ACEITE_PENDENTE) até a pessoa aceitar
+// Do mesmo jeito, o aluno que ainda não confirmou a idade mínima recebe 428 (IDADE_PENDENTE)
 // Continuam liberados: ler os documentos, ver e registrar os aceites, ver o perfil,
 // baixar os próprios dados e excluir a conta (quem não concorda pode sair)
 // Ligado pela variável EXIGIR_ACEITE (desligado por padrão, para o front antigo não travar)
@@ -31,6 +32,7 @@ public class AceitePendenteFilter extends OncePerRequestFilter {
             "/usuarios/me/aceites",
             "/usuarios/me/exportar",
             "/usuarios/me/exclusao",
+            "/usuarios/me/idade",
             "/error"
     );
 
@@ -57,12 +59,17 @@ public class AceitePendenteFilter extends OncePerRequestFilter {
         }
 
         List<DocumentoLegal> pendentes = documentoLegalService.pendentesPorUsername(usuario.getUsername());
-        if (pendentes.isEmpty()) {
-            filterChain.doFilter(request, response);
+        if (!pendentes.isEmpty()) {
+            responderAceitePendente(response, pendentes);
             return;
         }
 
-        responderAceitePendente(response, pendentes);
+        if (usuario.isIdadePendente()) {
+            responderIdadePendente(response);
+            return;
+        }
+
+        filterChain.doFilter(request, response);
     }
 
     private static boolean liberada(HttpServletRequest request) {
@@ -93,6 +100,15 @@ public class AceitePendenteFilter extends OncePerRequestFilter {
                         + "\"mensagem\":\"O Termo de Aceite ou a Política de Privacidade foi atualizado. "
                         + "Leia e aceite a nova versão para continuar.\","
                         + "\"documentos\":" + documentos + "}");
+    }
+
+    private static void responderIdadePendente(HttpServletResponse response) throws IOException {
+        response.setStatus(428);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        response.getWriter().write(
+                "{\"codigo\":\"IDADE_PENDENTE\","
+                        + "\"mensagem\":\"Informe a sua data de nascimento para continuar.\"}");
     }
 
     private static String escapar(String texto) {
