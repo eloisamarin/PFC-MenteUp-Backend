@@ -6,9 +6,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+
+import com.umc.menteup.repository.ResultadoAtividadeRepository;
 
 /*
  * Testes de integração do acompanhamento de desempenho (RF30).
@@ -16,6 +20,57 @@ import org.springframework.http.ResponseEntity;
  * então nenhum depende de outro.
  */
 class DesempenhoIntegrationTest extends IntegracaoBase {
+
+    @Autowired
+    private ResultadoAtividadeRepository resultadoAtividadeRepository;
+
+    // ------------------------------------------------- comentário visto pelo aluno
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void comentarResultado_deveAparecerParaOAlunoNaListaENoResultado() {
+        // Arrange: aluno conclui a atividade e o professor comenta o resultado
+        Sessao professor = novaSessao("PROFESSOR");
+        Sessao aluno = novaSessao("ALUNO");
+        Long turmaId = criarTurma(professor);
+        vincularAluno(professor, turmaId, aluno.id());
+        Long atividadeId = criarAtividade(professor, turmaId, "EM_ANDAMENTO");
+        List<PerguntaCriada> perguntas = cadastrarQuestionario(professor, atividadeId, 2);
+        concluirAtividade(aluno, atividadeId, perguntas, true);
+        Long resultadoId = resultadoAtividadeRepository
+                .findByUsuario_IdAndAtividade_Id(aluno.id(), atividadeId).orElseThrow().getId();
+
+        ResponseEntity<Map<String, Object>> comentario = client.put()
+                .uri("/turmas/{turmaId}/resultados/{resultadoId}/comentario", turmaId, resultadoId)
+                .header(HttpHeaders.AUTHORIZATION, professor.token())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("texto", "Ótimo trabalho, continue assim!"))
+                .retrieve()
+                .toEntity(JSON);
+        assertThat(comentario.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // Act: o aluno abre a lista de atividades e o resultado da atividade
+        List<Map<String, Object>> minhas = client.get().uri("/alunos/me/atividades")
+                .header(HttpHeaders.AUTHORIZATION, aluno.token())
+                .retrieve()
+                .toEntity(LISTA_JSON)
+                .getBody();
+        Map<String, Object> questionario = client.get().uri("/atividades/{id}", atividadeId)
+                .header(HttpHeaders.AUTHORIZATION, aluno.token())
+                .retrieve()
+                .toEntity(JSON)
+                .getBody();
+
+        // Assert
+        assertThat(minhas).singleElement().satisfies(item ->
+                assertThat(item).containsEntry("comentarioProfessor", "Ótimo trabalho, continue assim!"));
+        Map<String, Object> resultado = (Map<String, Object>) questionario.get("meuResultado");
+        assertThat(resultado)
+                .containsEntry("comentarioProfessor", "Ótimo trabalho, continue assim!")
+                .containsKey("comentadoEm")
+                .doesNotContainKey("usuario");
+        assertThat(resultado.get("comentadoPor")).isNotNull();
+    }
 
     // ------------------------------------------------- GET /turmas/{id}/desempenho
 

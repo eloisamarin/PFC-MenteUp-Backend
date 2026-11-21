@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.umc.menteup.dto.ResultadoAtividadeResponse;
+import com.umc.menteup.dto.RevisaoDtos;
 import com.umc.menteup.service.ResultadoAtividadeService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -37,5 +38,14 @@ public class ResultadoAtividadeController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
+    }
+
+    @Operation(summary = "Revisão das perguntas depois de enviar (a resposta certa só depois de encerrada)")
+    @GetMapping("/{atividadeId}/revisao")
+    public ResponseEntity<RevisaoDtos.RevisaoAtividade> revisar(
+            @PathVariable Long atividadeId,
+            Authentication authentication
+    ) {
+        return ResponseEntity.ok(resultadoAtividadeService.revisar(atividadeId, authentication.getName()));
     }
 }

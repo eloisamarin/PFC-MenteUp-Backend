@@ -103,6 +103,13 @@ class OrdenacaoTemplateTest {
         assertFalse(template.estaCorreta(pergunta, resposta(12L, 11L, 13L)));
     }
 
+    @Test
+    @DisplayName("revisão: mostra a sequência do aluno e a ordem correta de todos os itens")
+    void revisao() {
+        assertEquals(List.of("10", "1", "5"), template.respostaDoAluno(pergunta, resposta(13L, 11L, 12L)));
+        assertEquals(List.of("1", "5", "10"), template.respostaCorreta(pergunta));
+    }
+
     private void item(Long id, String texto, int ordem) {
         Alternativa alternativa = new Alternativa();
         alternativa.setId(id);

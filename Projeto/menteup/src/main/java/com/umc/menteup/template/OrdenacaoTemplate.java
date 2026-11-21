@@ -8,6 +8,7 @@ import com.umc.menteup.model.Pergunta;
 import com.umc.menteup.model.TipoAtividade;
 import org.springframework.stereotype.Component;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -21,6 +22,15 @@ public class OrdenacaoTemplate extends SequenciaTemplate {
     @Override
     public TipoAtividade tipo() {
         return TipoAtividade.ORDENACAO;
+    }
+
+    ///Revisão: a resposta certa é a lista de todos os itens na ordem cadastrada (de 1 a N)
+    @Override
+    public List<String> respostaCorreta(Pergunta pergunta) {
+        return pergunta.getAlternativas().stream()
+                .sorted(Comparator.comparing(Alternativa::getOrdem, Comparator.nullsLast(Comparator.naturalOrder())))
+                .map(Alternativa::getTexto)
+                .toList();
     }
 
     ///Deve ter ao menos 2 itens e as ordens corretas

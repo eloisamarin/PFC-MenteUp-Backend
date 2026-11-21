@@ -36,6 +36,8 @@ public class DesafioService {
     private final Clock clock;
     private final ApplicationEventPublisher eventos;
     private final LogSistemaService logSistemaService;
+    private final NotificacaoService notificacaoService;
+    private final PresencaDesafio presenca;
 
     public DesafioService(
             DesafioRepository desafioRepository,
@@ -45,10 +47,14 @@ public class DesafioService {
             MatriculaService matriculaService,
             Clock clock,
             ApplicationEventPublisher eventos,
-            LogSistemaService logSistemaService
+            LogSistemaService logSistemaService,
+            NotificacaoService notificacaoService,
+            PresencaDesafio presenca
     ) {
         this.eventos = eventos;
         this.logSistemaService = logSistemaService;
+        this.notificacaoService = notificacaoService;
+        this.presenca = presenca;
         this.desafioRepository = desafioRepository;
         this.respostaRepository = respostaRepository;
         this.turmaRepository = turmaRepository;
@@ -78,6 +84,9 @@ public class DesafioService {
 
         Desafio salvo = desafioRepository.save(desafio);
         registrarLog(autor, AcaoLog.CRIAR_DESAFIO, salvo, "Desafio criado");
+
+        ///Avisa os alunos da turma que há um novo desafio
+        notificacaoService.notificarDesafioCriado(salvo.getId(), salvo.getTitulo(), tokensDosAlunos(turma));
 
         return toResponse(salvo);
     }
@@ -172,7 +181,18 @@ public class DesafioService {
 
         registrarLog(professor, AcaoLog.INICIAR_DESAFIO, desafio, "Desafio iniciado");
 
+        ///Avisa os alunos da turma que o desafio começou (push no celular ou no navegador)
+        notificacaoService.notificarDesafioIniciado(
+                desafio.getId(), desafio.getTitulo(), tokensDosAlunos(desafio.getTurma()));
+
         return montarEstado(desafio, professor);
+    }
+
+    ///Tokens de notificação dos alunos da turma (quem não ativou as notificações fica com nulo e é ignorado)
+    private static List<String> tokensDosAlunos(Turma turma) {
+        return turma.getAlunos().stream()
+                .map(Usuario::getFcmToken)
+                .toList();
     }
 
     @Transactional
@@ -201,6 +221,7 @@ public class DesafioService {
             desafio.setPerguntaExpiraEm(null);
 
             registrarLog(professor, AcaoLog.ENCERRAR_DESAFIO, desafio, "Desafio encerrado");
+            presenca.fechar(desafio.getId());
 
             ///Verifica as conquistas de todos os participantes no fim do desafio, não a cada resposta
             List<Long> participantes = respostaRepository.buscarTodasDoDesafio(desafioId).stream()
@@ -222,7 +243,54 @@ public class DesafioService {
 
         exigirAcesso(desafio, usuario);
 
+        ///A tela do aluno consulta o estado a cada segundo: isso conta como presença na sala
+        if (TipoUsuario.ehAluno(usuario) && desafio.getStatus() != StatusDesafio.ENCERRADO) {
+            presenca.registrar(desafio.getId(), usuario);
+        }
+
         return montarEstado(desafio, usuario);
+    }
+
+    ///Revisão do desafio para o aluno: só depois de encerrado (todos já responderam), com a alternativa correta
+    @Transactional(readOnly = true)
+    public RevisaoDtos.RevisaoDesafio revisar(Long desafioId, String username) {
+        Usuario aluno = carregarUsuario(username);
+
+        if (!TipoUsuario.ehAluno(aluno)) {
+            throw ApiException.proibido("SOMENTE_ALUNO", "A revisão das respostas é exclusiva para alunos.");
+        }
+
+        Desafio desafio = carregarDesafio(desafioId);
+        exigirAcesso(desafio, aluno);
+
+        if (desafio.getStatus() != StatusDesafio.ENCERRADO) {
+            throw ApiException.conflito(
+                    "DESAFIO_NAO_ENCERRADO", "A revisão fica disponível quando o professor encerrar o desafio.");
+        }
+
+        List<RevisaoDtos.QuestaoDesafio> questoes = desafio.getPerguntas().stream()
+                .sorted(Comparator.comparing(PerguntaDesafio::getOrdem))
+                .map(pergunta -> {
+                    RespostaDesafio resposta = respostaRepository
+                            .findByPergunta_IdAndUsuario_Id(pergunta.getId(), aluno.getId())
+                            .orElse(null);
+                    String correta = pergunta.getAlternativas().stream()
+                            .filter(alternativa -> Boolean.TRUE.equals(alternativa.getCorreta()))
+                            .map(AlternativaDesafio::getTexto)
+                            .findFirst()
+                            .orElse(null);
+                    return new RevisaoDtos.QuestaoDesafio(
+                            pergunta.getId(),
+                            pergunta.getEnunciado(),
+                            resposta == null ? null : resposta.getAlternativa().getTexto(),
+                            resposta != null && Boolean.TRUE.equals(resposta.getCorreta()),
+                            resposta == null || resposta.getPontos() == null ? 0 : resposta.getPontos(),
+                            correta);
+                })
+                .toList();
+
+        int pontosTotais = questoes.stream().mapToInt(RevisaoDtos.QuestaoDesafio::pontos).sum();
+        return new RevisaoDtos.RevisaoDesafio(desafio.getId(), desafio.getTitulo(), pontosTotais, questoes);
     }
 
     @Transactional
@@ -419,10 +487,16 @@ public class DesafioService {
     private EstadoDesafioResponse montarEstado(Desafio desafio, Usuario usuario) {
         int totalPerguntas = desafio.getPerguntas().size();
 
+        ///Quem está na sala: só para quem conduz o desafio (o aluno não vê os colegas)
+        List<AlunoNaSalaResponse> alunosNaSala = TipoUsuario.ehAluno(usuario)
+                || desafio.getStatus() == StatusDesafio.ENCERRADO
+                ? null
+                : presenca.naSala(desafio.getId());
+
         if (desafio.getStatus() != StatusDesafio.EM_ANDAMENTO) {
             return new EstadoDesafioResponse(
                     desafio.getId(), desafio.getTitulo(), desafio.getStatus(), null, totalPerguntas,
-                    null, null, null, null, null, null, null);
+                    null, null, null, null, null, null, null, alunosNaSala);
         }
 
         PerguntaDesafio pergunta = perguntaAtual(desafio);
@@ -450,7 +524,8 @@ public class DesafioService {
                 respostaRepository.countByPergunta_Id(pergunta.getId()),
                 minhaResposta == null ? null : minhaResposta.getAlternativa().getId(),
                 alternativaCorreta,
-                minhaResposta == null || !encerrada ? null : minhaResposta.getPontos()
+                minhaResposta == null || !encerrada ? null : minhaResposta.getPontos(),
+                alunosNaSala
         );
     }
 

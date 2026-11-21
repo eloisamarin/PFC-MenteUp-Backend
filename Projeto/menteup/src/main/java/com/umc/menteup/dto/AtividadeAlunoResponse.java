@@ -7,6 +7,8 @@ public record AtividadeAlunoResponse(
         StatusAlunoAtividade status,
         Integer acertos,
         Integer pontuacao,
-        Integer percentualConclusao
+        Integer percentualConclusao,
+        /// Comentário do professor no resultado (nulo enquanto não houver)
+        String comentarioProfessor
 ) {
 }

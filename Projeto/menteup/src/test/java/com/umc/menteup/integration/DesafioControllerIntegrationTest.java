@@ -885,6 +885,62 @@ class DesafioControllerIntegrationTest extends IntegracaoBase {
         assertThat(excluir(administrador, c.desafioId()).getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
     }
 
+    // ------------------------------------------------------------ Revisão do aluno
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void revisar_desafioEncerrado_deveMostrarARespostaDoAlunoEACorreta() {
+        // Arrange: o aluno erra, o colega não responde, e o professor encerra
+        Cenario c = cenario(1);
+        Map<String, Object> pergunta = perguntaDe(iniciar(c.professor(), c.desafioId()).getBody());
+        responder(c.aluno(), c.desafioId(), id(pergunta), alternativaPorTexto(pergunta, "Errada 1"));
+        esgotarTempo(c.desafioId());
+        avancar(c.professor(), c.desafioId());
+
+        // Act
+        ResponseEntity<Map<String, Object>> doAluno = revisar(c.aluno(), c.desafioId());
+        ResponseEntity<Map<String, Object>> doColega = revisar(c.colega(), c.desafioId());
+
+        // Assert
+        assertThat(doAluno.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Map<String, Object> questao = ((List<Map<String, Object>>) doAluno.getBody().get("questoes")).get(0);
+        assertThat(questao)
+                .containsEntry("enunciado", "Pergunta 1")
+                .containsEntry("suaResposta", "Errada 1")
+                .containsEntry("acertou", false)
+                .containsEntry("pontos", 0)
+                .containsEntry("respostaCorreta", "Certa 1");
+        Map<String, Object> semResposta = ((List<Map<String, Object>>) doColega.getBody().get("questoes")).get(0);
+        assertThat(semResposta).containsEntry("suaResposta", null).containsEntry("respostaCorreta", "Certa 1");
+    }
+
+    @Test
+    void revisar_desafioEmAndamento_deveRetornar409SemRevelarOGabarito() {
+        Cenario c = cenario(1);
+        iniciar(c.professor(), c.desafioId());
+
+        ResponseEntity<Map<String, Object>> resposta = revisar(c.aluno(), c.desafioId());
+
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(resposta.getBody()).containsEntry("codigo", "DESAFIO_NAO_ENCERRADO");
+    }
+
+    private ResponseEntity<Map<String, Object>> revisar(Sessao sessao, Long desafioId) {
+        return client.get().uri(BASE_PATH + "/{id}/revisao", desafioId)
+                .header(HttpHeaders.AUTHORIZATION, sessao.token())
+                .retrieve()
+                .toEntity(JSON);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Long alternativaPorTexto(Map<String, Object> pergunta, String texto) {
+        return ((List<Map<String, Object>>) pergunta.get("alternativas")).stream()
+                .filter(alternativa -> texto.equals(alternativa.get("texto")))
+                .map(IntegracaoBase::id)
+                .findFirst()
+                .orElseThrow();
+    }
+
     private static Map<String, Object> buildDesafio(Long turmaId, int quantidadePerguntas) {
         List<Map<String, Object>> perguntas = new java.util.ArrayList<>();
         for (int i = 1; i <= quantidadePerguntas; i++) {

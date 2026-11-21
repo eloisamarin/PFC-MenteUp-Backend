@@ -51,7 +51,7 @@ public class DesafioController {
         return ResponseEntity.ok(desafioService.buscarParaEdicao(id, authentication.getName()));
     }
 
-    // Somente PROFESSOR ou ADMINISTRADOR edita, e apenas antes de iniciar o desafio
+    // Somente PROFESSOR ou ADMINISTRADOR edita e apenas antes de iniciar o desafio
     @Operation(summary = "Edita o desafio (só enquanto aguarda)")
     @PutMapping("/{id}")
     public ResponseEntity<DesafioResponse> atualizar(
@@ -117,5 +117,14 @@ public class DesafioController {
             Authentication authentication) {
 
         return ResponseEntity.ok(desafioService.ranking(id, authentication.getName()));
+    }
+
+    @Operation(summary = "Revisão das perguntas do desafio para o aluno (depois de encerrado)")
+    @GetMapping("/{id}/revisao")
+    public ResponseEntity<RevisaoDtos.RevisaoDesafio> revisar(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        return ResponseEntity.ok(desafioService.revisar(id, authentication.getName()));
     }
 }
